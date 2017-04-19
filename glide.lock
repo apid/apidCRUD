@@ -1,0 +1,88 @@
+hash: f90503eef9dbb6ed49fad30b5ca9e16e0de4e99bfd44706f95588313f2078dfe
+updated: 2017-04-11T21:36:10.77938417-07:00
+imports:
+- name: github.com/30x/apid-core
+  version: 95a9c4f3e421171c4539548ad1a90c1c25595410
+  subpackages:
+  - api
+  - config
+  - data
+  - data/wrap
+  - events
+  - factory
+  - logger
+- name: github.com/30x/goscaffold
+  version: 68835e7a23284346c2a11ad43effe69197c71b26
+- name: github.com/fsnotify/fsnotify
+  version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/mux
+  version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+- name: github.com/hashicorp/hcl
+  version: eb6f65b2d77ed5078887f960ff570fbddbbeb49d
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
+- name: github.com/julienschmidt/httprouter
+  version: 6f3f3919c8781ce5c0509c83fffc887a7830c938
+- name: github.com/justinas/alice
+  version: 1051eaf52fcafdd87ead59d28b065f1fcb8274ec
+- name: github.com/magiconair/properties
+  version: 00ec919ecb56326853e2c1eee377fa324bc23a79
+- name: github.com/mattn/go-sqlite3
+  version: ca5e3819723d8eeaf170ad510e7da1d6d2e94a08
+- name: github.com/mitchellh/mapstructure
+  version: bfdb1a85537d60bc7e954e600c250219ea497417
+- name: github.com/pelletier/go-buffruneio
+  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
+- name: github.com/pelletier/go-toml
+  version: 439fbba1f887c286024370cb4f281ba815c4c7d7
+- name: github.com/SermoDigital/jose
+  version: f6df55f235c24f236d11dbcf665249a59ac2021f
+  subpackages:
+  - crypto
+  - jws
+  - jwt
+- name: github.com/Sirupsen/logrus
+  version: d26492970760ca5d33129d2d799e34be5c4782eb
+- name: github.com/spf13/afero
+  version: 72b31426848c6ef12a7a8e216708cb0d1530f074
+  subpackages:
+  - mem
+- name: github.com/spf13/cast
+  version: 56a7ecbeb18dde53c6db4bd96b541fd9741b8d44
+- name: github.com/spf13/jwalterweatherman
+  version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
+- name: github.com/spf13/pflag
+  version: 9a906f17374922ed0f74e1b2f593d3723f2ffb00
+- name: github.com/spf13/viper
+  version: 5ed0fc31f7f453625df314d8e66b9791e8d13003
+- name: golang.org/x/net
+  version: 60c41d1de8da134c05b7b40154a9a82bf5b7edb9
+  subpackages:
+  - context
+- name: golang.org/x/sys
+  version: d75a52659825e75fff6158388dddc6a5b04f9ba5
+  subpackages:
+  - unix
+- name: golang.org/x/text
+  version: 44f4f658a783b0cee41fe0a23b8fc91d9c120558
+  subpackages:
+  - transform
+  - unicode/norm
+- name: gopkg.in/yaml.v2
+  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
+testImports:
+- name: github.com/onsi/ginkgo
+  version: f40a49d81e5c12e90400620b6242fb29a8e7c9d9
+  subpackages:
+  - ginkgo
+- name: github.com/onsi/gomega
+  version: 9b8c753e8dfb382618ba8fa19b4197b5dcb0434c

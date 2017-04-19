@@ -1,0 +1,8 @@
+package: github.com/30x/apidCRUD
+import:
+- package: github.com/30x/apid-core
+- package: github.com/30x/goscaffold
+- package: github.com/mattn/sqlite3
+testImport:
+- package: github.com/onsi/ginkgo/ginkgo
+- package: github.com/onsi/gomega
