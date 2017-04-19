@@ -2,47 +2,52 @@ package apidCRUD
 
 import "testing"
 import "os"
-import "fmt"
-// import "github.com/30x/apid-core"
+import "github.com/30x/apid-core"
 import "github.com/30x/apid-core/factory"
 
+// TestMain() is called by the test framework before running the tests.
+// we use it to initialize the log variable.
 func TestMain(m *testing.M) {
-	fmt.Printf("in TestMain\n")
-	// in case functions under test need to log something
-	services := factory.DefaultServicesFactory()
-	log = services.Log().ForModule("apigeeCRUD")
-	log.Debugf("hello\n")
+	// do this in case functions under test need to log something
+	apid.Initialize(factory.DefaultServicesFactory())
+	log = apid.Log()
 
+	// required boilerplate
 	os.Exit(m.Run())
 }
 
 // ---- unit tests for validate_xxx()
 
 type validate_offset_TC struct {
-	s string
-	ret string
-	ok bool
+	arg string		// input string
+	xres string		// expected result
+	xsucc bool		// expected success
 }
 
-var validate_offset_Tests = []validate_offset_TC {
+var validate_offset_Tab = []validate_offset_TC {
 	{ "", "0", true },
 	{ "0", "0", true },
 	{ "12345678", "12345678", true },
+	{ "-12345678", "-12345678", true },
+	{ "+12345678", "12345678", true },
+	{ "12345678.", "", false },
 	{ " 12345678", "", false },
-	{ "12345678", "", false },
+	{ "12345678 ", "", false },
 }
 
 func Test_validate_offset(t *testing.T) {
 	fn := "validate_offset"
-	for i, test := range validate_offset_Tests {
-		ret, err := validate_offset(test.s)
-		msg := "(ok)"
+	for i, test := range validate_offset_Tab {
+		ret, err := validate_offset(test.arg)
+		msg := "true"
 		if err != nil {
 			msg = err.Error()
 		}
-		if (test.ok && (test.ret != ret)) || err == nil {
+		if !((test.xsucc && err == nil && test.xres == ret) ||
+		   (!test.xsucc && err != nil)) {
 			t.Errorf(`#%d: %s("%s")=("%s","%s"); expected ("%s",%t)`,
-				i, fn, test.s, ret, msg, test.ret, test.ok)
+				i, fn, test.arg, ret, msg,
+				test.xres, test.xsucc)
 		}
 	}
 }
@@ -55,7 +60,7 @@ type notIdentChar_TC struct {
 	res bool
 }
 
-var notIdentChar_Tests = []notIdentChar_TC {
+var notIdentChar_Tab = []notIdentChar_TC {
 	{'&', true},
 	{'a', false},
 	{'z', false},
@@ -73,7 +78,7 @@ var notIdentChar_Tests = []notIdentChar_TC {
 
 func Test_notIdentChar(t *testing.T) {
 	fn := "isValidIdent"
-	for i, test := range notIdentChar_Tests {
+	for i, test := range notIdentChar_Tab {
 		res := notIdentChar(test.c)
 		if res != test.res {
 			t.Errorf(`#%d: %s('%c')=%t; expected %t`, i, fn, test.c, res, test.res)
@@ -88,7 +93,7 @@ type isValidIdent_TC struct {
 	res bool
 }
 
-var isValidIdent_Tests = []isValidIdent_TC {
+var isValidIdent_Tab = []isValidIdent_TC {
 	{"_ABCXYZabcxyz0123456789", true},
 	{"_ABCabc0123.", false},
 	{"abc.def", false},
@@ -102,7 +107,7 @@ var isValidIdent_Tests = []isValidIdent_TC {
 
 func Test_isValidIdent(t *testing.T) {
 	fn := "isValidIdent"
-	for i, test := range isValidIdent_Tests {
+	for i, test := range isValidIdent_Tab {
 		res := isValidIdent(test.s)
 		if res != test.res {
 			t.Errorf(`#%d: %s("%s")=%t; expected %t`, i, fn, test.s, res, test.res)

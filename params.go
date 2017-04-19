@@ -164,9 +164,6 @@ func validate_offset(s string) (string, error) {
 	if err != nil {
 		return s, err
 	}
-	if n <= 0 {
-		n = 0
-	}
 	return strconv.Itoa(n), nil
 }
 
