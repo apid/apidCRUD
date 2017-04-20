@@ -1,5 +1,5 @@
 .PHONY: default clean build install preinstall test run
-.PHONY: killer unit-test coverage setup
+.PHONY: killer lint test unit-test coverage setup
 
 default: install
 
@@ -21,7 +21,7 @@ get:
 	[ -d ./vendor ] \
 	|| glide install
 
-build test:
+build:
 	time go $@
 
 setup:
@@ -41,14 +41,16 @@ run: install
 killer:
 	pkill -f $(MYAPP)
 
+test: unit-test
+
 unit-test:
-	time go test
+	time go test | tee $(LOG_DIR)/$@.out
 
 func-test:
-	./tester.sh
+	./tester.sh | tee $(LOG_DIR)/$@.out
 
 coverage:
-	./cover.sh
+	./cover.sh | tee $(LOG_DIR)/$@.out
 
 lint:
-	gometalinter.v1 | tee $(LOG_DIR)/lint.out
+	gometalinter.v1 | tee $(LOG_DIR)/$@.out

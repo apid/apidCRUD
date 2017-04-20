@@ -99,4 +99,5 @@ else
 	echo OK
 fi
 
+echo "# all good"
 exit 0

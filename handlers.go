@@ -14,15 +14,6 @@ type dbType struct {
 	handle *sql.DB
 }
 
-// idType is an alias for the type of the database's rowid.
-type idType int64
-
-// idTypeBits is the number of bits in idType.
-const idTypeBits = 64
-
-// idTypeRadix is the base to use when converting an id string to int.
-const idTypeRadix = 10
-
 // badStat is a convenience constant, the http status for a bad request.
 const badStat = http.StatusBadRequest
 
@@ -126,6 +117,7 @@ func getDbRecordHandler(req *http.Request) (int, interface{}) {
 		return errorRet(badStat, err)
 	}
 	params["limit"] = strconv.Itoa(1)
+	params["offset"] = strconv.Itoa(0)
 
 	return get_common(params)
 }

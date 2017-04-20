@@ -9,11 +9,20 @@ import (
 	"github.com/30x/apid-core"
 )
 
-// the type of parameter validator function
-type paramValidator func (value string) (string, error)
+// idType is an alias for the type of the database's rowid.
+type idType int64
+
+// idTypeBits is the number of bits in idType.
+const idTypeBits = 64
+
+// idTypeRadix is the base to use when converting an id string to int.
+const idTypeRadix = 10
 
 // maxRecs is the maximum number of results allowed in a single bulk request.
 const maxRecs = 1000
+
+// the type of parameter validator function
+type paramValidator func (value string) (string, error)
 
 // map from param name to validator function
 var validators = map[string]paramValidator {
