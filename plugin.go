@@ -9,7 +9,6 @@ import (
 
 var (
 	log apid.LogService
-	apiws *apiWiring
 )
 
 // initPlugin() is called by the apid-core startup
@@ -21,14 +20,13 @@ func initPlugin(services apid.Services) (apid.PluginData, error) {
 
 	initDB()
 
-	apiws = initWiring()
-
 	registerHandlers(services.API())
 
 	return pluginData, nil
 }
 
 func registerHandlers(service apid.APIService) {
+	apiws := initWiring()
 	for path, methods := range apiws.pathsMap {
 		addHandler(service, path, methods)
 	}
