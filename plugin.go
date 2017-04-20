@@ -26,8 +26,8 @@ func initPlugin(services apid.Services) (apid.PluginData, error) {
 }
 
 func registerHandlers(service apid.APIService) {
-	apiws := initWiring()
-	for path, methods := range apiws.pathsMap {
+	maps := initWiring().getMaps()
+	for path, methods := range maps {
 		addHandler(service, path, methods)
 	}
 }

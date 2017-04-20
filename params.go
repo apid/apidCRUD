@@ -10,13 +10,13 @@ import (
 )
 
 // the type of parameter validator function
-type param_validator func (value string) (string, error)
+type paramValidator func (value string) (string, error)
 
 // maxRecs is the maximum number of results allowed in a single bulk request.
 const maxRecs = 1000
 
 // map from param name to validator function
-var param_validators = map[string]param_validator {
+var validators = map[string]paramValidator {
 	"table_name": validate_table_name,
 	"fields": validate_fields,
 	"id": validate_id,
@@ -26,29 +26,69 @@ var param_validators = map[string]param_validator {
 	"offset": validate_offset,
 }
 
+// extReq is an object encapsulating an http request's parameters,
+// unifying path parameters and query parameters.
+type extReq struct {
+	req *http.Request
+	pathParams map[string]string
+	validators map[string]paramValidator
+}
 
 // ----- start of functions
 
-// fetch_params() gets the named parameters from the given Request.
-// the parameters may be in the path or in the query.
-// each parameter must have a validator function.
-// the call returns an error if a validator function fails on any parameter.
-// the parameter values are returned as a map of string.
-func fetch_params(req *http.Request, names ...string) (map[string]string, error) {
-	ret := map[string]string{}
+// extReqNew returns a constructed extReq object.
+func extReqNew(req *http.Request, validators map[string]paramValidator) (*extReq, error) {
 
 	// make the query params available via FormValue().
 	err := req.ParseForm()
 	if err != nil {
+		return nil, err
+	}
+
+	return &extReq{req: req,
+		pathParams: apid.API().Vars(req),
+		validators: validators}, nil
+}
+
+// fetch_param() fetches the named parameter from the Request as a string.
+// the parameter must have a validator function.
+// the call fails if the validator function fails.
+func (xr *extReq) getParam(name string) (string, error) {
+	switch (name) {
+	case "table_name":
+		return validate_table_name(xr.pathParams[name])
+	case "id":
+		id, ok := xr.pathParams[name]
+		if !ok {
+			id = xr.req.FormValue(name)
+		}
+		return validate_id(id)
+	default:
+		val := xr.req.FormValue(name)
+		vfunc, ok := xr.validators[name]
+		if ! ok {
+			return val, fmt.Errorf("no validator for %s", name)
+		}
+		return vfunc(val)
+	}
+}
+
+// fetchParams() gets the named parameters from the given Request.
+// the parameters may be in the path or in the query.
+// each parameter must have a validator function.
+// the call returns an error if a validator function fails on any parameter.
+// the parameter values are returned as a map of string.
+func fetchParams(req *http.Request, names ...string) (map[string]string, error) {
+	ret := map[string]string{}
+
+	xr, err := extReqNew(req, validators)
+	if err != nil {
 		return ret, err
 	}
 
-	// make path params available thru path_params[]
-	path_params := apid.API().Vars(req)
-
 	// fetch and validate each named param, storing values in ret[]
 	for _, name := range names {
-		val, err := fetch_param(req, path_params, name)
+		val, err := xr.getParam(name)
 		if err != nil {
 			return ret, err
 		}
@@ -58,32 +98,7 @@ func fetch_params(req *http.Request, names ...string) (map[string]string, error)
 	return ret, nil
 }
 
-// fetch_param() fetches the named parameter from the Request as a string.
-// the parameter must have a validator function.
-// the call fails if the validator function fails.
-func fetch_param(req *http.Request,
-		path_params map[string]string,
-		name string) (string, error) {
-	switch (name) {
-	case "table_name": // table_name comes from path_params[] only
-		return validate_table_name(path_params[name])
-	case "id":	// id may come from path_params[] or FormValue()
-		id, ok := path_params[name]
-		if !ok {
-			id = req.FormValue(name)
-		}
-		return validate_id(id)
-	default:	// param comes from FormValue()
-		val := req.FormValue(name)
-		vfunc, ok := param_validators[name]
-		if ! ok {
-			return val, fmt.Errorf("no validator for %s", name)
-		}
-		return vfunc(val)
-	}
-}
-
-// ----- param validator functions compatible with param_validator type
+// ----- param validator functions compatible with paramValidator type
 
 // validate_fields() is the validator for the "fields" parameter.
 func validate_fields(fields string) (string, error) {
@@ -193,4 +208,3 @@ func notIdentChar(r rune) bool {
 func isValidIdent(s string) bool {
 	return len(s) > 0 && strings.IndexFunc(s, notIdentChar) < 0
 }
-

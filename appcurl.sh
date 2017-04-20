@@ -8,11 +8,27 @@ vrun()
 	"$@"
 }
 
+# strip EOL comments from the given input stream.
+stripcom()
+{
+	sed -e 's/[ 	]*#.*//' "$@"
+}
+
+# print from the given yaml file, the value of the named top-level variable.
+get_var()
+{
+	local yaml=$1 name=$2
+	stripcom < "$yaml" \
+	| sed -n -e 's/^'"$name"':[ 	]*\(.*\)/\1/p'
+}
+
 # ----- start of mainline code
-TESTHOST=localhost
-TESTPORT=9000
+CFG=./apid_config.yaml
 APP=apid
-URL_BASE=http://$TESTHOST:$TESTPORT/$APP
+
+API_LISTEN=$(get_var "$CFG" api_listen)
+
+URL_BASE=http://$API_LISTEN/$APP
 
 VERB=$1
 shift

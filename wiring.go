@@ -3,8 +3,6 @@ package apidCRUD
 import (
 	"fmt"
 	"net/http"
-	"reflect"
-	"runtime"
 )
 
 type apiHandler func(*http.Request) (int, interface{})
@@ -68,6 +66,10 @@ func (apiws *apiWiring) addWiring(path string, verb string, handler apiHandler) 
 	vmap.methods[verb] = handler
 }
 
+func (apiws *apiWiring) getMaps() map[string]verbMap {
+	return apiws.pathsMap
+}
+
 func getFunc(vmap verbMap, verb string) (apiHandler, error) {
 	verbFunc, ok := vmap.methods[verb]
 	if !ok {
@@ -75,8 +77,4 @@ func getFunc(vmap verbMap, verb string) (apiHandler, error) {
 			verb, vmap.path)
 	}
 	return verbFunc, nil
-}
-
-func getFunctionName(f interface{}) string {
-	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 }

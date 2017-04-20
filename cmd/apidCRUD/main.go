@@ -31,8 +31,8 @@ func main() {
 
 	// if we got here, an error occurred
 	config := apid.Config()
-	port := config.GetString("api_port")
-	log.Fatalf("Error. Is something already running on port %d? %s", port, err)
+	url := config.GetString("api_listen")
+	log.Fatalf("Error. Is something already running on %s? %s", url, err)
 }
 
 func dprintf(format string, args ...interface{}) {

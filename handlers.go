@@ -67,7 +67,7 @@ func getDbTablesHandler(req *http.Request) (int, interface{}) {
 
 // createDbRecordsHandler() handles POST requests on /db/_table/{table_name} .
 func createDbRecordsHandler(req *http.Request) (int, interface{}) {
-	params, err := fetch_params(req, "table_name")
+	params, err := fetchParams(req, "table_name")
 	if err != nil {
 		return errorRet(badStat, err)
 	}
@@ -106,7 +106,7 @@ func createDbRecordsHandler(req *http.Request) (int, interface{}) {
 
 // getDbRecordsHandler() handles GET requests on /db/_table/{table_name} .
 func getDbRecordsHandler(req *http.Request) (int, interface{}) {
-	params, err := fetch_params(req,
+	params, err := fetchParams(req,
 		"table_name", "fields", "id_field", "ids", "limit", "offset")
 	if err != nil {
 		return errorRet(badStat, err)
@@ -117,7 +117,7 @@ func getDbRecordsHandler(req *http.Request) (int, interface{}) {
 
 // getDbRecordHandler() handles GET requests on /db/_table/{table_name}/{id} .
 func getDbRecordHandler(req *http.Request) (int, interface{}) {
-	params, err := fetch_params(req,
+	params, err := fetchParams(req,
 		"table_name", "id", "fields", "id_field")
 	if err != nil {
 		return errorRet(badStat, err)
@@ -130,7 +130,7 @@ func getDbRecordHandler(req *http.Request) (int, interface{}) {
 
 // updateDbRecordsHandler() handles PATCH requests on /db/_table/{table_name} .
 func updateDbRecordsHandler(req *http.Request) (int, interface{}) {
-	params, err := fetch_params(req,
+	params, err := fetchParams(req,
 		"table_name", "id_field", "ids")
 	if err != nil {
 		return errorRet(badStat, err)
@@ -141,7 +141,7 @@ func updateDbRecordsHandler(req *http.Request) (int, interface{}) {
 
 // updateDbRecordHandler() handles PATCH requests on /db/_table/{table_name}/{id} .
 func updateDbRecordHandler(req *http.Request) (int, interface{}) {
-	params, err := fetch_params(req,
+	params, err := fetchParams(req,
 		"table_name", "id", "id_field")
 	if err != nil {
 		return errorRet(badStat, err)
@@ -151,7 +151,7 @@ func updateDbRecordHandler(req *http.Request) (int, interface{}) {
 
 // deleteDbRecordsHandler handles DELETE requests on /db/_table/{table_name} .
 func deleteDbRecordsHandler(req *http.Request) (int, interface{}) {
-	params, err := fetch_params(req,
+	params, err := fetchParams(req,
 		"table_name", "id_field", "ids")
 	if err != nil {
 		return errorRet(badStat, err)
@@ -162,7 +162,7 @@ func deleteDbRecordsHandler(req *http.Request) (int, interface{}) {
 
 // deleteDbRecordHandler handles DELETE requests on /db/_table/{table_name}/{id} .
 func deleteDbRecordHandler(req *http.Request) (int, interface{}) {
-	params, err := fetch_params(req,
+	params, err := fetchParams(req,
 		"table_name", "id", "id_field")
 	if err != nil {
 		return errorRet(badStat, err)

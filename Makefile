@@ -51,4 +51,4 @@ coverage:
 	./cover.sh
 
 lint:
-	gometalinter.v1
+	gometalinter.v1 | tee $(LOG_DIR)/lint.out

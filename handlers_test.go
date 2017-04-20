@@ -1,10 +1,14 @@
 package apidCRUD
 
-import "testing"
-import "strconv"
-import "os"
-import "github.com/30x/apid-core"
-import "github.com/30x/apid-core/factory"
+import (
+	"testing"
+	"strconv"
+	"os"
+	"github.com/30x/apid-core"
+	"github.com/30x/apid-core/factory"
+	"reflect"
+	"runtime"
+)
 
 // TestMain() is called by the test framework before running the tests.
 // we use it to initialize the log variable.
@@ -50,6 +54,10 @@ func call_validator(t *testing.T,
 			i, fname, test.arg, res, msg,
 			test.xres, test.xsucc)
 	}
+}
+
+func getFunctionName(f interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 }
 
 // ----- unit tests for validate_table_name
