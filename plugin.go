@@ -37,7 +37,7 @@ func registerHandlers(service apid.APIService) {
 func dispatch(apiws *apiWiring, pathid int, w http.ResponseWriter, req *http.Request) {
 	log.Debugf("in dispatch: method=%s path=%s", req.Method, req.URL.Path)
 	defer func() {
-		req.Body.Close()
+		_ = req.Body.Close()
 	}()
 
 	verbFunc, err := apiws.getFunc(pathid, req.Method)
@@ -55,7 +55,7 @@ func dispatch(apiws *apiWiring, pathid int, w http.ResponseWriter, req *http.Req
 	}
 
 	w.WriteHeader(code)
-	w.Write(rawdata)
+	_, _ = w.Write(rawdata)
 
 	log.Debugf("in dispatch: code=%d", code)
 }
@@ -84,7 +84,7 @@ func errorResponse(w http.ResponseWriter, err error) {
 	data, _ := convData(ErrorResponse{code,msg})
 
         w.WriteHeader(code)
-        w.Write(data)
+        _, _ = w.Write(data)
 
         log.Errorf("error handling API request: %s", msg)
 }
@@ -93,9 +93,8 @@ func conf_get(cfg apid.ConfigService, vname string, defval string) string {
 	ret := cfg.GetString(vname)
 	if ret == "" {
 		return defval
-	} else {
-		return ret
 	}
+	return ret
 }
 
 // initConfig() sets up some global configuration parameters for this plugin.

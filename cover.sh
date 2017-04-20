@@ -10,11 +10,12 @@ modules()
 
 cdir=cov
 ctxt=$cdir/coverage.txt
+/bin/rm -f "$ctxt"
 
 mkdir -p "$cdir"
 
 set -e
-echo "mode: atomic" > "$ctxt"
+# echo "mode: atomic" > "$ctxt"
 
 /bin/rm -f "$prof"
 

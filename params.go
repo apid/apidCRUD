@@ -29,6 +29,11 @@ var param_validators = map[string]param_validator {
 
 // ----- start of functions
 
+// fetch_params() gets the named parameters from the given Request.
+// the parameters may be in the path or in the query.
+// each parameter must have a validator function.
+// the call returns an error if a validator function fails on any parameter.
+// the parameter values are returned as a map of string.
 func fetch_params(req *http.Request, names ...string) (map[string]string, error) {
 	ret := map[string]string{}
 
@@ -53,6 +58,9 @@ func fetch_params(req *http.Request, names ...string) (map[string]string, error)
 	return ret, nil
 }
 
+// fetch_param() fetches the named parameter from the Request as a string.
+// the parameter must have a validator function.
+// the call fails if the validator function fails.
 func fetch_param(req *http.Request,
 		path_params map[string]string,
 		name string) (string, error) {
@@ -77,20 +85,21 @@ func fetch_param(req *http.Request,
 
 // ----- param validator functions compatible with param_validator type
 
+// validate_fields() is the validator for the "fields" parameter.
 func validate_fields(fields string) (string, error) {
 	log.Debugf("... fields = %s", fields)
 	if fields == "" {
 		return "*", nil
-	} else {
-		for _, f := range strings.Split(fields, ",") {
-			if ! isValidIdent(f) {
-				return fields, fmt.Errorf("illegal field name")
-			}
-		}
-		return fields, nil
 	}
+	for _, f := range strings.Split(fields, ",") {
+		if ! isValidIdent(f) {
+			return fields, fmt.Errorf("illegal field name")
+		}
+	}
+	return fields, nil
 }
 
+// validate_table_name() is the validator for the "table_name" parameter.
 func validate_table_name(table_name string) (string, error) {
 	log.Debugf("... table_name = %s", table_name)
 	if table_name == "" || ! isValidIdent(table_name) {
@@ -112,10 +121,11 @@ func validate_id_field(id_field string) (string, error) {
 
 func validate_id(id string) (string, error) {
 	log.Debugf("... id = %s", id)
-	if !isValidIdent(id) {
-		return id, fmt.Errorf("invalid id")
+	n, err := strconv.Atoi(id)
+	if err != nil {
+		return id, err
 	}
-	return id, nil
+	return strconv.Itoa(n), nil
 }
 
 func validate_ids(ids string) (string, error) {
@@ -132,7 +142,8 @@ func validate_ids(ids string) (string, error) {
 			return ids, err
 		}
 	}
-	return strings.Join(idlist, ","), nil
+
+	return ids, nil
 }
 
 func validate_limit(s string) (string, error) {

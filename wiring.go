@@ -50,7 +50,8 @@ var descTable = []apiDesc{
 	{ "/db/_schema", http.MethodPost, createDbTablesHandler },
 	{ "/db/_schema", http.MethodPut, replaceDbTablesHandler },
 	{ "/db/_schema", http.MethodPatch, updateDbTablesHandler, },
-	{ "/db/_schema/{table_name}", http.MethodGet, createDbTableHandler },
+	{ "/db/_schema/{table_name}", http.MethodGet, describeDbTableHandler },
+	{ "/db/_schema/{table_name}", http.MethodPost, createDbTableHandler },
 	{ "/db/_schema/{table_name}", http.MethodDelete, deleteDbTableHandler },
 	{ "/db/_schema/{table_name}/{field_name}", http.MethodGet, describeDbFieldHandler },
 }

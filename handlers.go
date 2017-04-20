@@ -228,7 +228,7 @@ func initDB() {
 	db = dbType{handle: localdb}
 }
 
-func mk_vmap(keys []string, values []interface{}) (*map[string]interface{}, error) {
+func mkVmap(keys []string, values []interface{}) (*map[string]interface{}, error) {
 	N := len(keys)
 	ret := make(map[string]interface{}, N)
 	for i := 0; i < N; i++ {
@@ -243,7 +243,7 @@ func mk_vmap(keys []string, values []interface{}) (*map[string]interface{}, erro
 	return &ret, nil
 }
 
-func mk_row(N int) []interface{} {
+func mkRow(N int) []interface{} {
 	ret := make([]interface{}, N)
 	for i := 0; i < N; i++ {
 		ret[i] = new(sql.RawBytes)
@@ -251,7 +251,7 @@ func mk_row(N int) []interface{} {
 	return ret
 }
 
-func print_row(rownum int, colnames []string, vals []interface{}) {
+func printRow(rownum int, colnames []string, vals []interface{}) {
 	log.Debugf("row #%d: ", rownum)
 	sep := ""
 	N := len(colnames)
@@ -282,7 +282,7 @@ func myselect(db dbType, qstring string, ivals []interface{}) ([]*map[string]int
 
 	// ensure rows gets closed at end
 	defer func() {
-		rows.Close()
+		_ = rows.Close()
 	}()
 
 	cols, err := rows.Columns() // Remember to check err afterwards
@@ -294,17 +294,17 @@ func myselect(db dbType, qstring string, ivals []interface{}) ([]*map[string]int
 	for rows.Next() {
 		rownum ++
 
-		vals := mk_row(len(cols))
+		vals := mkRow(len(cols))
 		err := rows.Scan(vals...)
 		if err != nil {
 			return ret, fmt.Errorf("scan error at rownum %d", rownum)
 		}
 
 		if DEBUG {
-			print_row(rownum, cols, vals)
+			printRow(rownum, cols, vals)
 		}
 
-		m, err := mk_vmap(cols, vals)
+		m, err := mkVmap(cols, vals)
 		if err != nil {
 			return ret, err
 		}
@@ -319,7 +319,7 @@ func myselect(db dbType, qstring string, ivals []interface{}) ([]*map[string]int
 }
 
 // convert a list of strings to a list of interface{}.
-func conv_interface(vals []string) []interface{} {
+func strToInterface(vals []string) []interface{} {
 	ret := make([]interface{}, len(vals))
 	for i, v := range vals {
 		ret[i] = interface{}(v)
@@ -333,7 +333,7 @@ func atoIdType(idstr string) int64 {
 }
 
 // convert a list of strings to a list database id's disguised as interface{}.
-func idType_conv_interface(vals []string) []interface{} {
+func idTypeToInterface(vals []string) []interface{} {
 	ret := make([]interface{}, len(vals))
 	for i, v := range vals {
 		ret[i] = interface{}(atoIdType(v))
@@ -369,7 +369,7 @@ func write_rec(db dbType, tabname string, keys []string, values []string) (idTyp
 		return NORET, err
 	}
 
-	ivalues := conv_interface(values)
+	ivalues := strToInterface(values)
 
 	log.Debugf("qstring = %s\n", qstring)
 	result, err := stmt.Exec(ivalues...)
@@ -481,7 +481,7 @@ func idclause_setup(params map[string]string) (string, []interface{}, error) {
 	ids, hasIds := params["ids"]
 	if hasIds && ids != "" {
 		idstrings := strings.Split(ids, ",")
-		idlist := idType_conv_interface(idstrings)
+		idlist := idTypeToInterface(idstrings)
 		placestr := nstring("?", len(idlist))
 		idclause := fmt.Sprintf("WHERE %s in (%s)", id_field, placestr)
 		return idclause, idlist, nil
@@ -526,7 +526,7 @@ func update_rec(db dbType,
 	if err != nil {
 		return NORET, err
 	}
-	ivals := conv_interface(dbrec.Values)
+	ivals := strToInterface(dbrec.Values)
 	result, err := stmt.Exec(ivals...)
 	if err != nil {
 		return NORET, err

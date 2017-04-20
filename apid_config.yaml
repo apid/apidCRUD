@@ -5,5 +5,5 @@ apidCRUD_proxy_server_base: http://localhost:9001/edgex
 apidCRUD_snapshot_server_base: http://localhost:9001/edgex
 apidCRUD_change_server_base: http://localhost:9001/edgex
 apidanalytics_uap_server_base: http://local.com:9001/edgex
-log_level: debug    # valid values: Debug, Info, Warning, Error, Panic, Fatal
+log_level: Warning    # valid values: Debug, Info, Warning, Error, Panic, Fatal
 apidCRUD_base_path: /apid

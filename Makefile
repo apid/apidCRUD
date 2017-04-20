@@ -5,17 +5,17 @@ default: install
 
 MYAPP := apidCRUD
 VENDOR_DIR := github.com/30x/$(MYAPP)/vendor
-COVDIR := cov
-LOGDIR := logs
+COV_DIR := cov
+LOG_DIR := logs
 SQLITE_PKG := github.com/mattn/go-sqlite3
 
 clean:
 	go clean
 	/bin/rm -rf ./vendor
-	/bin/rm -rf $(LOGDIR)
-	mkdir -p $(LOGDIR)
-	/bin/rm -rf $(COVDIR)
-	mkdir -p $(COVDIR)
+	/bin/rm -rf $(LOG_DIR)
+	mkdir -p $(LOG_DIR)
+	/bin/rm -rf $(COV_DIR)
+	mkdir -p $(COV_DIR)
 
 get:
 	[ -d ./vendor ] \
@@ -25,7 +25,7 @@ build test:
 	time go $@
 
 setup:
-	mkdir -p $(LOGDIR) $(COVDIR)
+	mkdir -p $(LOG_DIR) $(COV_DIR)
 
 # install this separately to speed up compilations.  thanks to Scott Ganyo.
 preinstall: get
@@ -39,7 +39,7 @@ run: install
 	./runner.sh
 
 killer:
-	pkill -f apidCRUD
+	pkill -f $(MYAPP)
 
 unit-test:
 	time go test
@@ -51,4 +51,4 @@ coverage:
 	./cover.sh
 
 lint:
-	golint
+	gometalinter.v1

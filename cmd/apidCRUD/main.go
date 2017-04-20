@@ -1,3 +1,5 @@
+// package main in apidCRUD is a test version of apid
+// built with only the apidCRUD plugin.
 package main
 
 import (
@@ -7,32 +9,34 @@ import (
 	_ "github.com/30x/apidCRUD"
 )
 
-func main() {
-	fmt.Printf("in main...\n")
+const DEBUG = false
 
-	fmt.Printf("before Initialize...\n")
+func main() {
+	dprintf("in main...\n")
 
 	// initialize apid using default services
+	dprintf("before Initialize...\n")
 	apid.Initialize(factory.DefaultServicesFactory())
 
-	fmt.Printf("before Log...\n")
+	dprintf("before Log...\n")
 	log := apid.Log()
 
-	fmt.Printf("before InitializePlugins...\n")
-	// this will call all initialization functions on all registered plugins
+	// call all initialization functions on all registered plugins
+	dprintf("before InitializePlugins...\n")
 	apid.InitializePlugins()
-
-	fmt.Printf("before Config...\n")
-	// print the base url to the console
-	config := apid.Config()
-	basePath := ""
-	port := config.GetString("api_port")
-	log.Print()
-	log.Printf("apidCRUD API is at: http://localhost:%s%s", port, basePath)
-	log.Print()
 
 	// start client API listener
 	api := apid.API()
-	err := api.Listen() // doesn't return if no error
+	err := api.Listen()
+
+	// if we got here, an error occurred
+	config := apid.Config()
+	port := config.GetString("api_port")
 	log.Fatalf("Error. Is something already running on port %d? %s", port, err)
+}
+
+func dprintf(format string, args ...interface{}) {
+	if DEBUG {
+		fmt.Printf(format, args...)
+	}
 }

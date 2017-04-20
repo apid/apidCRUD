@@ -1,6 +1,7 @@
 package apidCRUD
 
 import "testing"
+import "strconv"
 import "os"
 import "github.com/30x/apid-core"
 import "github.com/30x/apid-core/factory"
@@ -16,15 +17,137 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// ---- unit tests for validate_xxx()
+// ---- generic support for testing validator functions
 
-type validate_offset_TC struct {
-	arg string		// input string
-	xres string		// expected result
-	xsucc bool		// expected success
+type validatorFunc func(string) (string, error)
+
+type validatorTC struct {
+	arg string
+	xres string
+	xsucc bool
 }
 
-var validate_offset_Tab = []validate_offset_TC {
+func run_validator(t *testing.T, vf validatorFunc, tab []validatorTC) {
+	fname := getFunctionName(vf)
+	for i, test := range tab {
+		call_validator(t, fname, vf, i, test)
+	}
+}
+
+func call_validator(t *testing.T,
+		fname string,
+		vf validatorFunc,
+		i int,
+		test validatorTC) {
+	res, err := vf(test.arg)
+	msg := "true"
+	if err != nil {
+		msg = err.Error()
+	}
+	if !((test.xsucc && err == nil && test.xres == res) ||
+	   (!test.xsucc && err != nil)) {
+		t.Errorf(`#%d: %s("%s")=("%s","%s"); expected ("%s",%t)`,
+			i, fname, test.arg, res, msg,
+			test.xres, test.xsucc)
+	}
+}
+
+// ----- unit tests for validate_table_name
+
+var validate_id_field_Tab = []validatorTC {
+	{ "", "id", true },
+	{ "x", "x", true },
+	{ "1", "1", true },
+}
+
+func Test_validate_id_field(t *testing.T) {
+	run_validator(t, validate_id_field, validate_id_field_Tab)
+}
+
+var validate_fields_Tab = []validatorTC {
+	{ "", "*", true },
+	{ "f1", "f1", true },
+	{ "f1,f2", "f1,f2", true },
+	{ "f1,", "f1,", false },
+	{ ",f1,", ",f1", false },
+	{ " f1,", " f1", false },
+	{ "f1 ", "f1 ", false },
+}
+
+func Test_validate_fields(t *testing.T) {
+	run_validator(t, validate_fields, validate_fields_Tab)
+}
+
+var validate_table_name_Tab = []validatorTC {
+	{ "", "", false },
+	{ "a", "a", true },
+	{ "1", "1", true },
+	{ "a-2", "a-2", false },
+	{ ".", ".", false },
+	{ "xyz", "xyz", true },
+}
+
+func Test_validate_table_name(t *testing.T) {
+	run_validator(t, validate_table_name, validate_table_name_Tab)
+}
+
+// ----- unit tests for validate_id
+
+var validate_id_Tab = []validatorTC {
+	{ "", "", false },
+	{ " ", " ", false },
+	{ "0", "0", true },
+	{ "-1", "-1", true },
+	{ "0x21", "", false },
+	{ "1 ", "", false },
+	{ " 1", "", false },
+	{ "2,1", "", false },
+}
+
+func Test_validate_id(t *testing.T) {
+	run_validator(t, validate_id, validate_id_Tab)
+}
+
+// ----- unit tests for validate_limit
+
+var strMaxRecs = strconv.Itoa(maxRecs)
+
+var validate_limit_Tab = []validatorTC {
+	{ "", strMaxRecs, true },
+	{ " ", "", false },
+	{ " 1", "", false },
+	{ "1 ", "", false },
+	{ "1", "1", true },
+	{ "-1", strMaxRecs, true },
+	{ "100000", strMaxRecs, true },
+}
+
+func Test_validate_limit(t *testing.T) {
+	run_validator(t, validate_limit, validate_limit_Tab)
+}
+
+// ----- unit tests for validate_ids()
+
+var validate_ids_Tab = []validatorTC {
+	{ "", "", true },
+	{ " ", " ", false },
+	{ "0", "0", true },
+	{ "-1", "-1", true },
+	{ "0x21", "", false },
+	{ "0,0,1,1,1", "0,0,1,1,1", true },
+	{ "1 ", "", false },
+	{ " 1", "", false },
+	{ "1, -1", "", false },
+	{ "2,1,", "", false },
+}
+
+func Test_validate_ids(t *testing.T) {
+	run_validator(t, validate_ids, validate_ids_Tab)
+}
+
+// ----- unit tests for validate_offset()
+
+var validate_offset_Tab = []validatorTC {
 	{ "", "0", true },
 	{ "0", "0", true },
 	{ "12345678", "12345678", true },
@@ -36,22 +159,8 @@ var validate_offset_Tab = []validate_offset_TC {
 }
 
 func Test_validate_offset(t *testing.T) {
-	fn := "validate_offset"
-	for i, test := range validate_offset_Tab {
-		ret, err := validate_offset(test.arg)
-		msg := "true"
-		if err != nil {
-			msg = err.Error()
-		}
-		if !((test.xsucc && err == nil && test.xres == ret) ||
-		   (!test.xsucc && err != nil)) {
-			t.Errorf(`#%d: %s("%s")=("%s","%s"); expected ("%s",%t)`,
-				i, fn, test.arg, ret, msg,
-				test.xres, test.xsucc)
-		}
-	}
+	run_validator(t, validate_offset, validate_offset_Tab)
 }
-
 
 // ---- unit tests for notIdentChar()
 

@@ -1,4 +1,6 @@
 #! /bin/bash
+#	deltest.sh
+# functional test for the DELETE record API.
 
 ID=${1:-25}
 TABLE=bundles
