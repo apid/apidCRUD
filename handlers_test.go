@@ -102,14 +102,22 @@ func Test_validate_table_name(t *testing.T) {
 // ----- unit tests for validate_id
 
 var validate_id_Tab = []validatorTC {
-	{ "", "", false },
-	{ " ", " ", false },
-	{ "0", "0", true },
-	{ "-1", "-1", true },
-	{ "0x21", "", false },
-	{ "1 ", "", false },
-	{ " 1", "", false },
-	{ "2,1", "", false },
+	{ "", "", false },			// empty
+	{ " ", " ", false },			// blank
+	{ "0", "0", true },			// simple
+	{ "-1", "-1", true },			// negative
+	{ "0x21", "", false },			// go-ism
+	{ "00021", "21", true },		// go-ism
+	{ "1 ", "", false },			// trailing space
+	{ " 1", "", false },			// leading space
+	{ "2,1", "", false },			// multiple
+	{ "1_000_000", "1_000_000", false },	// go-ism
+	{ "1000", "1000", true },		// 1E3
+	{ "1000000", "1000000", true },		// 1E6
+	{ "1000000000", "1000000000", true },	// 1E9
+	{ "1000000000000", "1000000000000", true },  // 1E12
+	{ "1000000000000000", "1000000000000000", true },  // 1E15
+	{ "1000000000000000000000", "1000000000000000000000", false },	// overflow
 }
 
 func Test_validate_id(t *testing.T) {
@@ -128,6 +136,9 @@ var validate_limit_Tab = []validatorTC {
 	{ "1", "1", true },
 	{ "-1", strMaxRecs, true },
 	{ "100000", strMaxRecs, true },
+	{ "1000000", strMaxRecs, true },
+	{ "1000000000", strMaxRecs, true },
+	{ "1000000000000", strMaxRecs, true },
 }
 
 func Test_validate_limit(t *testing.T) {
@@ -137,8 +148,10 @@ func Test_validate_limit(t *testing.T) {
 // ----- unit tests for validate_ids()
 
 var validate_ids_Tab = []validatorTC {
-	{ "", "", true },
-	{ " ", " ", false },
+	{ "", "", true },			// empty list
+	{ " ", " ", false },			// blanks
+	{ "0x21", "", false },			// go-ism
+	{ "00021", "21", true },		// go-ism
 	{ "0", "0", true },
 	{ "-1", "-1", true },
 	{ "0x21", "", false },
@@ -147,6 +160,11 @@ var validate_ids_Tab = []validatorTC {
 	{ " 1", "", false },
 	{ "1, -1", "", false },
 	{ "2,1,", "", false },
+	{ "1_000_000", "1_000_000", false },
+	{ "1000", "1000", true },
+	{ "1000000", "1000000", true },
+	{ "1000000000", "1000000000", true },
+	{ "1000000000000", "1000000000000", true },
 }
 
 func Test_validate_ids(t *testing.T) {
@@ -164,6 +182,10 @@ var validate_offset_Tab = []validatorTC {
 	{ "12345678.", "", false },
 	{ " 12345678", "", false },
 	{ "12345678 ", "", false },
+	{ "1000", "1000", true },
+	{ "1000000", "1000000", true },
+	{ "1000000000", "1000000000", true },
+	{ "1000000000000", "1000000000000", true },
 }
 
 func Test_validate_offset(t *testing.T) {

@@ -12,17 +12,17 @@ import (
 const DEBUG = false
 
 func main() {
-	dprintf("in main...\n")
+	dprintf("in main...")
 
 	// initialize apid using default services
-	dprintf("before Initialize...\n")
+	dprintf("before Initialize...")
 	apid.Initialize(factory.DefaultServicesFactory())
 
-	dprintf("before Log...\n")
+	dprintf("before Log...")
 	log := apid.Log()
 
 	// call all initialization functions on all registered plugins
-	dprintf("before InitializePlugins...\n")
+	dprintf("before InitializePlugins...")
 	apid.InitializePlugins()
 
 	// start client API listener
@@ -31,12 +31,13 @@ func main() {
 
 	// if we got here, an error occurred
 	config := apid.Config()
-	url := config.GetString("api_listen")
-	log.Fatalf("Error. Is something already running on %s? %s", url, err)
+	api_listen := config.GetString("api_listen")
+	log.Fatalf("Error. Is something already running on %s? %s", api_listen, err)
 }
 
 func dprintf(format string, args ...interface{}) {
 	if DEBUG {
 		fmt.Printf(format, args...)
+		fmt.Print()
 	}
 }

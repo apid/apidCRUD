@@ -134,46 +134,59 @@ func validate_id_field(id_field string) (string, error) {
 	return id_field, nil
 }
 
+// validate_id() validates the given string as an SQL id value.
+// it must be a valid nonempty numeric string.
 func validate_id(id string) (string, error) {
 	log.Debugf("... id = %s", id)
-	n, err := strconv.Atoi(id)
+	n, err := strconv.ParseInt(id, idTypeRadix, idTypeBits)
 	if err != nil {
 		return id, err
 	}
-	return strconv.Itoa(n), nil
+	return strconv.FormatInt(n, idTypeRadix), nil
 }
 
+// validate_ids() validates the given string as a comma-separated list
+// of SQL id values.  each item must be a valid numeric string.
+// the empty string is valid and means the empty list.
 func validate_ids(ids string) (string, error) {
 	log.Debugf("... ids = %s", ids)
 	if ids == "" {
 		// an empty list is valid.
 		return ids, nil
 	}
+
 	idlist := strings.Split(ids, ",")
-	for _, id := range idlist {
-		// verify that each string is a valid number
-		_, err := strconv.Atoi(id)
+	nids := len(idlist)
+	for k := 0; k < nids; k++ {
+		// verify that each item is a valid numeric string
+		n, err := strconv.ParseInt(idlist[k], idTypeRadix, idTypeBits)
 		if err != nil {
 			return ids, err
 		}
+		// store back in normalized form
+		idlist[k] = strconv.FormatInt(n, idTypeRadix)
 	}
 
-	return ids, nil
+	return strings.Join(idlist, ","), nil
 }
 
+// validate_limit() checks the given string for validity as an SQL limit.
+// an empty string is valid and means the default 0.
+// a negative number or a number greater than maxRecs, is valid
+// and means maxRecs.
 func validate_limit(s string) (string, error) {
 	log.Debugf("... limit = %s", s)
 	if s == "" {
 		s = "0"
 	}
-	n, err := strconv.Atoi(s)
+	n, err := strconv.ParseInt(s, idTypeRadix, idTypeBits)
 	if err != nil {
 		return s, err
 	}
 	if n <= 0 || n > maxRecs {
 		n = maxRecs
 	}
-	return strconv.Itoa(n), nil
+	return strconv.FormatInt(n, idTypeRadix), nil
 }
 
 // validate_offset() checks the given string for validity as an SQL offset.
@@ -186,11 +199,11 @@ func validate_offset(s string) (string, error) {
 	if s == "" {
 		s = "0"
 	}
-	n, err := strconv.Atoi(s)
+	n, err := strconv.ParseInt(s, idTypeRadix, idTypeBits)
 	if err != nil {
 		return s, err
 	}
-	return strconv.Itoa(n), nil
+	return strconv.FormatInt(n, idTypeRadix), nil
 }
 
 // ----- misc validation support functions

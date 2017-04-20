@@ -20,6 +20,9 @@ type idType int64
 // idTypeBits is the number of bits in idType.
 const idTypeBits = 64
 
+// idTypeRadix is the base to use when converting an id string to int.
+const idTypeRadix = 10
+
 // badStat is a convenience constant, the http status for a bad request.
 const badStat = http.StatusBadRequest
 
@@ -123,7 +126,6 @@ func getDbRecordHandler(req *http.Request) (int, interface{}) {
 		return errorRet(badStat, err)
 	}
 	params["limit"] = strconv.Itoa(1)
-	params["offset"] = strconv.Itoa(0)
 
 	return get_common(params)
 }
@@ -328,7 +330,7 @@ func strToInterface(vals []string) []interface{} {
 }
 
 func atoIdType(idstr string) int64 {
-	id, _ := strconv.ParseInt(idstr, 10, idTypeBits)
+	id, _ := strconv.ParseInt(idstr, idTypeRadix, idTypeBits)
 	return id
 }
 
@@ -540,6 +542,9 @@ func update_rec(db dbType,
 
 func get_common(params map[string]string) (int, interface{}) {
 	idclause, idlist, err := idclause_setup(params)
+	if err != nil {
+		return errorRet(badStat, err)
+	}
 
 	qstring := fmt.Sprintf("SELECT %s FROM %s %s LIMIT %s OFFSET %s;",
 		params["fields"],
