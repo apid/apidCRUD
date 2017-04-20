@@ -29,18 +29,18 @@ func initPlugin(services apid.Services) (apid.PluginData, error) {
 }
 
 func registerHandlers(service apid.APIService) {
-	for path, id := range apiws.pathsMap {
-		addHandler(service, apiws, path, id)
+	for path, methods := range apiws.pathsMap {
+		addHandler(service, path, methods)
 	}
 }
 
-func dispatch(apiws *apiWiring, pathid int, w http.ResponseWriter, req *http.Request) {
+func dispatch(methods verbMap, w http.ResponseWriter, req *http.Request) {
 	log.Debugf("in dispatch: method=%s path=%s", req.Method, req.URL.Path)
 	defer func() {
 		_ = req.Body.Close()
 	}()
 
-	verbFunc, err := apiws.getFunc(pathid, req.Method)
+	verbFunc, err := getFunc(methods, req.Method)
 	if err != nil {
 		errorResponse(w, err)
 		return
@@ -71,10 +71,10 @@ func convData(data interface{}) ([]byte, error) {
 	}
 }
 
-func addHandler(service apid.APIService, apiws *apiWiring, path string, pathid int) {
+func addHandler(service apid.APIService, path string, methods verbMap) {
 	service.HandleFunc(path,
 		func(w http.ResponseWriter, r *http.Request) {
-			dispatch(apiws, pathid, w, r)
+			dispatch(methods, w, r)
 		})
 }
 

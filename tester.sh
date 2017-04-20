@@ -18,7 +18,7 @@ fail()
 # ----- start of mainline
 # start clean
 echo "# creating empty database"
-mkdb || exit 1
+mkdb.sh || exit 1
 echo OK
 
 echo "# checking tables"

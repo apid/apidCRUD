@@ -21,17 +21,12 @@ type apiDesc struct {
 }
 
 type apiWiring struct {
-	pathsMap map[string]int
-	verbMaps []verbMap
+	pathsMap map[string]verbMap
 }
 
 func newApiWiring(n int) (*apiWiring) {
-	vmaps := make([]verbMap, n)
-	for i := 0; i < n; i++ {
-		vmaps[i] = verbMap{"", map[string]apiHandler{}}
-	}
-	pmap := map[string]int{}
-	return &apiWiring{pathsMap: pmap, verbMaps: vmaps}
+	pm := make(map[string]verbMap)
+	return &apiWiring{pm}
 }
 
 var basePath = "/apid"
@@ -49,7 +44,7 @@ var descTable = []apiDesc{
 	{ "/db/_schema", http.MethodGet, getDbSchemasHandler },
 	{ "/db/_schema", http.MethodPost, createDbTablesHandler },
 	{ "/db/_schema", http.MethodPut, replaceDbTablesHandler },
-	{ "/db/_schema", http.MethodPatch, updateDbTablesHandler, },
+	{ "/db/_schema", http.MethodPatch, updateDbTablesHandler },
 	{ "/db/_schema/{table_name}", http.MethodGet, describeDbTableHandler },
 	{ "/db/_schema/{table_name}", http.MethodPost, createDbTableHandler },
 	{ "/db/_schema/{table_name}", http.MethodDelete, deleteDbTableHandler },
@@ -65,27 +60,19 @@ func initWiring() (*apiWiring) {
 }
 
 func (apiws *apiWiring) addWiring(path string, verb string, handler apiHandler) {
-	pathid, ok := apiws.pathsMap[path]
+	vmap, ok := apiws.pathsMap[path]
 	if !ok {
-		pathid = len(apiws.pathsMap)  // use next id
-		// fmt.Printf("(%s next pathid: %d)\n", path, pathid)
-		apiws.pathsMap[path] = pathid
+		vmap = verbMap{path: path, methods: map[string]apiHandler{}}
+		apiws.pathsMap[path] = vmap
 	}
-	// fmt.Printf("%s %s -> %d\n", path, verb, pathid)
-	apiws.verbMaps[pathid].path = path
-	apiws.verbMaps[pathid].methods[verb] = handler
+	vmap.methods[verb] = handler
 }
 
-func (apiws *apiWiring) getFunc(pathid int, verb string) (apiHandler, error) {
-	if !(0 <= pathid && pathid < len(apiws.verbMaps)) {
-		return nil, fmt.Errorf("internal wiring error for pathid=%d", pathid)
-	}
-	methods := apiws.verbMaps[pathid].methods
-	verbFunc, ok := methods[verb]
+func getFunc(vmap verbMap, verb string) (apiHandler, error) {
+	verbFunc, ok := vmap.methods[verb]
 	if !ok {
-		path := apiws.verbMaps[pathid].path
 		return nil, fmt.Errorf("internal wiring error for %s on %s",
-			verb, path)
+			verb, vmap.path)
 	}
 	return verbFunc, nil
 }
