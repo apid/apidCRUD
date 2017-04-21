@@ -222,8 +222,15 @@ func initDB() {
 	db = dbType{handle: localdb}
 }
 
+// mkVmap() takes a list of keys (string) and a list of values.
+// the values are *sql.RawBytes as interface{}.
+// and returns a map from key to corresponding value.
+// these map values are *string as interface{}.
 func mkVmap(keys []string, values []interface{}) (*map[string]interface{}, error) {
 	N := len(keys)
+	if N != len(values) {
+		return nil, fmt.Errorf("nkeys different from nvalues")
+	}
 	ret := make(map[string]interface{}, N)
 	for i := 0; i < N; i++ {
 		// convert from sql.RawBytes to string
@@ -237,7 +244,7 @@ func mkVmap(keys []string, values []interface{}) (*map[string]interface{}, error
 	return &ret, nil
 }
 
-func mkRow(N int) []interface{} {
+func mkSqlRow(N int) []interface{} {
 	ret := make([]interface{}, N)
 	for i := 0; i < N; i++ {
 		ret[i] = new(sql.RawBytes)
@@ -288,7 +295,7 @@ func myselect(db dbType, qstring string, ivals []interface{}) ([]*map[string]int
 	for rows.Next() {
 		rownum ++
 
-		vals := mkRow(len(cols))
+		vals := mkSqlRow(len(cols))
 		err := rows.Scan(vals...)
 		if err != nil {
 			return ret, fmt.Errorf("scan error at rownum %d", rownum)

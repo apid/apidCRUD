@@ -1,5 +1,5 @@
 .PHONY: default clean build install preinstall test run
-.PHONY: killer lint test unit-test coverage setup
+.PHONY: killer lint test unit-test coverage covered setup
 
 default: install
 
@@ -51,6 +51,9 @@ func-test:
 
 coverage:
 	./cover.sh | tee $(LOG_DIR)/$@.out
+
+covered:
+	tested_funcs.sh | sort | tee $(LOG_DIR)/$@.out
 
 lint:
 	gometalinter.v1 --sort=path -e "don't use underscores" \

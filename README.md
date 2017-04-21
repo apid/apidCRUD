@@ -39,11 +39,14 @@ for now, this runs apidCRUD in background, listening on localhost:9000.
  
 ```
 make unit-test
-make func-test
 make coverage
+
+make run
+make func-test
 ```
 
 when changes are pushed to github.com,
-`make install` and `make unit-test` are run automatically by [travis-CI](https://travis-ci.org/getting_started).
+`make install` and `make unit-test` are run automatically by
+[travis-CI](https://travis-ci.org/getting_started).
 see [.travis.yml](.travis.yml)
 

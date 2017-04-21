@@ -6,11 +6,12 @@ import (
 	"strings"
 	"strconv"
 	"os"
-	"github.com/30x/apid-core"
-	"github.com/30x/apid-core/factory"
 	"reflect"
 	"runtime"
 	"net/http"
+	"database/sql"
+	"github.com/30x/apid-core"
+	"github.com/30x/apid-core/factory"
 )
 
 // TestMain() is called by the test framework before running the tests.
@@ -404,3 +405,73 @@ func Test_fetchParams(t *testing.T) {
 		call_fetchParams(t, i, test.arg, test.xsucc)
 	}
 }
+
+// ----- unit tests for mkVmap()
+
+func rawBytesHelper(strlist []string) []interface{} {
+	ret := make([]interface{}, len(strlist))
+	for i, s := range strlist {
+		ret[i] = strToRawBytes(s)
+	}
+	return ret
+}
+
+func strToRawBytes(data string) interface{} {
+	rb := sql.RawBytes([]byte(data))
+	return &rb
+}
+
+func interfaceToStr(data interface{}) (string, error) {
+	sp, ok := data.(*string)
+	if !ok {
+		return "", fmt.Errorf("string conversion error")
+	}
+	return *sp, nil
+}
+
+func mkVmapHelper(t *testing.T,
+		i int,
+		keys []string,
+		values []string) {
+	fn := "mkVmap"
+	N := len(keys)
+	res, err := mkVmap(keys, rawBytesHelper(values))
+	if err != nil {
+		t.Errorf("#%d: %s(...) failed", i, fn)
+		return
+	}
+	if N != len(*res) {
+		t.Errorf("#%d: %s(...) map length mismatch nkeys", i, fn)
+		return
+	}
+	for j, k := range keys {
+		v, err := interfaceToStr((*res)[k])
+		if err != nil {
+			t.Errorf("#%d: %s(...) rawBytesToStr: %s", j, fn, err)
+			return
+		}
+		if values[j] != v {
+			t.Errorf("#%d: %s(...) map value mismatch", j, fn)
+			return
+		}
+	}
+}
+
+func Test_mkVmap(t *testing.T) {
+	N := 4
+
+	// create the keys and values arrays, with canned values.
+	keys := make([]string, N)
+	values := make([]string, N)
+	for i := 0; i < N; i++ {
+		keys[i] = fmt.Sprintf("K%d", i)
+		values[i] = fmt.Sprintf("V%d", i)
+	}
+
+	// test against initial slices of keys and values arrays.
+	for i := 0; i < N+1; i++ {
+		mkVmapHelper(t, i, keys[0:i], values[0:i])
+	}
+}
+
+// func mkVmap(keys []string, values []interface{}) (*map[string]interface{}, error) {
