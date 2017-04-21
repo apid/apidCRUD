@@ -80,11 +80,11 @@ func createDbRecordsHandler(req *http.Request) (int, interface{}) {
 		log.Debugf("rec = (%T) %s", rec, rec)
 		keys := rec.Keys
 		values := rec.Values
-		err := validate_sql_keys(keys)
+		err := validateSQLKeys(keys)
 		if err != nil {
 			return badStat, err
 		}
-		err = validate_sql_values(values)
+		err = validateSQLValues(values)
 		if err != nil {
 			return badStat, err
 		}
@@ -151,7 +151,7 @@ func deleteDbRecordsHandler(req *http.Request) (int, interface{}) {
 		return errorRet(badStat, err)
 	}
 
-	return del_common(params)
+	return delCommon(params)
 }
 
 // deleteDbRecordHandler handles DELETE requests on /db/_table/{table_name}/{id} .
@@ -161,7 +161,7 @@ func deleteDbRecordHandler(req *http.Request) (int, interface{}) {
 	if err != nil {
 		return errorRet(badStat, err)
 	}
-	return del_common(params)
+	return delCommon(params)
 }
 
 // getDbSchemasHandler handles GET requests on /db/_schema .
@@ -245,9 +245,9 @@ func mkVmap(keys []string, values []interface{}) (*map[string]interface{}, error
 	return &ret, nil
 }
 
-// mkSqlRow() returns a list of interface{} of the given length,
+// mkSQLRow() returns a list of interface{} of the given length,
 // each element is actually a pointer to sql.RawBytes .
-func mkSqlRow(N int) []interface{} {
+func mkSQLRow(N int) []interface{} {
 	ret := make([]interface{}, N)
 	for i := 0; i < N; i++ {
 		ret[i] = new(sql.RawBytes)
@@ -280,7 +280,7 @@ func myselect(db dbType, qstring string, ivals []interface{}) ([]*map[string]int
 	for rows.Next() {
 		rownum ++
 
-		vals := mkSqlRow(len(cols))
+		vals := mkSQLRow(len(cols))
 		err := rows.Scan(vals...)
 		if err != nil {
 			return ret, fmt.Errorf("scan error at rownum %d", rownum)
@@ -375,8 +375,8 @@ func write_rec(db dbType, tabname string, keys []string, values []string) (idTyp
 	return idType(lastid), nil
 }
 
-func del_common(params map[string]string) (int, interface{}) {
-	nc, err := del_recs(db, params)
+func delCommon(params map[string]string) (int, interface{}) {
+	nc, err := delRecs(db, params)
 	if err != nil {
 		return errorRet(badStat, err)
 	}
@@ -384,7 +384,7 @@ func del_common(params map[string]string) (int, interface{}) {
 	return http.StatusOK, DeleteResponse{nc}
 }
 
-func del_recs(db dbType, params map[string]string) (int, error) {
+func delRecs(db dbType, params map[string]string) (int, error) {
 	NORET := -1
 	idclause, idlist, err := idclause_setup(params)
 	if err != nil {
@@ -424,11 +424,16 @@ func del_recs(db dbType, params map[string]string) (int, error) {
 	return int(ra), nil
 }
 
-func validate_sql_keys(keys []string) error {
-	return nil    // no error for now
+func validateSQLKeys(keys []string) error {
+	for _, k := range keys {
+		if !isValidIdent(k) {
+			return fmt.Errorf("invalid key %s", k)
+		}
+	}
+	return nil
 }
 
-func validate_sql_values(values []string) error {
+func validateSQLValues(values []string) error {
 	return nil    // no error for now
 }
 
@@ -474,7 +479,7 @@ func idclause_setup(params map[string]string) (string, []interface{}, error) {
 	return "", []interface{}{}, nil
 }
 
-func mk_idclause(params map[string]string) string {
+func mkIdClause(params map[string]string) string {
 	id_field := params["id_field"]
 	id, ok := params["id"]
 	if ok {
@@ -502,7 +507,7 @@ func update_rec(db dbType,
 			params["table_name"],
 			keystr,
 			placestr,
-			mk_idclause(params))
+			mkIdClause(params))
 
 	log.Debugf("qstring = %s", qstring)
 	stmt, err := db.handle.Prepare(qstring)

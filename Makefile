@@ -6,6 +6,7 @@ default: install
 MYAPP := apidCRUD
 VENDOR_DIR := github.com/30x/$(MYAPP)/vendor
 COV_DIR := cov
+COV_FILE := $(COV_DIR)/covdata.out
 LOG_DIR := logs
 SQLITE_PKG := github.com/mattn/go-sqlite3
 
@@ -44,7 +45,10 @@ killer:
 test: unit-test
 
 unit-test:
-	time go test | tee $(LOG_DIR)/$@.out
+	go test -coverprofile=$(COV_FILE) \
+	| tee $(LOG_DIR)/$@.out
+	go tool cover -func=$(COV_FILE) \
+	> $(LOG_DIR)/cover-func.out
 
 func-test:
 	./tester.sh | tee $(LOG_DIR)/$@.out

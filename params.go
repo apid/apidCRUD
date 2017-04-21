@@ -228,5 +228,10 @@ func notIdentChar(r rune) bool {
 // field identifier in SQL.  s must be nonempty, and must contain only
 // chars that from the valid set (notIdentChar).
 func isValidIdent(s string) bool {
-	return len(s) > 0 && strings.IndexFunc(s, notIdentChar) < 0
+	if len(s) == 0 {
+		return false
+	}
+	r := rune(s[0])
+	return (r == '_' || unicode.In(r, unicode.Letter)) &&
+		strings.IndexFunc(s, notIdentChar) < 0
 }

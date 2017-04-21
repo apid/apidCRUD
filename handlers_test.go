@@ -69,7 +69,9 @@ func getFunctionName(f interface{}) string {
 var validate_id_field_Tab = []validatorTC {
 	{ "", "id", true },
 	{ "x", "x", true },
-	{ "1", "1", true },
+	{ "X", "X", true },
+	{ "_", "_", true },
+	{ "1", "1", false },
 }
 
 func Test_validate_id_field(t *testing.T) {
@@ -93,7 +95,7 @@ func Test_validate_fields(t *testing.T) {
 var validate_table_name_Tab = []validatorTC {
 	{ "", "", false },
 	{ "a", "a", true },
-	{ "1", "1", true },
+	{ "1", "1", false },
 	{ "a-2", "a-2", false },
 	{ ".", ".", false },
 	{ "xyz", "xyz", true },
@@ -474,11 +476,11 @@ func Test_mkVmap(t *testing.T) {
 	}
 }
 
-// ----- unit tests for mkSqlRow()
+// ----- unit tests for mkSQLRow()
 
-func mkSqlRowHelper(t *testing.T, i int, N int) {
-	fn := "mkSqlRow"
-	res := mkSqlRow(N)
+func mkSQLRowHelper(t *testing.T, i int, N int) {
+	fn := "mkSQLRow"
+	res := mkSQLRow(N)
 	if len(res) != N {
 		t.Errorf("#%d: %s(%d) failed", i, fn, N)
 		return
@@ -492,10 +494,10 @@ func mkSqlRowHelper(t *testing.T, i int, N int) {
 	}
 }
 
-func Test_mkSqlRow(t *testing.T) {
+func Test_mkSQLRow(t *testing.T) {
 	M := 5
 	for i := 0; i < M; i++ {
-		mkSqlRowHelper(t, i, i)
+		mkSQLRowHelper(t, i, i)
 	}
 }
 
@@ -510,5 +512,109 @@ func Test_notImplemented(t *testing.T) {
 	}
 	if err == nil {
 		t.Errorf("%s returned nil error; expected non-nil", fn)
+	}
+}
+
+// ----- unit tests for validateSQLValues()
+
+func genList(form string, N int) []string {
+	ret := make([]string, N)
+	for i := 0; i < N; i++ {
+		ret[i] = fmt.Sprintf(form, i)
+	}
+	return ret
+}
+
+func sqlValuesHelper(t *testing.T, form string, N int) {
+	fn := "validateSQLValues"
+	values := genList(form, N)
+	err := validateSQLValues(values)
+	if err != nil {
+		t.Errorf("%s(...) failed on length=%d", fn, N)
+	}
+}
+
+func Test_validateSQLValues(t *testing.T) {
+	M := 5
+	for j := 0; j < M; j++ {
+		sqlValuesHelper(t, "V%d", j)
+	}
+
+	// empty values OK
+	sqlValuesHelper(t, "", 3)
+}
+
+// ----- unit tests for validateSQLKeys()
+
+func sqlKeysHelper(t *testing.T, form string, N int, xsucc bool) {
+	fn := "validateSQLKeys"
+	values := genList(form, N)
+	err := validateSQLKeys(values)
+	if xsucc != (err == nil) {
+		msg := "true"
+		if err != nil {
+			msg = err.Error()
+		}
+		t.Errorf(`%s("%s"...)=%s expected %t`,
+			fn, form, msg, xsucc)
+	}
+}
+
+func Test_validateSQLKeys(t *testing.T) {
+	M := 3
+	for j := 0; j < M; j++ {
+		sqlKeysHelper(t, "K%d", j, true)
+	}
+
+	// numeric key not OK
+	sqlKeysHelper(t, "%d", 1, false)
+
+	// empty key not OK
+	sqlKeysHelper(t, "", 1, false)
+}
+
+// ----- unit tests for initDB()
+
+func Test_initDB(t *testing.T) {
+	db.handle = nil
+	initDB()
+	if db.handle == nil {
+		t.Errorf(`initDB failed to initialize db`)
+	}
+}
+
+// ----- unit tests for nstring()
+
+func nstringHelper(t *testing.T, s string, n int) {
+	fn := "nstring"
+	res := nstring(s, n)
+	rlist := strings.Split(res, ",")
+	if n == 0 {
+		// this must be handled as a special case
+		// because strings.Split() returns a list of length 1
+		// on empty string.
+		if res != "" {
+			t.Errorf(`%s("%s",%d)="%s" expected ""`,
+				fn, s, n, res)
+		}
+		return
+	} else if n != len(rlist) {
+		t.Errorf(`%s("%s",%d)="%s" failed split test`,
+			fn, s, n, res)
+		return
+	}
+	for _, v := range rlist {
+		if v != s {
+			t.Errorf(`%s("%s",%d) bad item "%s"`,
+				fn, s, n, v)
+		}
+	}
+}
+
+func Test_nstring(t *testing.T) {
+	M := 3
+	for j := 0; j < M; j++ {
+		nstringHelper(t, "", j)
+		nstringHelper(t, "abc", j)
 	}
 }

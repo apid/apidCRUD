@@ -17,13 +17,12 @@ ctxt=$cdir/coverage.txt
 mkdir -p "$cdir"
 
 set -e
-# echo "mode: atomic" > "$ctxt"
 
 /bin/rm -f "$prof"
 
 for d in $(modules); do
     prof=$cdir/profile.out
-    go test "-coverprofile=$prof" -covermode=atomic $d
+    go test "-coverprofile=$prof" -covermode=set $d
     if [ -f "$prof" ]; then
         head -2 "$prof" >> "$ctxt"
         rm "$prof"
