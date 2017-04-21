@@ -53,4 +53,5 @@ coverage:
 	./cover.sh | tee $(LOG_DIR)/$@.out
 
 lint:
-	gometalinter.v1 | tee $(LOG_DIR)/$@.out
+	gometalinter.v1 --sort=path -e "don't use underscores" \
+	| tee $(LOG_DIR)/$@.out

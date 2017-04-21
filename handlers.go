@@ -465,15 +465,15 @@ func getBody(req *http.Request, jrec *jsonRecord) error {
 
 func idclause_setup(params map[string]string) (string, []interface{}, error) {
 	id_field := params["id_field"]
-	id, hasId := params["id"]
-	if hasId {
+	id, ok := params["id"]
+	if ok {
 		idlist := []interface{}{atoIdType(id)}
 		placestr := "?"
 		idclause := fmt.Sprintf("WHERE %s = %s", id_field, placestr)
 		return idclause, idlist, nil
 	}
-	ids, hasIds := params["ids"]
-	if hasIds && ids != "" {
+	ids, ok := params["ids"]
+	if ok && ids != "" {
 		idstrings := strings.Split(ids, ",")
 		idlist := idTypeToInterface(idstrings)
 		placestr := nstring("?", len(idlist))
@@ -487,12 +487,12 @@ func idclause_setup(params map[string]string) (string, []interface{}, error) {
 
 func mk_idclause(params map[string]string) string {
 	id_field := params["id_field"]
-	id, hasId := params["id"]
-	if hasId {
+	id, ok := params["id"]
+	if ok {
 		return fmt.Sprintf("WHERE %s = %s", id_field, id)
 	}
-	ids, hasIds := params["ids"]
-	if hasIds && ids != "" {
+	ids, ok := params["ids"]
+	if ok && ids != "" {
 		return fmt.Sprintf("WHERE %s in (%s)", id_field, ids)
 	}
 
