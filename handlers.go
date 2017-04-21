@@ -206,12 +206,13 @@ func describeDbFieldHandler(req *http.Request) (int, interface{}) {
 
 // ----- misc support functions
 
-// errorRet is called by apiHandler routines to pass back the code/data
+// errorRet() is called by apiHandler routines to pass back the code/data
 // pair appropriate to the given code and error object.
 func errorRet(code int, err error) (int, interface{}) {
 	return code, ErrorResponse{code, err.Error()}
 }
 
+// initDB()
 func initDB() {
 	localdb, err := sql.Open("sqlite3", dbName)
 	if err != nil {
@@ -244,30 +245,14 @@ func mkVmap(keys []string, values []interface{}) (*map[string]interface{}, error
 	return &ret, nil
 }
 
+// mkSqlRow() returns a list of interface{} of the given length,
+// each element is actually a pointer to sql.RawBytes .
 func mkSqlRow(N int) []interface{} {
 	ret := make([]interface{}, N)
 	for i := 0; i < N; i++ {
 		ret[i] = new(sql.RawBytes)
 	}
 	return ret
-}
-
-func printRow(rownum int, colnames []string, vals []interface{}) {
-	log.Debugf("row #%d: ", rownum)
-	sep := ""
-	N := len(colnames)
-	for i := 0; i < N; i++ {
-		var v string
-		rbp, ok := vals[i].(*sql.RawBytes)
-		if !ok {
-			v = "?"
-		} else {
-			v = string(*rbp)
-		}
-		log.Debugf("%s%s=%s", sep, colnames[i], v)
-		sep = " | "
-	}
-	log.Debugf("\n")
 }
 
 func myselect(db dbType, qstring string, ivals []interface{}) ([]*map[string]interface{}, error) {
@@ -301,10 +286,6 @@ func myselect(db dbType, qstring string, ivals []interface{}) ([]*map[string]int
 			return ret, fmt.Errorf("scan error at rownum %d", rownum)
 		}
 
-		if DEBUG {
-			printRow(rownum, cols, vals)
-		}
-
 		m, err := mkVmap(cols, vals)
 		if err != nil {
 			return ret, err
@@ -319,7 +300,7 @@ func myselect(db dbType, qstring string, ivals []interface{}) ([]*map[string]int
 	return ret, nil
 }
 
-// convert a list of strings to a list of interface{}.
+// strToInterface() converts a list of strings to a list of interface{}.
 func strToInterface(vals []string) []interface{} {
 	ret := make([]interface{}, len(vals))
 	for i, v := range vals {
@@ -328,12 +309,14 @@ func strToInterface(vals []string) []interface{} {
 	return ret
 }
 
+// atoIdType() converts a string to idType.
 func atoIdType(idstr string) int64 {
 	id, _ := strconv.ParseInt(idstr, idTypeRadix, idTypeBits)
 	return id
 }
 
-// convert a list of strings to a list database id's disguised as interface{}.
+// idTypeToInterface() convert a list of strings to
+// a list of database id's (of idType) disguised as interface{}.
 func idTypeToInterface(vals []string) []interface{} {
 	ret := make([]interface{}, len(vals))
 	for i, v := range vals {
@@ -343,7 +326,7 @@ func idTypeToInterface(vals []string) []interface{} {
 }
 
 
-// return a string with n comma-separated copies of the given string s
+// nstring() returns a string with n comma-separated copies of the given string s
 func nstring(s string, n int) string {
 	ret := make([]string, n, n)
 	for i := 0; i < n; i++ {
@@ -448,7 +431,6 @@ func validate_sql_keys(keys []string) error {
 func validate_sql_values(values []string) error {
 	return nil    // no error for now
 }
-
 
 func notImplemented() (int, interface{}) {
 	code := http.StatusNotImplemented

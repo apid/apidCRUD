@@ -1,6 +1,7 @@
 #! /bin/bash
 #	tester.sh
 # try out a variety of APIs, and do some cursory tests.
+# this assumes the server is already running.
 
 get_rec_ids()
 {

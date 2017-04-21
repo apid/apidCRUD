@@ -55,7 +55,7 @@ func dispatch(methods verbMap, w http.ResponseWriter, req *http.Request) {
 
 	verbFunc, err := getFunc(methods, req.Method)
 	if err != nil {
-		errorResponse(w, err)
+		writeErrorResponse(w, err)
 		return
 	}
 
@@ -63,7 +63,7 @@ func dispatch(methods verbMap, w http.ResponseWriter, req *http.Request) {
 
 	rawdata, err := convData(data)
 	if err != nil {
-		errorResponse(w, err)
+		writeErrorResponse(w, err)
 		return
 	}
 
@@ -84,9 +84,9 @@ func convData(data interface{}) ([]byte, error) {
 	}
 }
 
-// errorResponse() writes to the ResponseWriter,
+// writeErrorResponse() writes to the ResponseWriter,
 // the given error's message, and logs it.
-func errorResponse(w http.ResponseWriter, err error) {
+func writeErrorResponse(w http.ResponseWriter, err error) {
 	code := http.StatusInternalServerError
 	msg := err.Error()
 	data, _ := convData(ErrorResponse{code,msg})

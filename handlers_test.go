@@ -498,3 +498,17 @@ func Test_mkSqlRow(t *testing.T) {
 		mkSqlRowHelper(t, i, i)
 	}
 }
+
+// ----- unit tests for notImplemented()
+
+func Test_notImplemented(t *testing.T) {
+	fn := "notImplemented"
+	xcode := http.StatusNotImplemented
+	code, err := notImplemented()
+	if code != xcode {
+		t.Errorf("%s returned code %d; expected %d", fn, code, xcode)
+	}
+	if err == nil {
+		t.Errorf("%s returned nil error; expected non-nil", fn)
+	}
+}
