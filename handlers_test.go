@@ -474,4 +474,27 @@ func Test_mkVmap(t *testing.T) {
 	}
 }
 
-// func mkVmap(keys []string, values []interface{}) (*map[string]interface{}, error) {
+// ----- unit tests for mkSqlRow()
+
+func mkSqlRowHelper(t *testing.T, i int, N int) {
+	fn := "mkSqlRow"
+	res := mkSqlRow(N)
+	if len(res) != N {
+		t.Errorf("#%d: %s(%d) failed", i, fn, N)
+		return
+	}
+	for _, v := range res {
+		_, ok := v.(*sql.RawBytes)
+		if !ok {
+			t.Errorf("#%d: %s(%d) sql conversion error", i, fn, N)
+			return
+		}
+	}
+}
+
+func Test_mkSqlRow(t *testing.T) {
+	M := 5
+	for i := 0; i < M; i++ {
+		mkSqlRowHelper(t, i, i)
+	}
+}
