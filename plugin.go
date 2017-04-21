@@ -6,9 +6,9 @@ import (
 	"github.com/30x/apid-core"
 )
 
-var (
-	log apid.LogService
-)
+type GetStringer interface {
+	GetString(string) string
+}
 
 // initPlugin() is called by the apid-core startup
 func initPlugin(services apid.Services) (apid.PluginData, error) {
@@ -17,7 +17,11 @@ func initPlugin(services apid.Services) (apid.PluginData, error) {
 
 	initConfig()
 
-	initDB()
+	var err error
+	db, err = initDB()
+	if err != nil {
+		return pluginData, err
+	}
 
 	registerHandlers(services.API())
 
@@ -99,7 +103,7 @@ func writeErrorResponse(w http.ResponseWriter, err error) {
 
 // confGet() returns the config value of the named string,
 // or if there is no configured value, the given default value.
-func confGet(cfg apid.ConfigService, vname string, defval string) string {
+func confGet(cfg GetStringer, vname string, defval string) string {
 	ret := cfg.GetString(vname)
 	if ret == "" {
 		return defval

@@ -151,7 +151,7 @@ func validate_id(id string) (string, error) {
 	if err != nil {
 		return id, err
 	}
-	return strconv.FormatInt(n, idTypeRadix), nil
+	return idTypeToA(n), nil
 }
 
 // validate_ids() validates the given string as a comma-separated list
@@ -173,7 +173,7 @@ func validate_ids(ids string) (string, error) {
 			return ids, err
 		}
 		// store back in normalized form
-		idlist[k] = strconv.FormatInt(n, idTypeRadix)
+		idlist[k] = idTypeToA(n)
 	}
 
 	return strings.Join(idlist, ","), nil
@@ -195,7 +195,7 @@ func validate_limit(s string) (string, error) {
 	if n <= 0 || n > maxRecs {
 		n = maxRecs
 	}
-	return strconv.FormatInt(n, idTypeRadix), nil
+	return idTypeToA(n), nil
 }
 
 // validate_offset() checks the given string for validity as an SQL offset.
@@ -212,7 +212,7 @@ func validate_offset(s string) (string, error) {
 	if err != nil {
 		return s, err
 	}
-	return strconv.FormatInt(n, idTypeRadix), nil
+	return idTypeToA(n), nil
 }
 
 // ----- misc validation support functions
@@ -234,4 +234,20 @@ func isValidIdent(s string) bool {
 	r := rune(s[0])
 	return (r == '_' || unicode.In(r, unicode.Letter)) &&
 		strings.IndexFunc(s, notIdentChar) < 0
+}
+
+// aToIdType() converts a string to idType.
+// on error, return -1.  note that -1 is also a legitimate value,
+// so should use this only on strings that are known to be valid.
+func aToIdType(idstr string) int64 {
+	id, err := strconv.ParseInt(idstr, idTypeRadix, idTypeBits)
+	if err != nil {
+		return -1
+	}
+	return id
+}
+
+// idTypeToA() converts an idType value to a string, in the standard way.
+func idTypeToA(val int64) string {
+	return strconv.FormatInt(val, idTypeRadix)
 }

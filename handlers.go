@@ -9,23 +9,6 @@ import (
 	"database/sql"
 )
 
-// dbType is intended to encapsulate the database handle type.
-type dbType struct {
-	handle *sql.DB
-}
-
-// badStat is a convenience constant, the http status for a bad request.
-const badStat = http.StatusBadRequest
-
-// dbName is the name of the database that is implicitly used in these APIs.
-var dbName = "apidCRUD.db"
-
-// DEBUG enables debugging printouts
-var DEBUG = true
-
-// db is our global database handle
-var db dbType
-
 // ----- plain old handlers that are compatible with the apiHandler type.
 
 // getDbResourcesHandler handles GET requests on /db
@@ -40,7 +23,7 @@ func getDbTablesHandler(req *http.Request) (int, interface{}) {
 
 	idlist := []interface{}{}
 	qstring := "select name from tables;"
-	result, err := myselect(db, qstring, idlist)
+	result, err := runQuery(db, qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err)
 	}
@@ -88,7 +71,7 @@ func createDbRecordsHandler(req *http.Request) (int, interface{}) {
 		if err != nil {
 			return badStat, err
 		}
-		id, err := write_rec(db, params["table_name"], keys, values)
+		id, err := runInsert(db, params["table_name"], keys, values)
 		if err != nil {
 			return badStat, err
 		}
@@ -106,7 +89,7 @@ func getDbRecordsHandler(req *http.Request) (int, interface{}) {
 		return errorRet(badStat, err)
 	}
 
-	return get_common(params)
+	return getCommon(params)
 }
 
 // getDbRecordHandler() handles GET requests on /db/_table/{table_name}/{id} .
@@ -119,28 +102,25 @@ func getDbRecordHandler(req *http.Request) (int, interface{}) {
 	params["limit"] = strconv.Itoa(1)
 	params["offset"] = strconv.Itoa(0)
 
-	return get_common(params)
+	return getCommon(params)
 }
 
 // updateDbRecordsHandler() handles PATCH requests on /db/_table/{table_name} .
 func updateDbRecordsHandler(req *http.Request) (int, interface{}) {
-	params, err := fetchParams(req,
-		"table_name", "id_field", "ids")
+	params, err := fetchParams(req, "table_name", "id_field", "ids")
 	if err != nil {
 		return errorRet(badStat, err)
 	}
-
-	return update_common(req, params)
+	return updateCommon(req, params)
 }
 
 // updateDbRecordHandler() handles PATCH requests on /db/_table/{table_name}/{id} .
 func updateDbRecordHandler(req *http.Request) (int, interface{}) {
-	params, err := fetchParams(req,
-		"table_name", "id", "id_field")
+	params, err := fetchParams(req, "table_name", "id", "id_field")
 	if err != nil {
 		return errorRet(badStat, err)
 	}
-	return update_common(req, params)
+	return updateCommon(req, params)
 }
 
 // deleteDbRecordsHandler handles DELETE requests on /db/_table/{table_name} .
@@ -156,8 +136,7 @@ func deleteDbRecordsHandler(req *http.Request) (int, interface{}) {
 
 // deleteDbRecordHandler handles DELETE requests on /db/_table/{table_name}/{id} .
 func deleteDbRecordHandler(req *http.Request) (int, interface{}) {
-	params, err := fetchParams(req,
-		"table_name", "id", "id_field")
+	params, err := fetchParams(req, "table_name", "id", "id_field")
 	if err != nil {
 		return errorRet(badStat, err)
 	}
@@ -212,15 +191,15 @@ func errorRet(code int, err error) (int, interface{}) {
 	return code, ErrorResponse{code, err.Error()}
 }
 
-// initDB()
-func initDB() {
-	localdb, err := sql.Open("sqlite3", dbName)
+// initDB() initializes the global db variable
+func initDB() (dbType, error) {
+	h, err := sql.Open("sqlite3", dbName)
 	if err != nil {
-		log.Fatal(err)
+		return dbType{}, err
 	}
 
 	// assign the global db variable
-	db = dbType{handle: localdb}
+	return dbType{handle: h}, nil
 }
 
 // mkVmap() takes a list of keys (string) and a list of values.
@@ -255,7 +234,9 @@ func mkSQLRow(N int) []interface{} {
 	return ret
 }
 
-func myselect(db dbType, qstring string, ivals []interface{}) ([]*map[string]interface{}, error) {
+func runQuery(db dbType,
+		qstring string,
+		ivals []interface{}) ([]*map[string]interface{}, error) {
 	log.Debugf("query = %s", qstring)
 
 	ret := make([]*map[string]interface{}, 0, maxRecs)
@@ -300,8 +281,8 @@ func myselect(db dbType, qstring string, ivals []interface{}) ([]*map[string]int
 	return ret, nil
 }
 
-// strToInterface() converts a list of strings to a list of interface{}.
-func strToInterface(vals []string) []interface{} {
+// strListToInterfaces() converts a list of strings to a list of interface{}.
+func strListToInterfaces(vals []string) []interface{} {
 	ret := make([]interface{}, len(vals))
 	for i, v := range vals {
 		ret[i] = interface{}(v)
@@ -309,18 +290,12 @@ func strToInterface(vals []string) []interface{} {
 	return ret
 }
 
-// atoIdType() converts a string to idType.
-func atoIdType(idstr string) int64 {
-	id, _ := strconv.ParseInt(idstr, idTypeRadix, idTypeBits)
-	return id
-}
-
-// idTypeToInterface() convert a list of strings to
+// idTypesToInterface() convert a list of strings to
 // a list of database id's (of idType) disguised as interface{}.
-func idTypeToInterface(vals []string) []interface{} {
+func idTypesToInterface(vals []string) []interface{} {
 	ret := make([]interface{}, len(vals))
 	for i, v := range vals {
-		ret[i] = interface{}(atoIdType(v))
+		ret[i] = interface{}(aToIdType(v))
 	}
 	return ret
 }
@@ -335,7 +310,7 @@ func nstring(s string, n int) string {
 	return strings.Join(ret, ",")
 }
 
-func write_rec(db dbType, tabname string, keys []string, values []string) (idType, error) {
+func runInsert(db dbType, tabname string, keys []string, values []string) (idType, error) {
 	NORET := idType(-1)
 	nkeys := len(keys)
 	nvalues := len(values)
@@ -353,7 +328,7 @@ func write_rec(db dbType, tabname string, keys []string, values []string) (idTyp
 		return NORET, err
 	}
 
-	ivalues := strToInterface(values)
+	ivalues := strListToInterfaces(values)
 
 	log.Debugf("qstring = %s\n", qstring)
 	result, err := stmt.Exec(ivalues...)
@@ -386,7 +361,7 @@ func delCommon(params map[string]string) (int, interface{}) {
 
 func delRecs(db dbType, params map[string]string) (int, error) {
 	NORET := -1
-	idclause, idlist, err := idclause_setup(params)
+	idclause, idlist, err := idclauseSetup(params)
 	if err != nil {
 		return NORET, err
 	}
@@ -457,11 +432,11 @@ func getBody(req *http.Request, jrec *jsonRecord) error {
 	return err
 }
 
-func idclause_setup(params map[string]string) (string, []interface{}, error) {
+func idclauseSetup(params map[string]string) (string, []interface{}, error) {
 	id_field := params["id_field"]
 	id, ok := params["id"]
 	if ok {
-		idlist := []interface{}{atoIdType(id)}
+		idlist := []interface{}{aToIdType(id)}
 		placestr := "?"
 		idclause := fmt.Sprintf("WHERE %s = %s", id_field, placestr)
 		return idclause, idlist, nil
@@ -469,7 +444,7 @@ func idclause_setup(params map[string]string) (string, []interface{}, error) {
 	ids, ok := params["ids"]
 	if ok && ids != "" {
 		idstrings := strings.Split(ids, ",")
-		idlist := idTypeToInterface(idstrings)
+		idlist := idTypesToInterface(idstrings)
 		placestr := nstring("?", len(idlist))
 		idclause := fmt.Sprintf("WHERE %s in (%s)", id_field, placestr)
 		return idclause, idlist, nil
@@ -494,7 +469,7 @@ func mkIdClause(params map[string]string) string {
 	return ""
 }
 
-func update_rec(db dbType,
+func updateRec(db dbType,
 		params map[string]string,
 		jrec jsonRecord) (int, error) {
 	NORET := -1
@@ -514,7 +489,7 @@ func update_rec(db dbType,
 	if err != nil {
 		return NORET, err
 	}
-	ivals := strToInterface(dbrec.Values)
+	ivals := strListToInterfaces(dbrec.Values)
 	result, err := stmt.Exec(ivals...)
 	if err != nil {
 		return NORET, err
@@ -526,8 +501,8 @@ func update_rec(db dbType,
 	return int(ra), nil
 }
 
-func get_common(params map[string]string) (int, interface{}) {
-	idclause, idlist, err := idclause_setup(params)
+func getCommon(params map[string]string) (int, interface{}) {
+	idclause, idlist, err := idclauseSetup(params)
 	if err != nil {
 		return errorRet(badStat, err)
 	}
@@ -538,7 +513,7 @@ func get_common(params map[string]string) (int, interface{}) {
 		idclause,
 		params["limit"],
 		params["offset"])
-	result, err := myselect(db, qstring, idlist)
+	result, err := runQuery(db, qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err)
 	}
@@ -550,13 +525,13 @@ func get_common(params map[string]string) (int, interface{}) {
 	return http.StatusOK, GetRecordResponse{Record:result}
 }
 
-func update_common(req *http.Request, params map[string]string) (int, interface{}) {
+func updateCommon(req *http.Request, params map[string]string) (int, interface{}) {
 	jrecs, err := getJsonRecord(req)
 	if err != nil {
 		return errorRet(badStat, err)
 	}
 
-	ra, err := update_rec(db, params, jrecs)
+	ra, err := updateRec(db, params, jrecs)
 	if err != nil {
 		return errorRet(badStat, err)
 	}

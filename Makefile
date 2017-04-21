@@ -1,5 +1,5 @@
-.PHONY: default clean build install preinstall test run
-.PHONY: killer lint test unit-test coverage covered setup
+.PHONY: default clean clobber build install preinstall test run
+.PHONY: killer lint test unit-test coverage covered uncovered setup
 
 default: install
 
@@ -12,11 +12,13 @@ SQLITE_PKG := github.com/mattn/go-sqlite3
 
 clean:
 	go clean
-	/bin/rm -rf ./vendor
 	/bin/rm -rf $(LOG_DIR)
 	mkdir -p $(LOG_DIR)
 	/bin/rm -rf $(COV_DIR)
 	mkdir -p $(COV_DIR)
+
+clobber: clean
+	/bin/rm -rf ./vendor
 
 get:
 	[ -d ./vendor ] \
@@ -57,7 +59,10 @@ coverage:
 	./cover.sh | tee $(LOG_DIR)/$@.out
 
 covered:
-	tested_funcs.sh | sort | tee $(LOG_DIR)/$@.out
+	./tested_funcs.sh | sort | tee $(LOG_DIR)/$@.out
+
+uncovered:
+	./uncovered.sh | tee $(LOG_DIR)/$@.out
 
 lint:
 	gometalinter.v1 --sort=path -e "don't use underscores" \

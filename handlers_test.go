@@ -123,7 +123,7 @@ var validate_id_Tab = []validatorTC {
 	{ "1000000000", "1000000000", true },	// 1E9
 	{ "1000000000000", "1000000000000", true },  // 1E12
 	{ "1000000000000000", "1000000000000000", true },  // 1E15
-	{ "1000000000000000000000", "1000000000000000000000", false },	// overflow
+	{ "1000000000000000000000", "1000000000000000000000", false },	// will overflow
 }
 
 func Test_validate_id(t *testing.T) {
@@ -266,7 +266,7 @@ func Test_isValidIdent(t *testing.T) {
 	}
 }
 
-// ----- unit tests for extReqNew()
+// ----- unit tests for newExtReq()
 
 func mkRequest(path string) (*http.Request, error) {
 	return http.NewRequest(http.MethodGet, path, nil)
@@ -294,7 +294,7 @@ func Test_newExtReq(t *testing.T) {
 
 // ----- unit tests for getParam()
 
-func getParamHelper(t *testing.T,
+func getParam_Checker(t *testing.T,
 		paramName string,
 		val string) (string, error) {
 	path := fmt.Sprintf("/apid/db?%s=%s", paramName, val)
@@ -310,28 +310,28 @@ func Test_getParam(t *testing.T) {
 	// test getParam on id values
 	run_validator(t,
 		func(val string) (string, error) {
-			return getParamHelper(t, "id", val)
+			return getParam_Checker(t, "id", val)
 		},
 		validate_id_Tab)
 
 	// test getParam on ids values
 	run_validator(t,
 		func(val string) (string, error) {
-			return getParamHelper(t, "ids", val)
+			return getParam_Checker(t, "ids", val)
 		},
 		validate_ids_Tab)
 
 	// test getParam on id_field values
 	run_validator(t,
 		func(val string) (string, error) {
-			return getParamHelper(t, "id_field", val)
+			return getParam_Checker(t, "id_field", val)
 		},
 		validate_id_field_Tab)
 
 	// test getParam on a field with no validator
 	run_validator(t,
 		func(val string) (string, error) {
-			return getParamHelper(t, "nofield", val)
+			return getParam_Checker(t, "nofield", val)
 		},
 		validate_nofield_Tab)
 }
@@ -373,7 +373,7 @@ func fetchParamsHelper(qp string) (map[string]string, error) {
 	nvmap := len(vmap)
 	nnames := len(names)
 	if nvmap != nnames {
-		err := fmt.Errorf("map has %d entries, expected %d",
+		err := fmt.Errorf("map has %d entries; expected %d",
 				nvmap, nnames)
 		return vmap, err
 	}
@@ -397,7 +397,7 @@ func call_fetchParams(t *testing.T, i int, qp string, xsucc bool) {
 		if err != nil {
 			msg = err.Error()
 		}
-		t.Errorf(`#%d: fetchParams("%s")=(%s), expected (%t)`,
+		t.Errorf(`#%d: fetchParams("%s")=(%s); expected (%t)`,
 			i, qp, msg, xsucc)
 	}
 }
@@ -409,14 +409,6 @@ func Test_fetchParams(t *testing.T) {
 }
 
 // ----- unit tests for mkVmap()
-
-func rawBytesHelper(strlist []string) []interface{} {
-	ret := make([]interface{}, len(strlist))
-	for i, s := range strlist {
-		ret[i] = strToRawBytes(s)
-	}
-	return ret
-}
 
 func strToRawBytes(data string) interface{} {
 	rb := sql.RawBytes([]byte(data))
@@ -431,7 +423,15 @@ func interfaceToStr(data interface{}) (string, error) {
 	return *sp, nil
 }
 
-func mkVmapHelper(t *testing.T,
+func rawBytesHelper(strlist []string) []interface{} {
+	ret := make([]interface{}, len(strlist))
+	for i, s := range strlist {
+		ret[i] = interface{}(strToRawBytes(s))
+	}
+	return ret
+}
+
+func mkVmap_Checker(t *testing.T,
 		i int,
 		keys []string,
 		values []string) {
@@ -472,13 +472,13 @@ func Test_mkVmap(t *testing.T) {
 
 	// test against initial slices of keys and values arrays.
 	for i := 0; i < N+1; i++ {
-		mkVmapHelper(t, i, keys[0:i], values[0:i])
+		mkVmap_Checker(t, i, keys[0:i], values[0:i])
 	}
 }
 
 // ----- unit tests for mkSQLRow()
 
-func mkSQLRowHelper(t *testing.T, i int, N int) {
+func mkSQLRow_Checker(t *testing.T, i int, N int) {
 	fn := "mkSQLRow"
 	res := mkSQLRow(N)
 	if len(res) != N {
@@ -497,7 +497,7 @@ func mkSQLRowHelper(t *testing.T, i int, N int) {
 func Test_mkSQLRow(t *testing.T) {
 	M := 5
 	for i := 0; i < M; i++ {
-		mkSQLRowHelper(t, i, i)
+		mkSQLRow_Checker(t, i, i)
 	}
 }
 
@@ -525,7 +525,7 @@ func genList(form string, N int) []string {
 	return ret
 }
 
-func sqlValuesHelper(t *testing.T, form string, N int) {
+func sqlValues_Checker(t *testing.T, form string, N int) {
 	fn := "validateSQLValues"
 	values := genList(form, N)
 	err := validateSQLValues(values)
@@ -537,16 +537,16 @@ func sqlValuesHelper(t *testing.T, form string, N int) {
 func Test_validateSQLValues(t *testing.T) {
 	M := 5
 	for j := 0; j < M; j++ {
-		sqlValuesHelper(t, "V%d", j)
+		sqlValues_Checker(t, "V%d", j)
 	}
 
 	// empty values OK
-	sqlValuesHelper(t, "", 3)
+	sqlValues_Checker(t, "", 3)
 }
 
 // ----- unit tests for validateSQLKeys()
 
-func sqlKeysHelper(t *testing.T, form string, N int, xsucc bool) {
+func sqlKeys_Checker(t *testing.T, form string, N int, xsucc bool) {
 	fn := "validateSQLKeys"
 	values := genList(form, N)
 	err := validateSQLKeys(values)
@@ -555,7 +555,7 @@ func sqlKeysHelper(t *testing.T, form string, N int, xsucc bool) {
 		if err != nil {
 			msg = err.Error()
 		}
-		t.Errorf(`%s("%s"...)=%s expected %t`,
+		t.Errorf(`%s("%s"...)=%s; expected %t`,
 			fn, form, msg, xsucc)
 	}
 }
@@ -563,29 +563,19 @@ func sqlKeysHelper(t *testing.T, form string, N int, xsucc bool) {
 func Test_validateSQLKeys(t *testing.T) {
 	M := 3
 	for j := 0; j < M; j++ {
-		sqlKeysHelper(t, "K%d", j, true)
+		sqlKeys_Checker(t, "K%d", j, true)
 	}
 
 	// numeric key not OK
-	sqlKeysHelper(t, "%d", 1, false)
+	sqlKeys_Checker(t, "%d", 1, false)
 
 	// empty key not OK
-	sqlKeysHelper(t, "", 1, false)
-}
-
-// ----- unit tests for initDB()
-
-func Test_initDB(t *testing.T) {
-	db.handle = nil
-	initDB()
-	if db.handle == nil {
-		t.Errorf(`initDB failed to initialize db`)
-	}
+	sqlKeys_Checker(t, "", 1, false)
 }
 
 // ----- unit tests for nstring()
 
-func nstringHelper(t *testing.T, s string, n int) {
+func nstring_Checker(t *testing.T, s string, n int) {
 	fn := "nstring"
 	res := nstring(s, n)
 	rlist := strings.Split(res, ",")
@@ -594,7 +584,7 @@ func nstringHelper(t *testing.T, s string, n int) {
 		// because strings.Split() returns a list of length 1
 		// on empty string.
 		if res != "" {
-			t.Errorf(`%s("%s",%d)="%s" expected ""`,
+			t.Errorf(`%s("%s",%d)="%s"; expected ""`,
 				fn, s, n, res)
 		}
 		return
@@ -614,7 +604,72 @@ func nstringHelper(t *testing.T, s string, n int) {
 func Test_nstring(t *testing.T) {
 	M := 3
 	for j := 0; j < M; j++ {
-		nstringHelper(t, "", j)
-		nstringHelper(t, "abc", j)
+		nstring_Checker(t, "", j)
+		nstring_Checker(t, "abc", j)
+	}
+}
+
+// ----- unit tests for aToIdType()
+
+type aToIdType_TC struct {
+	arg string
+	xval idType
+}
+
+var aToIdType_Tab = []aToIdType_TC {
+	{ "", -1 },
+	{ "x", -1 },
+	{ "0x", -1 },
+	{ "-1", -1 },
+	{ "-1000000", -1000000 },
+	{ "0", 0 },
+	{ "1", 1 },
+	{ "10", 10 },
+	{ "10000", 10000 },
+	{ "1000000000000", 1000000000000 },
+}
+
+func aToIdType_Checker(t *testing.T, i int, test aToIdType_TC) {
+	fn := "aToIdType"
+	res := idType(aToIdType(test.arg))
+	if test.xval != res {
+		t.Errorf(`#%d: %s("%s")=%d; expected %d`,
+			i, fn, test.arg, res, test.xval)
+	}
+}
+
+func Test_aToIdType(t *testing.T) {
+	for i, test := range aToIdType_Tab {
+		aToIdType_Checker(t, i, test)
+	}
+}
+
+// ----- unit tests for idTypeToA()
+
+type idTypeToA_TC struct {
+	arg idType
+	xval string
+}
+
+var idTypeToA_Tab = []idTypeToA_TC {
+	{ 0, "0" },
+	{ 1, "1" },
+	{ -1, "-1" },
+	{ -10000000000, "-10000000000" },
+	{ 10000000000000, "10000000000000" },
+}
+
+func idTypeToA_Checker(t *testing.T, i int, test idTypeToA_TC) {
+	fn := "idTypeToA"
+	res := idTypeToA(int64(test.arg))
+	if test.xval != res {
+		t.Errorf(`#%d: %s(%d)="%s"; expected "%s"`,
+			i, fn, test.arg, res, test.xval)
+	}
+}
+
+func Test_idTypeToA(t *testing.T) {
+	for i, test := range idTypeToA_Tab {
+		idTypeToA_Checker(t, i, test)
 	}
 }
