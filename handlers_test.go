@@ -225,6 +225,12 @@ func Test_notIdentChar(t *testing.T) {
 	}
 }
 
+// ----- test table for a field with no validator
+
+var validate_nofield_Tab = []validatorTC {
+	{ "", "", false },
+}
+
 // ----- unit tests for isValidIdent()
 
 type isValidIdent_TC struct {

@@ -1,0 +1,9 @@
+time go test | tee logs/unit-test.out
+Base log level: Info
+time="Apr 20 18:48:51.215" level=info msg="will open api port 9100 bound to 127.0.0.1" module=api 
+PASS
+ok  	github.com/30x/apidCRUD	0.086s
+
+real	0m1.117s
+user	0m0.888s
+sys	0m0.296s

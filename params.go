@@ -45,8 +45,8 @@ type extReq struct {
 
 // ----- start of functions
 
-// extReqNew returns a constructed extReq object.
-func extReqNew(req *http.Request, validators map[string]paramValidator) (*extReq, error) {
+// newExtReq returns a constructed extReq object.
+func newExtReq(req *http.Request, validators map[string]paramValidator) (*extReq, error) {
 
 	// make the query params available via FormValue().
 	err := req.ParseForm()
@@ -90,7 +90,7 @@ func (xr *extReq) getParam(name string) (string, error) {
 func fetchParams(req *http.Request, names ...string) (map[string]string, error) {
 	ret := map[string]string{}
 
-	xr, err := extReqNew(req, validators)
+	xr, err := newExtReq(req, validators)
 	if err != nil {
 		return ret, err
 	}
