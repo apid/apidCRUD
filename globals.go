@@ -28,3 +28,7 @@ var db dbType
 
 // log is our global log variable
 var log apid.LogService
+
+// basePath is the prefix applied to paths in the API description table
+var basePath = "/apid"
+

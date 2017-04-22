@@ -10,6 +10,26 @@ type GetStringer interface {
 	GetString(string) string
 }
 
+var apiTable = []apiDesc{
+	{ "/db", http.MethodGet, getDbResourcesHandler },
+	{ "/db/_table", http.MethodGet, getDbTablesHandler },
+	{ "/db/_table/{table_name}", http.MethodGet, getDbRecordsHandler },
+	{ "/db/_table/{table_name}", http.MethodPost, createDbRecordsHandler },
+	{ "/db/_table/{table_name}", http.MethodDelete, deleteDbRecordsHandler },
+	{ "/db/_table/{table_name}", http.MethodPatch, updateDbRecordsHandler },
+	{ "/db/_table/{table_name}/{id}", http.MethodGet, getDbRecordHandler },
+	{ "/db/_table/{table_name}/{id}", http.MethodPatch, updateDbRecordHandler },
+	{ "/db/_table/{table_name}/{id}", http.MethodDelete, deleteDbRecordHandler },
+	{ "/db/_schema", http.MethodGet, getDbSchemasHandler },
+	{ "/db/_schema", http.MethodPost, createDbTablesHandler },
+	{ "/db/_schema", http.MethodPut, replaceDbTablesHandler },
+	{ "/db/_schema", http.MethodPatch, updateDbTablesHandler },
+	{ "/db/_schema/{table_name}", http.MethodGet, describeDbTableHandler },
+	{ "/db/_schema/{table_name}", http.MethodPost, createDbTableHandler },
+	{ "/db/_schema/{table_name}", http.MethodDelete, deleteDbTableHandler },
+	{ "/db/_schema/{table_name}/{field_name}", http.MethodGet, describeDbFieldHandler },
+}
+
 // initPlugin() is called by the apid-core startup
 func initPlugin(services apid.Services) (apid.PluginData, error) {
 	log = services.Log().ForModule(pluginData.Name)
@@ -30,7 +50,8 @@ func initPlugin(services apid.Services) (apid.PluginData, error) {
 
 // registerHandlers() register all our handlers with the given service.
 func registerHandlers(service apid.APIService) {
-	maps := initWiring().getMaps()
+	ws := NewApiWiring(basePath, apiTable)
+	maps := ws.GetMaps()
 	for path, methods := range maps {
 		addHandler(service, path, methods)
 	}
@@ -57,13 +78,7 @@ func dispatch(methods verbMap, w http.ResponseWriter, req *http.Request) {
 		_ = req.Body.Close()
 	}()
 
-	verbFunc, err := getFunc(methods, req.Method)
-	if err != nil {
-		writeErrorResponse(w, err)
-		return
-	}
-
-	code, data := verbFunc(req)
+	code, data := CallFunc(methods, req.Method, req)
 
 	rawdata, err := convData(data)
 	if err != nil {

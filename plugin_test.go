@@ -17,7 +17,7 @@ var confGet_Tab = []confGet_TC {
 	{"not-there", "no", "no"},	// this key is not present
 }
 
-// mockGetStringer is the interface expected by getConf()
+// mockGetStringer is the interface expected by confGet()
 type mockGetStringer struct {
 	data map[string]string
 }
@@ -37,7 +37,7 @@ func confGet_Checker(t *testing.T, i int, gs GetStringer, test *confGet_TC) {
 	}
 }
 
-func Test_getConf(t *testing.T) {
+func Test_confGet(t *testing.T) {
 	gs := mockGetStringer{fakeConfData}
 	for i, test := range confGet_Tab {
 		confGet_Checker(t, i, gs, &test)

@@ -673,3 +673,98 @@ func Test_idTypeToA(t *testing.T) {
 		idTypeToA_Checker(t, i, test)
 	}
 }
+
+// ----- unit tests for strListToInterfaces()
+
+func strListToInterfaces_Checker(t *testing.T, form string, M int) {
+	fn := "strListToInterfaces"
+	strlist := genList(form, M)
+	res := strListToInterfaces(strlist)
+	n := len(res)
+	if M != n {
+		t.Errorf(`%s returned length is %d; expected %d`, fn, n, M)
+	}
+	for i, si := range res {
+		str, ok := si.(string)
+		if !ok {
+			t.Errorf("%s length %d: result item is not a string",
+				fn, M)
+		}
+		if str != strlist[i] {
+			t.Errorf(`%s length %d: item="%s"; expected "%s"`,
+				fn, M, str, strlist[i])
+		}
+	}
+}
+
+func Test_strListToInterfaces(t *testing.T) {
+	M := 3
+	for j := 0; j < M; j++ {
+		strListToInterfaces_Checker(t, "S%d", j)
+	}
+}
+
+// ----- unit tests for errorRet()
+
+type errorRet_TC struct {
+	code int
+	msg string
+}
+
+var errorRet_Tab = []errorRet_TC {
+	{ 1, "abc" },
+	{ 2, "" },
+	{ 3, "xyz" },
+}
+
+func errorRet_Checker(t *testing.T, i int, code int, msg string) {
+	fn := "errorRet"
+	err := fmt.Errorf("%s", msg)
+	rescode, resdata := errorRet(code, err)
+	if code != rescode {
+		t.Errorf(`#%d: %s returned (%d,); expected %d`,
+			i, fn, rescode, code)
+		return
+	}
+	eresp, ok := resdata.(ErrorResponse)
+	if !ok {
+		t.Errorf(`#%d: %s ErrorResponse conversion error`, i, fn)
+		return
+	}
+	if code != eresp.Code {
+		t.Errorf(`#%d: %s ErrorResponse.Code=%d; expected %d`,
+			i, fn, eresp.Code, code)
+		return
+	}
+	if msg != eresp.Message {
+		t.Errorf(`#%d: %s ErrorResponse.Message="%s"; expected "%s"`,
+			i, fn, eresp.Message, msg)
+	}
+}
+
+func Test_errorRet(t *testing.T) {
+	for i, test := range errorRet_Tab {
+		errorRet_Checker(t, i, test.code, test.msg)
+	}
+}
+
+// ----- unit tests for okRet()
+
+func Test_okRet(t *testing.T) {
+	fn := "okRet"
+	xcode := http.StatusOK
+	data := DeleteResponse{0}
+	code, idata := okRet(DeleteResponse{0})
+	if xcode != code {
+		t.Errorf("%s returned code=%d; expected %d", fn, code, xcode)
+		return
+	}
+	cdata, ok := idata.(DeleteResponse)
+	if !ok {
+		t.Errorf("%s returned data could not convert", fn)
+		return
+	}
+	if data != cdata {
+		t.Errorf("%s returned data does not match", fn)
+	}
+}

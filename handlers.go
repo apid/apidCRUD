@@ -39,7 +39,7 @@ func getDbTablesHandler(req *http.Request) (int, interface{}) {
 		ret[i] = *pname
 	}
 
-	return http.StatusOK, TablesResponse{Resource: ret}
+	return okRet(TablesResponse{Resource: ret})
 }
 
 // createDbRecordsHandler() handles POST requests on /db/_table/{table_name} .
@@ -78,7 +78,7 @@ func createDbRecordsHandler(req *http.Request) (int, interface{}) {
 		idlist = append(idlist, int(id))
 	}
 
-	return http.StatusOK, RecordIds{Ids: idlist}
+	return okRet(RecordIds{Ids: idlist})
 }
 
 // getDbRecordsHandler() handles GET requests on /db/_table/{table_name} .
@@ -191,6 +191,12 @@ func errorRet(code int, err error) (int, interface{}) {
 	return code, ErrorResponse{code, err.Error()}
 }
 
+// okRet() is called by apiHandler routines to pass back the code/data
+// pair for http.StatusOK and the given data.
+func okRet(data interface{}) (int, interface{}) {
+	return http.StatusOK, data
+}
+
 // initDB() initializes the global db variable
 func initDB() (dbType, error) {
 	h, err := sql.Open("sqlite3", dbName)
@@ -301,7 +307,8 @@ func idTypesToInterface(vals []string) []interface{} {
 }
 
 
-// nstring() returns a string with n comma-separated copies of the given string s
+// nstring() returns a string with n comma-separated copies of
+// the given string s.
 func nstring(s string, n int) string {
 	ret := make([]string, n, n)
 	for i := 0; i < n; i++ {
@@ -356,13 +363,17 @@ func delCommon(params map[string]string) (int, interface{}) {
 		return errorRet(badStat, err)
 	}
 
-	return http.StatusOK, DeleteResponse{nc}
+	return okRet(DeleteResponse{nc})
 }
 
 func delRecs(db dbType, params map[string]string) (int, error) {
 	NORET := -1
-	idclause, idlist, err := idclauseSetup(params)
+	idclause, idlist, err := mkIdClause(params)
 	if err != nil {
+		return NORET, err
+	}
+	if idclause == "" {
+		err := fmt.Errorf("id or ids must be specified")
 		return NORET, err
 	}
 	qstring := fmt.Sprintf("DELETE FROM %s %s;",
@@ -412,6 +423,8 @@ func validateSQLValues(values []string) error {
 	return nil    // no error for now
 }
 
+// notImpemented() returns the code/data pair for an apiHandler
+// that is not implemented.
 func notImplemented() (int, interface{}) {
 	code := http.StatusNotImplemented
 	return errorRet(code, fmt.Errorf("API not implemented yet"))
@@ -419,20 +432,18 @@ func notImplemented() (int, interface{}) {
 
 func getJsonRecord(req *http.Request) (jsonRecord, error) {
 	jrec := jsonRecord{}
-	err := getBody(req, &jrec)
+        err := json.NewDecoder(req.Body).Decode(&jrec)
 	return jrec, err
 }
 
-func getBody(req *http.Request, jrec *jsonRecord) error {
-        err := json.NewDecoder(req.Body).Decode(jrec)
-        if err != nil {
-                log.Errorf("JSON Response Data not parsable: %v", err)
-                return err
-        }
-	return err
-}
-
-func idclauseSetup(params map[string]string) (string, []interface{}, error) {
+// mkIdClause() takes the API parameters,
+// and returns the implied WHERE clause that can be
+// plugged in to a query string (for use with Prepare)
+// and list of data items (for use with Exec).
+// the params examined include id_field, id, and/or ids.
+// if id is specified, that is used; otherwise ids.
+// if neither id nor ids is specified, the WHERE clause is empty.
+func mkIdClause(params map[string]string) (string, []interface{}, error) {
 	id_field := params["id_field"]
 	id, ok := params["id"]
 	if ok {
@@ -441,6 +452,7 @@ func idclauseSetup(params map[string]string) (string, []interface{}, error) {
 		idclause := fmt.Sprintf("WHERE %s = %s", id_field, placestr)
 		return idclause, idlist, nil
 	}
+
 	ids, ok := params["ids"]
 	if ok && ids != "" {
 		idstrings := strings.Split(ids, ",")
@@ -451,22 +463,28 @@ func idclauseSetup(params map[string]string) (string, []interface{}, error) {
 	}
 
 	// no id and no ids implies everything matches.
+	// if this is bad, caller should check.
 	return "", []interface{}{}, nil
 }
 
-func mkIdClause(params map[string]string) string {
+// mkIdClauseHardwired() is like mkIdClause(), but for UPDATE operations.
+// the difference is, for now, that the id values are formatted directly
+// into the WHERE string, rather than being subbed in by Exec.
+// don't allow the case where neither id nor ids is specified.
+func mkIdClauseHardwired(params map[string]string) (string, error) {
 	id_field := params["id_field"]
 	id, ok := params["id"]
 	if ok {
-		return fmt.Sprintf("WHERE %s = %s", id_field, id)
+		return fmt.Sprintf("WHERE %s = %s", id_field, id), nil
 	}
 	ids, ok := params["ids"]
 	if ok && ids != "" {
-		return fmt.Sprintf("WHERE %s in (%s)", id_field, ids)
+		return fmt.Sprintf("WHERE %s in (%s)", id_field, ids), nil
 	}
 
 	// no id and no ids implies everything matches.
-	return ""
+	// if this is bad, caller should check.
+	return "", nil
 }
 
 func updateRec(db dbType,
@@ -477,12 +495,20 @@ func updateRec(db dbType,
 	keylist := dbrec.Keys
 	keystr := strings.Join(keylist, ",")
 	placestr := nstring("?", len(keylist))
+	idclause, err := mkIdClauseHardwired(params)
+	if err != nil {
+		return NORET, err
+	}
+	if idclause == "" {
+		err := fmt.Errorf("id or ids must be specified")
+		return NORET, err
+	}
 
 	qstring := fmt.Sprintf("UPDATE %s SET (%s) = (%s) %s;",
 			params["table_name"],
 			keystr,
 			placestr,
-			mkIdClause(params))
+			idclause)
 
 	log.Debugf("qstring = %s", qstring)
 	stmt, err := db.handle.Prepare(qstring)
@@ -502,7 +528,7 @@ func updateRec(db dbType,
 }
 
 func getCommon(params map[string]string) (int, interface{}) {
-	idclause, idlist, err := idclauseSetup(params)
+	idclause, idlist, err := mkIdClause(params)
 	if err != nil {
 		return errorRet(badStat, err)
 	}
@@ -522,7 +548,7 @@ func getCommon(params map[string]string) (int, interface{}) {
 		return errorRet(badStat, fmt.Errorf("no matching record"))
 	}
 
-	return http.StatusOK, GetRecordResponse{Record:result}
+	return okRet(GetRecordResponse{Record:result})
 }
 
 func updateCommon(req *http.Request, params map[string]string) (int, interface{}) {
@@ -535,5 +561,5 @@ func updateCommon(req *http.Request, params map[string]string) (int, interface{}
 	if err != nil {
 		return errorRet(badStat, err)
 	}
-	return http.StatusOK, DeleteResponse{ra}
+	return okRet(DeleteResponse{ra})
 }
