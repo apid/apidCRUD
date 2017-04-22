@@ -3,6 +3,8 @@ package apidCRUD
 import (
 	"testing"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 )
 
 const (
@@ -107,5 +109,35 @@ func Test_CallFunc(t *testing.T) {
 	ws := NewApiWiring("", fakeApiTable)
 	for i, test := range CallFunc_Tab {
 		CallFunc_Checker(t, i, ws, test)
+	}
+}
+
+// ----- unit tests for dispatch()
+
+func dispatch_Checker(t *testing.T, i int, ws *apiWiring, test CallFunc_TC) {
+	fn := "dispatch"
+
+	vmap, ok := ws.pathsMap[test.path]
+	if !ok {
+		t.Errorf(`#%d: %s bad path "%s"`, i, fn, test.path)
+		return
+	}
+
+	rdr := strings.NewReader("")
+	req, _ := http.NewRequest(test.verb, test.path, rdr)
+	w := httptest.NewRecorder()
+
+	dispatch(vmap, w, req)
+	code := w.Code
+	if test.xcode != code {
+		t.Errorf(`#%d: %s("%s","%s") code=%d; expected %d`,
+			i, fn, test.path, test.verb, code, test.xcode)
+	}
+}
+
+func Test_dispatch(t *testing.T) {
+	ws := NewApiWiring("", fakeApiTable)
+	for i, test := range CallFunc_Tab {
+		dispatch_Checker(t, i, ws, test)
 	}
 }

@@ -6,10 +6,12 @@ import (
 	"github.com/30x/apid-core"
 )
 
+// GetStringer is an interface that supports GetString().
 type GetStringer interface {
 	GetString(string) string
 }
 
+// apiTable is the list of APIs that need to be wired up.
 var apiTable = []apiDesc{
 	{ "/db", http.MethodGet, getDbResourcesHandler },
 	{ "/db/_table", http.MethodGet, getDbTablesHandler },
@@ -52,33 +54,33 @@ func initPlugin(services apid.Services) (apid.PluginData, error) {
 func registerHandlers(service apid.APIService) {
 	ws := NewApiWiring(basePath, apiTable)
 	maps := ws.GetMaps()
-	for path, methods := range maps {
-		addHandler(service, path, methods)
+	for path, vmap := range maps {
+		addHandler(service, path, vmap)
 	}
 }
 
 // addHandler() registers the given path with the given service,
 // so that it will be handled indirectly by dispatch().
-// when an API call is made on this path, the methods argument from
+// when an API call is made on this path, the vmap argument from
 // this context will be suppllied, along with the w and r arguments
 // passed in by the service framework.
-func addHandler(service apid.APIService, path string, methods verbMap) {
+func addHandler(service apid.APIService, path string, vmap verbMap) {
 	service.HandleFunc(path,
 		func(w http.ResponseWriter, r *http.Request) {
-			dispatch(methods, w, r)
+			dispatch(vmap, w, r)
 		})
 }
 
 // dispatch() is the general handler for all our APIs.
 // it is called indirectly thru a closure function that
-// supplies the methods argument.
-func dispatch(methods verbMap, w http.ResponseWriter, req *http.Request) {
+// supplies the vmap argument.
+func dispatch(vmap verbMap, w http.ResponseWriter, req *http.Request) {
 	log.Debugf("in dispatch: method=%s path=%s", req.Method, req.URL.Path)
 	defer func() {
 		_ = req.Body.Close()
 	}()
 
-	code, data := CallFunc(methods, req.Method, req)
+	code, data := CallFunc(vmap, req.Method, req)
 
 	rawdata, err := convData(data)
 	if err != nil {

@@ -38,11 +38,11 @@ type validatorTC struct {
 func run_validator(t *testing.T, vf validatorFunc, tab []validatorTC) {
 	fname := getFunctionName(vf)
 	for i, test := range tab {
-		call_validator(t, fname, vf, i, test)
+		validator_Checker(t, fname, vf, i, test)
 	}
 }
 
-func call_validator(t *testing.T,
+func validator_Checker(t *testing.T,
 		fname string,
 		vf validatorFunc,
 		i int,
@@ -390,7 +390,7 @@ func fetchParamsHelper(qp string) (map[string]string, error) {
 	return vmap, nil
 }
 
-func call_fetchParams(t *testing.T, i int, qp string, xsucc bool) {
+func fetchParams_Checker(t *testing.T, i int, qp string, xsucc bool) {
 	_, err := fetchParamsHelper(qp)
 	if xsucc != (err == nil) {
 		msg := "true"
@@ -404,7 +404,7 @@ func call_fetchParams(t *testing.T, i int, qp string, xsucc bool) {
 
 func Test_fetchParams(t *testing.T) {
 	for i, test := range fetchParams_Tab {
-		call_fetchParams(t, i, test.arg, test.xsucc)
+		fetchParams_Checker(t, i, test.arg, test.xsucc)
 	}
 }
 
@@ -767,4 +767,24 @@ func Test_okRet(t *testing.T) {
 	if data != cdata {
 		t.Errorf("%s returned data does not match", fn)
 	}
+}
+
+// ----- unit tests for mkIdClause()
+
+type idclause_TC struct {
+	params string
+	xres string
+	xidlist string
+	xsucc bool
+}
+
+var idclause_Tab = []idclause_TC {
+	{ "id=123", "WHERE id = ?", "123", true },
+}
+
+func mkIdClause_Checker(t *testing.T, i int, test idclause_TC) {
+	
+}
+
+func Test_mkIdClause(t *testing.T) {
 }
