@@ -325,8 +325,8 @@ func fakeParams(paramstr string) map[string]string {
 	if paramstr == "" {
 		return ret
 	}
-	strlist := strings.Split(paramstr, "&")
 	var name, value string
+	strlist := strings.Split(paramstr, "&")
 	for _, s := range strlist {
 		if s == "" {
 			continue
@@ -343,6 +343,7 @@ func fakeParams(paramstr string) map[string]string {
 			name = ""
 			value = ""
 		}
+		// fmt.Printf("in fakeParams, name=%s, value=%s\n", name, value)
 		ret[name] = value
 	}
 	return ret
@@ -375,13 +376,18 @@ func aToIdList(s string) []interface{} {
 	return ret
 }
 
-func idListToA(idlist []interface{}) string {
+// convert idlist (list of int64) to ascii csv.
+func idListToA(idlist []interface{}) (string, error) {
 	alist := make([]string, len(idlist))
 	for i, ival := range idlist {
-		val := ival.(int64)
+		val, ok := ival.(int64)
+		if !ok {
+			return "",
+				fmt.Errorf(`idListToA conversion error on "%s"`, ival)
+		}
 		alist[i] = idTypeToA(val)
 	}
-	return strings.Join(alist, ",")
+	return strings.Join(alist, ","), nil
 }
 
 func mkIdClause_Checker(t *testing.T, i int, test idclause_TC) {
@@ -402,7 +408,10 @@ func mkIdClause_Checker(t *testing.T, i int, test idclause_TC) {
 			i, fn, test.paramstr, res, test.xres)
 	}
 
-	resids := idListToA(idlist)
+	resids, err := idListToA(idlist)
+	if err != nil {
+		t.Errorf(`#%d: %s idListToA error "%s"`, err)
+	}
 	if test.xids != resids {
 		t.Errorf(`#%d: %s([%s]) idlist=[%s]; expected [%s]`,
 			i, fn, test.paramstr, resids, test.xids)
@@ -469,7 +478,10 @@ func idTypesToInterface_Checker(t *testing.T, i int, test string) {
 		alist = []string{}
 	}
 	res := idTypesToInterface(alist)
-	str := idListToA(res)
+	str, err := idListToA(res)
+	if err != nil {
+		t.Errorf(`#%d: %s idListToA error "%s"`, err)
+	}
 	if str != test {
 		t.Errorf(`#%d: %s("%s") = "%s"; expected "%s"`,
 			i, fn, test, str, test)
@@ -497,8 +509,8 @@ var mkSelectString_Tab = []mkSelectString_TC {
 	{"table_name=T&id_field=id&id=456&fields=a&limit=1&offset=0",
 		"SELECT a FROM T WHERE id = ? LIMIT 1 OFFSET 0;",
 		"456", true},
-	{"table_name=T&id_field=id&id=123,456&fields=a,b,c&limit=1&offset=0",
-		"SELECT a,b,c FROM T WHERE id = ? LIMIT 1 OFFSET 0;",
+	{"table_name=T&id_field=id&ids=123,456&fields=a,b,c&limit=1&offset=0",
+		"SELECT a,b,c FROM T WHERE id in (?,?) LIMIT 1 OFFSET 0;",
 		"123,456", true},
 }
 
@@ -506,6 +518,7 @@ var mkSelectString_Tab = []mkSelectString_TC {
 func mkSelectString_Checker(t *testing.T, i int, test mkSelectString_TC) {
 	fn := "mkSelectString"
 	params := fakeParams(test.paramstr)
+	// fmt.Printf("in %s_Checker, params=%s\n", fn, params)
 	res, idlist, err := mkSelectString(params)
 	if test.xsucc != (err == nil) {
 		msg := errRep(err)
@@ -521,7 +534,10 @@ func mkSelectString_Checker(t *testing.T, i int, test mkSelectString_TC) {
 			i, fn, res, test.xres)
 		return
 	}
-	ids := idListToA(idlist)
+	ids, err := idListToA(idlist)
+	if err != nil {
+		t.Errorf(`#%d: %s idListToA error "%s"`, err)
+	}
 	if test.xids != ids {
 		t.Errorf(`#%d: %s returned ids "%s"; expected "%s"`,
 			i, fn, ids, test.xids)
