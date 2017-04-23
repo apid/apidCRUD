@@ -197,6 +197,13 @@ func okRet(data interface{}) (int, interface{}) {
 	return http.StatusOK, data
 }
 
+// notImpemented() returns the code/data pair for an apiHandler
+// that is not implemented.
+func notImplemented() (int, interface{}) {
+	code := http.StatusNotImplemented
+	return errorRet(code, fmt.Errorf("API not implemented yet"))
+}
+
 // initDB() initializes the global db variable
 func initDB() (dbType, error) {
 	h, err := sql.Open("sqlite3", dbName)
@@ -306,7 +313,6 @@ func idTypesToInterface(vals []string) []interface{} {
 	return ret
 }
 
-
 // nstring() returns a string with n comma-separated copies of
 // the given string s.
 func nstring(s string, n int) string {
@@ -319,6 +325,7 @@ func nstring(s string, n int) string {
 
 func runInsert(db dbType, tabname string, keys []string, values []string) (idType, error) {
 	NORET := idType(-1)
+
 	nkeys := len(keys)
 	nvalues := len(values)
 	if nkeys != nvalues {
@@ -330,6 +337,7 @@ func runInsert(db dbType, tabname string, keys []string, values []string) (idTyp
 
 	qstring := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);",
 		tabname, keystr, placestr)
+
 	stmt, err := db.handle.Prepare(qstring)
 	if err != nil {
 		return NORET, err
@@ -373,8 +381,8 @@ func delRecs(db dbType, params map[string]string) (int, error) {
 		return NORET, err
 	}
 	if idclause == "" {
-		err := fmt.Errorf("id or ids must be specified")
-		return NORET, err
+		return NORET,
+			fmt.Errorf("id or ids must be specified")
 	}
 	qstring := fmt.Sprintf("DELETE FROM %s %s;",
 		params["table_name"],
@@ -423,13 +431,6 @@ func validateSQLValues(values []string) error {
 	return nil    // no error for now
 }
 
-// notImpemented() returns the code/data pair for an apiHandler
-// that is not implemented.
-func notImplemented() (int, interface{}) {
-	code := http.StatusNotImplemented
-	return errorRet(code, fmt.Errorf("API not implemented yet"))
-}
-
 func getJsonRecord(req *http.Request) (jsonRecord, error) {
 	jrec := jsonRecord{}
         err := json.NewDecoder(req.Body).Decode(&jrec)
@@ -467,11 +468,11 @@ func mkIdClause(params map[string]string) (string, []interface{}, error) {
 	return "", []interface{}{}, nil
 }
 
-// mkIdClauseHardwired() is like mkIdClause(), but for UPDATE operations.
+// mkIdClauseUpdate() is like mkIdClause(), but for UPDATE operations.
 // the difference is, for now, that the id values are formatted directly
 // into the WHERE string, rather than being subbed in by Exec.
 // don't allow the case where neither id nor ids is specified.
-func mkIdClauseHardwired(params map[string]string) (string, error) {
+func mkIdClauseUpdate(params map[string]string) (string, error) {
 	id_field := params["id_field"]
 	id, ok := params["id"]
 	if ok {
@@ -495,13 +496,13 @@ func updateRec(db dbType,
 	keylist := dbrec.Keys
 	keystr := strings.Join(keylist, ",")
 	placestr := nstring("?", len(keylist))
-	idclause, err := mkIdClauseHardwired(params)
+	idclause, err := mkIdClauseUpdate(params)
 	if err != nil {
 		return NORET, err
 	}
 	if idclause == "" {
-		err := fmt.Errorf("id or ids must be specified")
-		return NORET, err
+		return NORET,
+			fmt.Errorf("id or ids must be specified")
 	}
 
 	qstring := fmt.Sprintf("UPDATE %s SET (%s) = (%s) %s;",
@@ -527,10 +528,10 @@ func updateRec(db dbType,
 	return int(ra), nil
 }
 
-func getCommon(params map[string]string) (int, interface{}) {
+func mkSelectString(params map[string]string) (string, []interface{}, error) {
 	idclause, idlist, err := mkIdClause(params)
 	if err != nil {
-		return errorRet(badStat, err)
+		return idclause, idlist, err
 	}
 
 	qstring := fmt.Sprintf("SELECT %s FROM %s %s LIMIT %s OFFSET %s;",
@@ -539,6 +540,15 @@ func getCommon(params map[string]string) (int, interface{}) {
 		idclause,
 		params["limit"],
 		params["offset"])
+
+	return qstring, idlist, nil
+}
+
+func getCommon(params map[string]string) (int, interface{}) {
+	qstring, idlist, err := mkSelectString(params)
+	if err != nil {
+		return errorRet(badStat, err)
+	}
 	result, err := runQuery(db, qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err)

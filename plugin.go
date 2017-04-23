@@ -2,7 +2,6 @@ package apidCRUD
 
 import (
 	"net/http"
-	"encoding/json"
 	"github.com/30x/apid-core"
 )
 
@@ -64,58 +63,11 @@ func registerHandlers(service apid.APIService) {
 // when an API call is made on this path, the vmap argument from
 // this context will be suppllied, along with the w and r arguments
 // passed in by the service framework.
-func addHandler(service apid.APIService, path string, vmap verbMap) {
+func addHandler(service apid.APIService, path string, vmap VerbMap) {
 	service.HandleFunc(path,
 		func(w http.ResponseWriter, r *http.Request) {
 			dispatch(vmap, w, r)
 		})
-}
-
-// dispatch() is the general handler for all our APIs.
-// it is called indirectly thru a closure function that
-// supplies the vmap argument.
-func dispatch(vmap verbMap, w http.ResponseWriter, req *http.Request) {
-	log.Debugf("in dispatch: method=%s path=%s", req.Method, req.URL.Path)
-	defer func() {
-		_ = req.Body.Close()
-	}()
-
-	code, data := CallFunc(vmap, req.Method, req)
-
-	rawdata, err := convData(data)
-	if err != nil {
-		writeErrorResponse(w, err)
-		return
-	}
-
-	w.WriteHeader(code)
-	_, _ = w.Write(rawdata)
-
-	log.Debugf("in dispatch: code=%d", code)
-}
-
-func convData(data interface{}) ([]byte, error) {
-	switch data := data.(type) {
-	case []byte:
-		return data, nil
-	case string:
-		return []byte(data), nil
-	default: // json conversion
-		return json.Marshal(data)
-	}
-}
-
-// writeErrorResponse() writes to the ResponseWriter,
-// the given error's message, and logs it.
-func writeErrorResponse(w http.ResponseWriter, err error) {
-	code := http.StatusInternalServerError
-	msg := err.Error()
-	data, _ := convData(ErrorResponse{code,msg})
-
-        w.WriteHeader(code)
-        _, _ = w.Write(data)
-
-        log.Errorf("error handling API request: %s", msg)
 }
 
 // confGet() returns the config value of the named string,

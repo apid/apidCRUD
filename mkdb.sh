@@ -18,7 +18,6 @@ create table nothing(id integer not null primary key autoincrement, name text no
 EOF
 
 # create the tables table
-echo ""
 sqlite3 "$DBFILE" <<EOF
 create table tables (name text unique not null);
 insert into tables (name) values ("bundles");
@@ -28,7 +27,6 @@ insert into tables (name) values ("nothing");
 EOF
 
 # dump the bundles table.
-echo ""
 sqlite3 "$DBFILE" << EOF
 select * from bundles;
 .quit

@@ -10,6 +10,17 @@ get_rec_ids()
 	| jq -S -r '.[].id'
 }
 
+get_rec_uri()
+{
+	ID=$1
+	TABLE=bundles
+	FIELDS=uri
+	API_PATH=db/_table
+	VERBOSE=
+	./appcurl.sh GET "$API_PATH/$TABLE/$ID?fields=$FIELDS" $VERBOSE 2>/dev/null \
+	| jq -S '.Record' | jq -r -S '.[].uri'
+}
+
 fail()
 {
 	echo "FAIL - $*"
@@ -92,10 +103,22 @@ else
 	echo OK
 fi
 
+echo "# check rec 6 uri before update"
+uri1=$(get_rec_uri 6)
+
 echo "# updating 2 records"
 nc=$(./upstest.sh 1,6 2>/dev/null)
 if [[ "$nc" != 2 ]]; then
 	fail "upstest.sh expected 2, got $nc"
+else
+	echo OK
+fi
+
+echo "# checking the update"
+uri2=$(get_rec_uri 6)
+
+if [[ "$uri1" == "$uri2" ]]; then
+	fail "update did not change uri = $uri1"
 else
 	echo OK
 fi

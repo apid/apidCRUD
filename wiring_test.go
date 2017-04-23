@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"reflect"
+	"fmt"
+	"encoding/json"
 )
 
 const (
@@ -77,44 +80,44 @@ func Test_addApi(t *testing.T) {
 	}
 }
 
-// ----- unit tests for CallFunc()
+// ----- unit tests for CallApiMethod()
 
-type CallFunc_TC struct {
+type CallApiMethod_TC struct {
 	path string
 	verb string
 	xcode int
 }
 
-var CallFunc_Tab = []CallFunc_TC {
+var CallApiMethod_Tab = []CallApiMethod_TC {
 	{ "/abc", http.MethodGet, abcGetRet },
 	{ "/abc", http.MethodPost, abcPostRet },
 	{ "/xyz", http.MethodPut, xyzPutRet },
 }
 
-func CallFunc_Checker(t *testing.T, i int, ws *apiWiring, test CallFunc_TC) {
-	fn := "CallFunc"
+func CallApiMethod_Checker(t *testing.T, i int, ws *ApiWiring, test CallApiMethod_TC) {
+	fn := "CallApiMethod"
 	vmap, ok := ws.pathsMap[test.path]
 	if !ok {
 		t.Errorf(`#%d: %s bad path "%s"`, i, fn, test.path)
 		return
 	}
-	code, _ := CallFunc(vmap, test.verb, nil)
+	code, _ := CallApiMethod(vmap, test.verb, nil)
 	if test.xcode != code {
 		t.Errorf(`#%d: %s("%s","%s")=%d; expected %d`,
 			i, fn, test.path, test.verb, code, test.xcode)
 	}
 }
 
-func Test_CallFunc(t *testing.T) {
+func Test_CallApiMethod(t *testing.T) {
 	ws := NewApiWiring("", fakeApiTable)
-	for i, test := range CallFunc_Tab {
-		CallFunc_Checker(t, i, ws, test)
+	for i, test := range CallApiMethod_Tab {
+		CallApiMethod_Checker(t, i, ws, test)
 	}
 }
 
 // ----- unit tests for dispatch()
 
-func dispatch_Checker(t *testing.T, i int, ws *apiWiring, test CallFunc_TC) {
+func dispatch_Checker(t *testing.T, i int, ws *ApiWiring, test CallApiMethod_TC) {
 	fn := "dispatch"
 
 	vmap, ok := ws.pathsMap[test.path]
@@ -137,7 +140,98 @@ func dispatch_Checker(t *testing.T, i int, ws *apiWiring, test CallFunc_TC) {
 
 func Test_dispatch(t *testing.T) {
 	ws := NewApiWiring("", fakeApiTable)
-	for i, test := range CallFunc_Tab {
+	for i, test := range CallApiMethod_Tab {
 		dispatch_Checker(t, i, ws, test)
+	}
+}
+
+// ----- unit tests for convData()
+
+func errRep(err error) string {
+	if err == nil {
+		return "true"
+	}
+	return err.Error()
+}
+
+type convData_TC struct {
+	idata interface{}
+	xbytes []byte
+	xsucc bool
+}
+
+var erdata = ErrorResponse{567, "junk"}
+
+var erjson = `{"Code":567,"Message":"junk"}`
+
+var convData_Tab = []convData_TC {
+	{"abc", []byte("abc"), true},
+	{[]byte("xyz"), []byte("xyz"), true},
+	{erdata, []byte(erjson), true},
+}
+
+func convData_Checker(t *testing.T, i int, test convData_TC) {
+	fn := "convData"
+	res, err := convData(test.idata)
+	if test.xsucc != (err == nil) {
+		msg := errRep(err)
+		t.Errorf(`#%d: %s returned status=[%s]; expected %t`,
+			i, fn, msg, test.xsucc)
+	}
+	if err != nil {
+		// if the actual call failed, nothing more can be checked.
+		return
+	}
+	if ! reflect.DeepEqual(test.xbytes, res) {
+		t.Errorf(`#%d: %s returned data=[%s]; expected [%s]`,
+			i, fn, res, test.xbytes)
+	}
+}
+
+func Test_convData(t *testing.T) {
+	for i, test := range convData_Tab {
+		convData_Checker(t, i, test)
+	}
+}
+
+// ----- unit tests for writeErrorResponse()
+
+type writeErrorResponse_TC struct {
+	msg string
+	xcode int
+}
+
+var writeErrorResponse_Tab = []writeErrorResponse_TC {
+	{ "wxyz", http.StatusInternalServerError },
+	{ "abcd", http.StatusInternalServerError },
+}
+
+func writeErrorResponse_Checker(t *testing.T, i int, test writeErrorResponse_TC) {
+	fn := "writeErrorResponse"
+	w := httptest.NewRecorder()
+	err := fmt.Errorf("%s", test.msg)
+	writeErrorResponse(w, err)
+	if test.xcode != w.Code {
+		t.Errorf(`#%d: %s wrote code=%d; expected %d`,
+			i, fn, w.Code, test.xcode)
+		return
+	}
+	body := w.Body.Bytes()
+	erec := &ErrorResponse{}
+	json.Unmarshal(body, erec)
+	if test.xcode != erec.Code {
+		t.Errorf(`#%d: %s ErrorResponse code=%d; expected %d`,
+			i, fn, erec.Code, test.xcode)
+		return
+	}
+	if test.msg != erec.Message {
+		t.Errorf(`#%d: %s ErrorResponse msg="%s"; expected "%s"`,
+			i, fn, erec.Message, test.msg)
+	}
+}
+
+func Test_writeErrorResponse(t *testing.T) {
+	for i, test := range writeErrorResponse_Tab {
+		writeErrorResponse_Checker(t, i, test)
 	}
 }

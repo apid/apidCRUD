@@ -20,9 +20,6 @@ const badStat = http.StatusBadRequest
 // dbName is the name of the database that is implicitly used in these APIs.
 var dbName = "apidCRUD.db"
 
-// DEBUG enables debugging printouts
-var DEBUG = true
-
 // db is our global database handle
 var db dbType
 

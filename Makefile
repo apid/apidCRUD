@@ -1,5 +1,5 @@
 .PHONY: default clean clobber build install preinstall test run
-.PHONY: killer lint test unit-test coverage covered uncovered setup
+.PHONY: killer lint test unit-test coverage covered setup
 
 default: install
 
@@ -55,14 +55,13 @@ unit-test:
 func-test:
 	./tester.sh | tee $(LOG_DIR)/$@.out
 
+# obsolete
 coverage:
 	./cover.sh | tee $(LOG_DIR)/$@.out
 
 covered:
 	./tested_funcs.sh | sort | tee $(LOG_DIR)/$@.out
-
-uncovered:
-	./uncovered.sh | tee $(LOG_DIR)/$@.out
+	./uncovered.sh | tee $(LOG_DIR)/uncovered.out
 
 lint:
 	gometalinter.v1 --sort=path -e "don't use underscores" \
