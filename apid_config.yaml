@@ -1,4 +1,4 @@
-api_listen: 127.0.0.1:9100  # will allow local connections only
+api_listen: 127.0.0.1:9000  # will allow local connections only
 api_expvar_path: null  # not exposed
 apidCRUD_db_name: apidCRUD.db
 log_level: Info    # valid values: Debug, Info, Warning, Error, Panic, Fatal

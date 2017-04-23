@@ -1,6 +1,7 @@
 #! /bin/bash
 #	tabtest.sh
 # print the names of the available tables in the database.
+# the API is GET on /db/_table aka getDbTables .
 
 FIELDS=id,name,uri
 API_PATH=db/_table

@@ -1,5 +1,7 @@
 #! /bin/bash
-# test of update record
+#	uptest.sh ID
+# update the record of the given ID.
+# the API is PATCH on /db/_table/{table_name}/{id} aka updateDbRecord .
 
 ID=${1:-2}
 TABLE=bundles

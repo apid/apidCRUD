@@ -1,4 +1,8 @@
 #! /bin/bash
+#	upstest.sh IDS
+# IDS is a comma-separated list of record ids.
+# update the given records.
+# the API is PATCH on /db/_table/{table_name} aka updateDbRecords .
 
 IDS=${1:-52}
 TABLE=bundles

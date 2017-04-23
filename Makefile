@@ -1,5 +1,5 @@
 .PHONY: default clean clobber build install preinstall test run
-.PHONY: killer lint test unit-test coverage covered setup
+.PHONY: killer lint test unit-test coverage setup
 
 default: install
 
@@ -51,18 +51,20 @@ unit-test:
 	| tee $(LOG_DIR)/$@.out
 	go tool cover -func=$(COV_FILE) \
 	> $(LOG_DIR)/cover-func.out
+	./tested_funcs.sh | sort > $(LOG_DIR)/covered.out
+	./uncovered.sh > $(LOG_DIR)/uncovered.out
 
 func-test:
-	./tester.sh | tee $(LOG_DIR)/$@.out
+	./func-test.sh
 
 # obsolete
 coverage:
 	./cover.sh | tee $(LOG_DIR)/$@.out
 
-covered:
-	./tested_funcs.sh | sort | tee $(LOG_DIR)/$@.out
-	./uncovered.sh | tee $(LOG_DIR)/uncovered.out
-
 lint:
 	gometalinter.v1 --sort=path -e "don't use underscores" \
 	| tee $(LOG_DIR)/$@.out
+
+# not yet implemented
+doc:
+	godoc

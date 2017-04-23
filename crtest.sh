@@ -1,6 +1,7 @@
 #! /bin/bash
 #	crtest.sh NRECS
 # create the given number of new records.
+# the API is POST /db/_table/{table_name} aka createDbRecords .
 
 # output the json for a single record
 mkrec()

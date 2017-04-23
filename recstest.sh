@@ -1,6 +1,7 @@
 #! /bin/bash
 #	recstest.sh IDS
 # dump all records (by default)
+# the API is GET on /db/_table/{table_name} aka getDbRecords
 
 TABLE=bundles
 FIELDS=id,name

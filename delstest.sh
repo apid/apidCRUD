@@ -1,6 +1,7 @@
 #! /bin/bash
 #	delstest.sh
 # functional test for the DELETE records API.
+# the API is DELETE /db/_table/{table_name} aka deleteDbRecords .
 
 IDS=${1:-25}
 TABLE=bundles
