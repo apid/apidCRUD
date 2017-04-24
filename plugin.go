@@ -5,8 +5,8 @@ import (
 	"github.com/30x/apid-core"
 )
 
-// GetStringer is an interface that supports GetString().
-type GetStringer interface {
+// getStringer is an interface that supports GetString().
+type getStringer interface {
 	GetString(string) string
 }
 
@@ -63,7 +63,7 @@ func registerHandlers(service apid.APIService) {
 // when an API call is made on this path, the vmap argument from
 // this context will be suppllied, along with the w and r arguments
 // passed in by the service framework.
-func addHandler(service apid.APIService, path string, vmap VerbMap) {
+func addHandler(service apid.APIService, path string, vmap verbMap) {
 	service.HandleFunc(path,
 		func(w http.ResponseWriter, r *http.Request) {
 			dispatch(vmap, w, r)
@@ -72,7 +72,7 @@ func addHandler(service apid.APIService, path string, vmap VerbMap) {
 
 // confGet() returns the config value of the named string,
 // or if there is no configured value, the given default value.
-func confGet(cfg GetStringer, vname string, defval string) string {
+func confGet(cfg getStringer, vname string, defval string) string {
 	ret := cfg.GetString(vname)
 	if ret == "" {
 		return defval

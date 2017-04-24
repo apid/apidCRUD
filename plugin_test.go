@@ -28,7 +28,7 @@ func (self mockGetStringer) GetString(name string) string {
 
 var fakeConfData = map[string]string{"there": "yes"}
 
-func confGet_Checker(t *testing.T, i int, gs GetStringer, tc *confGet_TC) {
+func confGet_Checker(t *testing.T, i int, gs getStringer, tc *confGet_TC) {
 	fn := "confGet"
 	res := confGet(gs, tc.name, tc.defval)
 	if tc.xval != res {

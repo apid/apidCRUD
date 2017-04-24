@@ -80,44 +80,44 @@ func Test_addApi(t *testing.T) {
 	}
 }
 
-// ----- unit tests for CallApiMethod()
+// ----- unit tests for callApiMethod()
 
-type CallApiMethod_TC struct {
+type callApiMethod_TC struct {
 	path string
 	verb string
 	xcode int
 }
 
-var CallApiMethod_Tab = []CallApiMethod_TC {
+var callApiMethod_Tab = []callApiMethod_TC {
 	{ "/abc", http.MethodGet, abcGetRet },
 	{ "/abc", http.MethodPost, abcPostRet },
 	{ "/xyz", http.MethodPut, xyzPutRet },
 }
 
-func CallApiMethod_Checker(t *testing.T, i int, ws *ApiWiring, tc CallApiMethod_TC) {
-	fn := "CallApiMethod"
+func callApiMethod_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {
+	fn := "callApiMethod"
 	vmap, ok := ws.pathsMap[tc.path]
 	if !ok {
 		t.Errorf(`#%d: %s bad path "%s"`, i, fn, tc.path)
 		return
 	}
-	code, _ := CallApiMethod(vmap, tc.verb, nil)
+	code, _ := callApiMethod(vmap, tc.verb, nil)
 	if tc.xcode != code {
 		t.Errorf(`#%d: %s("%s","%s")=%d; expected %d`,
 			i, fn, tc.path, tc.verb, code, tc.xcode)
 	}
 }
 
-func Test_CallApiMethod(t *testing.T) {
+func Test_callApiMethod(t *testing.T) {
 	ws := NewApiWiring("", fakeApiTable)
-	for i, tc := range CallApiMethod_Tab {
-		CallApiMethod_Checker(t, i, ws, tc)
+	for i, tc := range callApiMethod_Tab {
+		callApiMethod_Checker(t, i, ws, tc)
 	}
 }
 
 // ----- unit tests for dispatch()
 
-func dispatch_Checker(t *testing.T, i int, ws *ApiWiring, tc CallApiMethod_TC) {
+func dispatch_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {
 	fn := "dispatch"
 
 	vmap, ok := ws.pathsMap[tc.path]
@@ -140,7 +140,7 @@ func dispatch_Checker(t *testing.T, i int, ws *ApiWiring, tc CallApiMethod_TC) {
 
 func Test_dispatch(t *testing.T) {
 	ws := NewApiWiring("", fakeApiTable)
-	for i, tc := range CallApiMethod_Tab {
+	for i, tc := range callApiMethod_Tab {
 		dispatch_Checker(t, i, ws, tc)
 	}
 }
