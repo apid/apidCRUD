@@ -398,7 +398,7 @@ func mkIdClause_Checker(t *testing.T, i int, tc idclause_TC) {
 
 	resids, err := idListToA(idlist)
 	if err != nil {
-		t.Errorf(`#%d: %s idListToA error "%s"`, err)
+		t.Errorf(`#%d: %s idListToA error "%s"`, i, fn, err)
 	}
 	if tc.xids != resids {
 		t.Errorf(`#%d: %s([%s]) idlist=[%s]; expected [%s]`,
@@ -468,7 +468,7 @@ func idTypesToInterface_Checker(t *testing.T, i int, tc string) {
 	res := idTypesToInterface(alist)
 	str, err := idListToA(res)
 	if err != nil {
-		t.Errorf(`#%d: %s idListToA error "%s"`, err)
+		t.Errorf(`#%d: %s idListToA error "%s"`, i, fn, err)
 	}
 	if str != tc {
 		t.Errorf(`#%d: %s("%s") = "%s"; expected "%s"`,
@@ -524,7 +524,7 @@ func mkSelectString_Checker(t *testing.T, i int, tc mkSelectString_TC) {
 	}
 	ids, err := idListToA(idlist)
 	if err != nil {
-		t.Errorf(`#%d: %s idListToA error "%s"`, err)
+		t.Errorf(`#%d: %s idListToA error "%s"`, i, fn, err)
 	}
 	if tc.xids != ids {
 		t.Errorf(`#%d: %s returned ids "%s"; expected "%s"`,

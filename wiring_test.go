@@ -218,7 +218,7 @@ func writeErrorResponse_Checker(t *testing.T, i int, tc writeErrorResponse_TC) {
 	}
 	body := w.Body.Bytes()
 	erec := &ErrorResponse{}
-	json.Unmarshal(body, erec)
+	_ = json.Unmarshal(body, erec)
 	if tc.xcode != erec.Code {
 		t.Errorf(`#%d: %s ErrorResponse code=%d; expected %d`,
 			i, fn, erec.Code, tc.xcode)

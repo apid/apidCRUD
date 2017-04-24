@@ -241,6 +241,8 @@ func mkSQLRow(N int) []interface{} {
 	return ret
 }
 
+// runQuery() does a select query using the given query string.
+// the return value is a list of the retrieved records.
 func runQuery(db dbType,
 		qstring string,
 		ivals []interface{}) ([]*map[string]interface{}, error) {
@@ -317,6 +319,8 @@ func nstring(s string, n int) string {
 	return strings.Join(ret, ",")
 }
 
+// runInsert() inserts a record whose data is specified by the
+// given keys and values.  it returns the id of the inserted record.
 func runInsert(db dbType, tabname string, keys []string, values []string) (idType, error) {
 	NORET := idType(-1)
 
@@ -359,6 +363,7 @@ func runInsert(db dbType, tabname string, keys []string, values []string) (idTyp
 	return idType(lastid), nil
 }
 
+// delCommon() is the common part of record deletion APIs.
 func delCommon(params map[string]string) (int, interface{}) {
 	nc, err := delRecs(db, params)
 	if err != nil {
@@ -368,6 +373,8 @@ func delCommon(params map[string]string) (int, interface{}) {
 	return http.StatusOK, NumChangedResponse{nc}
 }
 
+// delRecs() deletes multiple records, using parameters in the params map.
+// it returns the number of records deleted.
 func delRecs(db dbType, params map[string]string) (int64, error) {
 	NORET := int64(-1)
 	idclause, idlist, err := mkIdClause(params)
@@ -489,6 +496,9 @@ func mkIdClauseUpdate(params map[string]string) (string, error) {
 	return "", nil
 }
 
+// updateRec() updates certain fields of a given record or records,
+// using parameters in the params map.
+// it returns the number of records changed.
 func updateRec(db dbType,
 		params map[string]string,
 		body BodyRecord) (int64, error) {
@@ -529,6 +539,7 @@ func updateRec(db dbType,
 	return ra, nil
 }
 
+// mkSelectString() returns the WHERE part of a selection query.
 func mkSelectString(params map[string]string) (string, []interface{}, error) {
 	idclause, idlist, err := mkIdClause(params)
 	if err != nil {
@@ -545,6 +556,7 @@ func mkSelectString(params map[string]string) (string, []interface{}, error) {
 	return qstring, idlist, nil
 }
 
+// getCommon() is common code for selection APIs.
 func getCommon(params map[string]string) (int, interface{}) {
 	qstring, idlist, err := mkSelectString(params)
 	if err != nil {
@@ -562,6 +574,7 @@ func getCommon(params map[string]string) (int, interface{}) {
 	return http.StatusOK, RecordsResponse{Records:result}
 }
 
+// updateCommon is common code for update APIs.
 func updateCommon(req *http.Request, params map[string]string) (int, interface{}) {
 	body, err := getBodyRecord(req)
 	if err != nil {

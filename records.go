@@ -2,7 +2,7 @@ package apidCRUD
 
 // ----- types for parameter record and response structures
 
-// NumChangedResponse is the response data for the API deleteDbRecord and others.
+// NumChangedResponse is the response data for API deleteDbRecord and others.
 type NumChangedResponse struct {
 	NumChanged int64
 }
@@ -13,6 +13,7 @@ type ErrorResponse struct {
 	Message string
 }
 
+// BodyRecord is the body data for APIs that create or update database records.
 type BodyRecord struct {
 	Records []KVRecord
 }

@@ -132,6 +132,7 @@ func validate_table_name(table_name string) (string, error) {
 	return table_name, nil
 }
 
+// validate_id_field() is the validator for the "id_field" parameter.
 func validate_id_field(id_field string) (string, error) {
 	log.Debugf("... id_field = %s", id_field)
 	if id_field == "" {
