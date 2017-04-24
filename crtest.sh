@@ -30,7 +30,7 @@ mk_nrecs()
 NRECS=${1:-2}
 TABLE=bundles
 RESOURCES="[$(mk_nrecs "$NRECS")]"
-BODY="{\"resource\":$RESOURCES}"
+BODY="{\"records\":$RESOURCES}"
 # echo 1>&2 "BODY=$BODY"
 
 out=$(./appcurl.sh POST "db/_table/$TABLE" -v -d "$BODY")

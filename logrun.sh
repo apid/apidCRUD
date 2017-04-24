@@ -5,5 +5,5 @@
 
 LOGFILE=$1; shift
 
-"$@" | tee "$LOGFILE"
+"$@" 2>&1 | tee "$LOGFILE"
 exit ${PIPESTATUS[0]}

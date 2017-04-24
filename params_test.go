@@ -15,18 +15,18 @@ import (
 // the type of a validator function.
 type validatorFunc func(string) (string, error)
 
-// type validatorTC is the structure of one test case for a validator.
-type validatorTC struct {
+// type validator_TC is the structure of one test case for a validator.
+type validator_TC struct {
 	arg string
 	xres string
 	xsucc bool
 }
 
 // run thru the table of test cases for the given validator function.
-func run_validator(t *testing.T, vf validatorFunc, tab []validatorTC) {
+func run_validator(t *testing.T, vf validatorFunc, tab []validator_TC) {
 	fname := getFunctionName(vf)
-	for i, test := range tab {
-		validator_Checker(t, fname, vf, i, test)
+	for i, tc := range tab {
+		validator_Checker(t, fname, vf, i, tc)
 	}
 }
 
@@ -35,14 +35,14 @@ func validator_Checker(t *testing.T,
 		fname string,
 		vf validatorFunc,
 		i int,
-		test validatorTC) {
-	res, err := vf(test.arg)
+		tc validator_TC) {
+	res, err := vf(tc.arg)
 	msg := errRep(err)
-	if !((test.xsucc && err == nil && test.xres == res) ||
-	   (!test.xsucc && err != nil)) {
+	if !((tc.xsucc && err == nil && tc.xres == res) ||
+	   (!tc.xsucc && err != nil)) {
 		t.Errorf(`#%d: %s("%s")=("%s","%s"); expected ("%s",%t)`,
-			i, fname, test.arg, res, msg,
-			test.xres, test.xsucc)
+			i, fname, tc.arg, res, msg,
+			tc.xres, tc.xsucc)
 	}
 }
 
@@ -53,7 +53,7 @@ func getFunctionName(f interface{}) string {
 
 // ----- unit tests for validate_id_field
 
-var validate_id_field_Tab = []validatorTC {
+var validate_id_field_Tab = []validator_TC {
 	{ "", "id", true },
 	{ "x", "x", true },
 	{ "X", "X", true },
@@ -67,7 +67,7 @@ func Test_validate_id_field(t *testing.T) {
 
 // ----- unit tests for validate_fields
 
-var validate_fields_Tab = []validatorTC {
+var validate_fields_Tab = []validator_TC {
 	{ "", "*", true },
 	{ "f1", "f1", true },
 	{ "f1,f2", "f1,f2", true },
@@ -83,7 +83,7 @@ func Test_validate_fields(t *testing.T) {
 
 // ----- unit tests for validate_table_name
 
-var validate_table_name_Tab = []validatorTC {
+var validate_table_name_Tab = []validator_TC {
 	{ "", "", false },
 	{ "a", "a", true },
 	{ "1", "1", false },
@@ -98,7 +98,7 @@ func Test_validate_table_name(t *testing.T) {
 
 // ----- unit tests for validate_id
 
-var validate_id_Tab = []validatorTC {
+var validate_id_Tab = []validator_TC {
 	{ "", "", false },			// empty
 	{ " ", " ", false },			// blank
 	{ "0", "0", true },			// simple
@@ -125,7 +125,7 @@ func Test_validate_id(t *testing.T) {
 
 var strMaxRecs = strconv.Itoa(maxRecs)
 
-var validate_limit_Tab = []validatorTC {
+var validate_limit_Tab = []validator_TC {
 	{ "", strMaxRecs, true },
 	{ " ", "", false },
 	{ " 1", "", false },
@@ -144,7 +144,7 @@ func Test_validate_limit(t *testing.T) {
 
 // ----- unit tests for validate_ids()
 
-var validate_ids_Tab = []validatorTC {
+var validate_ids_Tab = []validator_TC {
 	{ "", "", true },			// empty list
 	{ " ", " ", false },			// blanks
 	{ "0x21", "", false },			// go-ism
@@ -170,7 +170,7 @@ func Test_validate_ids(t *testing.T) {
 
 // ----- unit tests for validate_offset()
 
-var validate_offset_Tab = []validatorTC {
+var validate_offset_Tab = []validator_TC {
 	{ "", "0", true },
 	{ "0", "0", true },
 	{ "12345678", "12345678", true },
@@ -214,17 +214,17 @@ var notIdentChar_Tab = []notIdentChar_TC {
 
 func Test_notIdentChar(t *testing.T) {
 	fn := "isValidIdent"
-	for i, test := range notIdentChar_Tab {
-		res := notIdentChar(test.c)
-		if res != test.res {
-			t.Errorf(`#%d: %s('%c')=%t; expected %t`, i, fn, test.c, res, test.res)
+	for i, tc := range notIdentChar_Tab {
+		res := notIdentChar(tc.c)
+		if res != tc.res {
+			t.Errorf(`#%d: %s('%c')=%t; expected %t`, i, fn, tc.c, res, tc.res)
 		}
 	}
 }
 
 // ----- test table for a field with no validator
 
-var validate_nofield_Tab = []validatorTC {
+var validate_nofield_Tab = []validator_TC {
 	{ "", "", false },
 }
 
@@ -249,10 +249,10 @@ var isValidIdent_Tab = []isValidIdent_TC {
 
 func Test_isValidIdent(t *testing.T) {
 	fn := "isValidIdent"
-	for i, test := range isValidIdent_Tab {
-		res := isValidIdent(test.s)
-		if res != test.res {
-			t.Errorf(`#%d: %s("%s")=%t; expected %t`, i, fn, test.s, res, test.res)
+	for i, tc := range isValidIdent_Tab {
+		res := isValidIdent(tc.s)
+		if res != tc.res {
+			t.Errorf(`#%d: %s("%s")=%t; expected %t`, i, fn, tc.s, res, tc.res)
 		}
 	}
 }
@@ -393,8 +393,8 @@ func fetchParams_Checker(t *testing.T, i int, qp string, xsucc bool) {
 }
 
 func Test_fetchParams(t *testing.T) {
-	for i, test := range fetchParams_Tab {
-		fetchParams_Checker(t, i, test.arg, test.xsucc)
+	for i, tc := range fetchParams_Tab {
+		fetchParams_Checker(t, i, tc.arg, tc.xsucc)
 	}
 }
 
@@ -419,18 +419,18 @@ var aToIdType_Tab = []aToIdType_TC {
 }
 
 // handle one testcase.
-func aToIdType_Checker(t *testing.T, i int, test aToIdType_TC) {
+func aToIdType_Checker(t *testing.T, i int, tc aToIdType_TC) {
 	fn := "aToIdType"
-	res := idType(aToIdType(test.arg))
-	if test.xval != res {
+	res := idType(aToIdType(tc.arg))
+	if tc.xval != res {
 		t.Errorf(`#%d: %s("%s")=%d; expected %d`,
-			i, fn, test.arg, res, test.xval)
+			i, fn, tc.arg, res, tc.xval)
 	}
 }
 
 func Test_aToIdType(t *testing.T) {
-	for i, test := range aToIdType_Tab {
-		aToIdType_Checker(t, i, test)
+	for i, tc := range aToIdType_Tab {
+		aToIdType_Checker(t, i, tc)
 	}
 }
 
@@ -450,17 +450,17 @@ var idTypeToA_Tab = []idTypeToA_TC {
 }
 
 // handle one testcase
-func idTypeToA_Checker(t *testing.T, i int, test idTypeToA_TC) {
+func idTypeToA_Checker(t *testing.T, i int, tc idTypeToA_TC) {
 	fn := "idTypeToA"
-	res := idTypeToA(int64(test.arg))
-	if test.xval != res {
+	res := idTypeToA(int64(tc.arg))
+	if tc.xval != res {
 		t.Errorf(`#%d: %s(%d)="%s"; expected "%s"`,
-			i, fn, test.arg, res, test.xval)
+			i, fn, tc.arg, res, tc.xval)
 	}
 }
 
 func Test_idTypeToA(t *testing.T) {
-	for i, test := range idTypeToA_Tab {
-		idTypeToA_Checker(t, i, test)
+	for i, tc := range idTypeToA_Tab {
+		idTypeToA_Checker(t, i, tc)
 	}
 }

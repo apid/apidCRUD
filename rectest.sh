@@ -18,7 +18,7 @@ for i in ${IDS//,/ }; do
 		bad=1
 	fi
 	echo 1>&2 "$out"
-	echo "$out" | jq -r -S .Record[].id
+	echo "$out" | jq -r -S .Records[].id
 done
 
 exit $bad

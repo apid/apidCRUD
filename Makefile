@@ -6,7 +6,7 @@ default: install
 export MYAPP := apidCRUD
 export COV_DIR := cov
 export COV_FILE := $(COV_DIR)/covdata.out
-export COV_HTML := $(COV_DIR)/coverage.html
+export COV_HTML := $(COV_DIR)/$(MYAPP)-coverage.html
 export LOG_DIR := logs
 VENDOR_DIR := github.com/30x/$(MYAPP)/vendor
 SQLITE_PKG := github.com/mattn/go-sqlite3
@@ -48,16 +48,10 @@ killer:
 test: unit-test
 
 unit-test:
-	./logrun.sh $(LOG_DIR)/$@.out \
-	go test -coverprofile=$(COV_FILE)
-	./logrun.sh $(LOG_DIR)/cover-func.out \
-	go tool cover -func=$(COV_FILE) \
-	> $(LOG_DIR)/cover-func.out
-	./tested_funcs.sh | sort > $(LOG_DIR)/covered.out
-	./uncovered.sh > $(LOG_DIR)/uncovered.out
+	./unit-test.sh
 
 cov-view:
-	go tool cover -html=$(COV_FILE)
+	go tool cover -html=$(COV_FILE) -o $(COV_HTML)
 
 func-test:
 	./func-test.sh

@@ -79,3 +79,31 @@ this project follows the somewhat standard go testing pattern.
    * Test_*XYZ*() just uses a for/range statement to loop over the test cases.
    * on each test case, the function *XYZ*_Checker() checks one test case.
 
+Template:
+```
+type XYZ_TC struct {
+	// CUSTOMIZE
+	arg string
+	result string
+}
+
+var XYZ_Tab = XYZ_TC {
+	// CUSTOMIZE
+	{ "arg1", "result1" },
+}
+
+func XYZ_Checker(t *testing.T, testno int, tc XYZ_TC) {
+	// CUSTOMIZE
+	result := XYZ(tc.args)
+	if tc.result !- result {
+		t.Errorf(`#%d: XYZ("%s")="%s"; expected "%s"`,
+			testno, tc.args, result, tc.result)
+	}
+}
+
+func Test_XYZ(t *testing.T) {
+	for testno, tc := range XYZ_Tab {
+		XYZ_Checker(t, testno, tc)
+	}
+}
+```

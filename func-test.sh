@@ -7,13 +7,15 @@ vrun()
 }
 
 # ----- start of mainline code
+NSLEEP=2
+
 vrun ./runner.sh
-sleep 2
+sleep "$NSLEEP"
 echo ""
 
 vrun ./tester.sh
 xstat=$?
-sleep 2
+sleep "$NSLEEP"
 echo ""
 
 vrun pkill -f apidCRUD

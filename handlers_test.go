@@ -22,6 +22,15 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+// mySplit() is like strings.Split() except that
+// it returns a 0-length slice when s is the empty string.
+func mySplit(str string, sep string) []string {
+	if str == "" {
+		return []string{}
+	}
+	return strings.Split(str, sep)
+}
+
 // ----- unit tests for mkVmap()
 
 func strToRawBytes(data string) interface{} {
@@ -292,29 +301,8 @@ func errorRet_Checker(t *testing.T, i int, code int, msg string) {
 }
 
 func Test_errorRet(t *testing.T) {
-	for i, test := range errorRet_Tab {
-		errorRet_Checker(t, i, test.code, test.msg)
-	}
-}
-
-// ----- unit tests for okRet()
-
-func Test_okRet(t *testing.T) {
-	fn := "okRet"
-	xcode := http.StatusOK
-	data := DeleteResponse{0}
-	code, idata := okRet(DeleteResponse{0})
-	if xcode != code {
-		t.Errorf("%s returned code=%d; expected %d", fn, code, xcode)
-		return
-	}
-	cdata, ok := idata.(DeleteResponse)
-	if !ok {
-		t.Errorf("%s returned data could not convert", fn)
-		return
-	}
-	if data != cdata {
-		t.Errorf("%s returned data does not match", fn)
+	for i, tc := range errorRet_Tab {
+		errorRet_Checker(t, i, tc.code, tc.msg)
 	}
 }
 
@@ -390,37 +378,37 @@ func idListToA(idlist []interface{}) (string, error) {
 	return strings.Join(alist, ","), nil
 }
 
-func mkIdClause_Checker(t *testing.T, i int, test idclause_TC) {
+func mkIdClause_Checker(t *testing.T, i int, tc idclause_TC) {
 	fn := "mkIdClause"
-	params := fakeParams(test.paramstr)
+	params := fakeParams(tc.paramstr)
 	res, idlist, err := mkIdClause(params)
-	if test.xsucc != (err == nil) {
+	if tc.xsucc != (err == nil) {
 		msg := errRep(err)
 		t.Errorf(`#%d: %s([%s]) returned status=[%s]; expected [%t]`,
-			i, fn, test.paramstr, msg, test.xsucc)
+			i, fn, tc.paramstr, msg, tc.xsucc)
 		return
 	}
 	if err != nil {
 		return
 	}
-	if test.xres != res {
+	if tc.xres != res {
 		t.Errorf(`#%d: %s([%s]) returned "%s"; expected "%s"`,
-			i, fn, test.paramstr, res, test.xres)
+			i, fn, tc.paramstr, res, tc.xres)
 	}
 
 	resids, err := idListToA(idlist)
 	if err != nil {
 		t.Errorf(`#%d: %s idListToA error "%s"`, err)
 	}
-	if test.xids != resids {
+	if tc.xids != resids {
 		t.Errorf(`#%d: %s([%s]) idlist=[%s]; expected [%s]`,
-			i, fn, test.paramstr, resids, test.xids)
+			i, fn, tc.paramstr, resids, tc.xids)
 	}
 }
 
 func Test_mkIdClause(t *testing.T) {
-	for i, test := range idclause_Tab {
-		mkIdClause_Checker(t, i, test)
+	for i, tc := range idclause_Tab {
+		mkIdClause_Checker(t, i, tc)
 	}
 }
 
@@ -433,28 +421,28 @@ var mkIdClauseUpdate_Tab = []idclause_TC {
 	{ "id_field=id", "", "", true },
 }
 
-func mkIdClauseUpdate_Checker(t *testing.T, i int, test idclause_TC) {
+func mkIdClauseUpdate_Checker(t *testing.T, i int, tc idclause_TC) {
 	fn := "mkIdClauseUpdate"
-	params := fakeParams(test.paramstr)
+	params := fakeParams(tc.paramstr)
 	res, err := mkIdClauseUpdate(params)
-	if test.xsucc != (err == nil) {
+	if tc.xsucc != (err == nil) {
 		msg := errRep(err)
 		t.Errorf(`#%d: %s([%s]) returned status=[%s]; expected [%t]`,
-			i, fn, test.paramstr, msg, test.xsucc)
+			i, fn, tc.paramstr, msg, tc.xsucc)
 		return
 	}
 	if err != nil {
 		return
 	}
-	if test.xres != res {
+	if tc.xres != res {
 		t.Errorf(`#%d: %s([%s]) returned "%s"; expected "%s"`,
-			i, fn, test.paramstr, res, test.xres)
+			i, fn, tc.paramstr, res, tc.xres)
 	}
 }
 
 func Test_mkIdClauseUpdate(t *testing.T) {
-	for i, test := range mkIdClauseUpdate_Tab {
-		mkIdClauseUpdate_Checker(t, i, test)
+	for i, tc := range mkIdClauseUpdate_Tab {
+		mkIdClauseUpdate_Checker(t, i, tc)
 	}
 }
 
@@ -471,10 +459,10 @@ var idTypesToInterface_Tab = []string {
 	"987,654,32,1,0",
 }
 
-func idTypesToInterface_Checker(t *testing.T, i int, test string) {
+func idTypesToInterface_Checker(t *testing.T, i int, tc string) {
 	fn := "idTypesToInterface"
-	alist := strings.Split(test, ",")
-	if test == "" {
+	alist := strings.Split(tc, ",")
+	if tc == "" {
 		alist = []string{}
 	}
 	res := idTypesToInterface(alist)
@@ -482,16 +470,16 @@ func idTypesToInterface_Checker(t *testing.T, i int, test string) {
 	if err != nil {
 		t.Errorf(`#%d: %s idListToA error "%s"`, err)
 	}
-	if str != test {
+	if str != tc {
 		t.Errorf(`#%d: %s("%s") = "%s"; expected "%s"`,
-			i, fn, test, str, test)
+			i, fn, tc, str, tc)
 		return
 	}
 }
 
 func Test_idTypesToInterface(t *testing.T) {
-	for i, test := range idTypesToInterface_Tab {
-		idTypesToInterface_Checker(t, i, test)
+	for i, tc := range idTypesToInterface_Tab {
+		idTypesToInterface_Checker(t, i, tc)
 	}
 }
 
@@ -514,38 +502,101 @@ var mkSelectString_Tab = []mkSelectString_TC {
 		"123,456", true},
 }
 
-// run one test case
-func mkSelectString_Checker(t *testing.T, i int, test mkSelectString_TC) {
+// run one tc case
+func mkSelectString_Checker(t *testing.T, i int, tc mkSelectString_TC) {
 	fn := "mkSelectString"
-	params := fakeParams(test.paramstr)
+	params := fakeParams(tc.paramstr)
 	// fmt.Printf("in %s_Checker, params=%s\n", fn, params)
 	res, idlist, err := mkSelectString(params)
-	if test.xsucc != (err == nil) {
+	if tc.xsucc != (err == nil) {
 		msg := errRep(err)
 		t.Errorf(`#%d: %s returned status [%s]; expected [%t]`,
-			i, fn, msg, test.xsucc)
+			i, fn, msg, tc.xsucc)
 		return
 	}
 	if err != nil {
 		return
 	}
-	if test.xres != res {
+	if tc.xres != res {
 		t.Errorf(`#%d: %s returned "%s"; expected "%s"`,
-			i, fn, res, test.xres)
+			i, fn, res, tc.xres)
 		return
 	}
 	ids, err := idListToA(idlist)
 	if err != nil {
 		t.Errorf(`#%d: %s idListToA error "%s"`, err)
 	}
-	if test.xids != ids {
+	if tc.xids != ids {
 		t.Errorf(`#%d: %s returned ids "%s"; expected "%s"`,
-			i, fn, ids, test.xids)
+			i, fn, ids, tc.xids)
 	}
 }
 
 func Test_mkSelectString(t *testing.T) {
-	for i, test := range mkSelectString_Tab {
-		mkSelectString_Checker(t, i, test)
+	for i, tc := range mkSelectString_Tab {
+		mkSelectString_Checker(t, i, tc)
+	}
+}
+
+// ----- unit tests for getBodyRecord()
+
+type getBodyRecord_TC struct {
+	data string
+	keys string
+	values string
+}
+
+var getBodyRecord_Tab = []getBodyRecord_TC {
+	{`{"Records":[{"Keys":[], "Values":[]}]}`,
+		"",
+		""},
+	{`{"Records":[{"Keys":["k1","k2","k3"], "Values":["v1","v2","v3"]}]}`,
+		"k1,k2,k3",
+		"v1,v2,v3"},
+	{`{"Records":[{"Keys":["k1","k2","k3"], "Values":["v1","v2","v3"]},{"Keys":["k4","k5","k6"], "Values":["v4","v5","v6"]}]}`,
+		"k1,k2,k3&k4,k5,k6",
+		"v1,v2,v3&v4,v5,v6"},
+}
+
+func getBodyRecord_Checker(t *testing.T, testno int, tc getBodyRecord_TC) {
+	fn := "getBodyRecord"
+
+	rdr := strings.NewReader(tc.data)
+	req, _ := http.NewRequest(http.MethodPost, "/xyz", rdr)
+
+	tckeys := strings.Split(tc.keys, "&")
+	tcvalues := strings.Split(tc.values, "&")
+	nkeys := len(tckeys)
+
+	body, err := getBodyRecord(req)
+	if err != nil {
+		t.Errorf("#%d: %s([%s]) failed, error=%s",
+			testno, fn, tc.data, err)
+	}
+	records := body.Records
+	nrecs := len(records)
+
+	if nkeys != nrecs {
+		t.Errorf(`#%d: %s returned Records length=%d; expected %d`,
+			testno, fn, nrecs, nkeys)
+	}
+	for j := 0; j < nrecs; j++ {
+		rec := records[j]
+		keystr := strings.Join(rec.Keys, ",")
+		if tckeys[j] != keystr {
+			t.Errorf(`#%d %s Record[%d] keys=%s; expected %s`,
+				testno, fn, j, keystr, tckeys[j])
+		}
+		valstr := strings.Join(rec.Values, ",")
+		if tcvalues[j] != valstr {
+			t.Errorf(`#%d %s Record[%d] values=%s; expected %s`,
+				testno, fn, j, valstr, tcvalues[j])
+		}
+	}
+}
+
+func Test_getBodyRecord(t *testing.T) {
+	for testno, tc := range getBodyRecord_Tab {
+		getBodyRecord_Checker(t, testno, tc)
 	}
 }

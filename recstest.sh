@@ -15,5 +15,5 @@ out=$(./appcurl.sh GET "$API_PATH/$TABLE?ids=$IDS&fields=$FIELDS")
 xstat=$?
 
 echo "$out"
-# echo "$out" | jq -r -S .Record[].id
+# echo "$out" | jq -r -S .Records[].id
 exit $xstat

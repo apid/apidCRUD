@@ -6,7 +6,7 @@
 ID=${1:-2}
 TABLE=bundles
 RESOURCES='[{"keys":["name", "uri"], "values":["name9", "host2:z"]}]'
-BODY="{\"resource\":$RESOURCES}"
+BODY="{\"records\":$RESOURCES}"
 # echo 1>&2 "# BODY=$BODY"
 
 out=$(./appcurl.sh PATCH "db/_table/$TABLE/$ID" -v -d "$BODY")

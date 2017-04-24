@@ -28,19 +28,19 @@ func (self mockGetStringer) GetString(name string) string {
 
 var fakeConfData = map[string]string{"there": "yes"}
 
-func confGet_Checker(t *testing.T, i int, gs GetStringer, test *confGet_TC) {
+func confGet_Checker(t *testing.T, i int, gs GetStringer, tc *confGet_TC) {
 	fn := "confGet"
-	res := confGet(gs, test.name, test.defval)
-	if test.xval != res {
+	res := confGet(gs, tc.name, tc.defval)
+	if tc.xval != res {
 		t.Errorf(`#%d: %s("%s","%s")="%s"; expected "%s"`,
-			i, fn, test.name, test.defval, res, test.xval)
+			i, fn, tc.name, tc.defval, res, tc.xval)
 	}
 }
 
 func Test_confGet(t *testing.T) {
 	gs := mockGetStringer{fakeConfData}
-	for i, test := range confGet_Tab {
-		confGet_Checker(t, i, gs, &test)
+	for i, tc := range confGet_Tab {
+		confGet_Checker(t, i, gs, &tc)
 	}
 }
 

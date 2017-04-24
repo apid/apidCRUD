@@ -10,5 +10,5 @@ API_PATH=db/_table
 out=$(./appcurl.sh GET "$API_PATH")
 xstat=$?
 echo 1>&2 "$out"
-echo "$out" | jq -S -r .Resource[]
+echo "$out" | jq -S -r .Names[]
 exit $xstat

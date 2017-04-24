@@ -94,54 +94,54 @@ var CallApiMethod_Tab = []CallApiMethod_TC {
 	{ "/xyz", http.MethodPut, xyzPutRet },
 }
 
-func CallApiMethod_Checker(t *testing.T, i int, ws *ApiWiring, test CallApiMethod_TC) {
+func CallApiMethod_Checker(t *testing.T, i int, ws *ApiWiring, tc CallApiMethod_TC) {
 	fn := "CallApiMethod"
-	vmap, ok := ws.pathsMap[test.path]
+	vmap, ok := ws.pathsMap[tc.path]
 	if !ok {
-		t.Errorf(`#%d: %s bad path "%s"`, i, fn, test.path)
+		t.Errorf(`#%d: %s bad path "%s"`, i, fn, tc.path)
 		return
 	}
-	code, _ := CallApiMethod(vmap, test.verb, nil)
-	if test.xcode != code {
+	code, _ := CallApiMethod(vmap, tc.verb, nil)
+	if tc.xcode != code {
 		t.Errorf(`#%d: %s("%s","%s")=%d; expected %d`,
-			i, fn, test.path, test.verb, code, test.xcode)
+			i, fn, tc.path, tc.verb, code, tc.xcode)
 	}
 }
 
 func Test_CallApiMethod(t *testing.T) {
 	ws := NewApiWiring("", fakeApiTable)
-	for i, test := range CallApiMethod_Tab {
-		CallApiMethod_Checker(t, i, ws, test)
+	for i, tc := range CallApiMethod_Tab {
+		CallApiMethod_Checker(t, i, ws, tc)
 	}
 }
 
 // ----- unit tests for dispatch()
 
-func dispatch_Checker(t *testing.T, i int, ws *ApiWiring, test CallApiMethod_TC) {
+func dispatch_Checker(t *testing.T, i int, ws *ApiWiring, tc CallApiMethod_TC) {
 	fn := "dispatch"
 
-	vmap, ok := ws.pathsMap[test.path]
+	vmap, ok := ws.pathsMap[tc.path]
 	if !ok {
-		t.Errorf(`#%d: %s bad path "%s"`, i, fn, test.path)
+		t.Errorf(`#%d: %s bad path "%s"`, i, fn, tc.path)
 		return
 	}
 
 	rdr := strings.NewReader("")
-	req, _ := http.NewRequest(test.verb, test.path, rdr)
+	req, _ := http.NewRequest(tc.verb, tc.path, rdr)
 	w := httptest.NewRecorder()
 
 	dispatch(vmap, w, req)
 	code := w.Code
-	if test.xcode != code {
+	if tc.xcode != code {
 		t.Errorf(`#%d: %s("%s","%s") code=%d; expected %d`,
-			i, fn, test.path, test.verb, code, test.xcode)
+			i, fn, tc.path, tc.verb, code, tc.xcode)
 	}
 }
 
 func Test_dispatch(t *testing.T) {
 	ws := NewApiWiring("", fakeApiTable)
-	for i, test := range CallApiMethod_Tab {
-		dispatch_Checker(t, i, ws, test)
+	for i, tc := range CallApiMethod_Tab {
+		dispatch_Checker(t, i, ws, tc)
 	}
 }
 
@@ -170,27 +170,27 @@ var convData_Tab = []convData_TC {
 	{erdata, []byte(erjson), true},
 }
 
-func convData_Checker(t *testing.T, i int, test convData_TC) {
+func convData_Checker(t *testing.T, i int, tc convData_TC) {
 	fn := "convData"
-	res, err := convData(test.idata)
-	if test.xsucc != (err == nil) {
+	res, err := convData(tc.idata)
+	if tc.xsucc != (err == nil) {
 		msg := errRep(err)
 		t.Errorf(`#%d: %s returned status=[%s]; expected %t`,
-			i, fn, msg, test.xsucc)
+			i, fn, msg, tc.xsucc)
 	}
 	if err != nil {
 		// if the actual call failed, nothing more can be checked.
 		return
 	}
-	if ! reflect.DeepEqual(test.xbytes, res) {
+	if ! reflect.DeepEqual(tc.xbytes, res) {
 		t.Errorf(`#%d: %s returned data=[%s]; expected [%s]`,
-			i, fn, res, test.xbytes)
+			i, fn, res, tc.xbytes)
 	}
 }
 
 func Test_convData(t *testing.T) {
-	for i, test := range convData_Tab {
-		convData_Checker(t, i, test)
+	for i, tc := range convData_Tab {
+		convData_Checker(t, i, tc)
 	}
 }
 
@@ -206,32 +206,32 @@ var writeErrorResponse_Tab = []writeErrorResponse_TC {
 	{ "abcd", http.StatusInternalServerError },
 }
 
-func writeErrorResponse_Checker(t *testing.T, i int, test writeErrorResponse_TC) {
+func writeErrorResponse_Checker(t *testing.T, i int, tc writeErrorResponse_TC) {
 	fn := "writeErrorResponse"
 	w := httptest.NewRecorder()
-	err := fmt.Errorf("%s", test.msg)
+	err := fmt.Errorf("%s", tc.msg)
 	writeErrorResponse(w, err)
-	if test.xcode != w.Code {
+	if tc.xcode != w.Code {
 		t.Errorf(`#%d: %s wrote code=%d; expected %d`,
-			i, fn, w.Code, test.xcode)
+			i, fn, w.Code, tc.xcode)
 		return
 	}
 	body := w.Body.Bytes()
 	erec := &ErrorResponse{}
 	json.Unmarshal(body, erec)
-	if test.xcode != erec.Code {
+	if tc.xcode != erec.Code {
 		t.Errorf(`#%d: %s ErrorResponse code=%d; expected %d`,
-			i, fn, erec.Code, test.xcode)
+			i, fn, erec.Code, tc.xcode)
 		return
 	}
-	if test.msg != erec.Message {
+	if tc.msg != erec.Message {
 		t.Errorf(`#%d: %s ErrorResponse msg="%s"; expected "%s"`,
-			i, fn, erec.Message, test.msg)
+			i, fn, erec.Message, tc.msg)
 	}
 }
 
 func Test_writeErrorResponse(t *testing.T) {
-	for i, test := range writeErrorResponse_Tab {
-		writeErrorResponse_Checker(t, i, test)
+	for i, tc := range writeErrorResponse_Tab {
+		writeErrorResponse_Checker(t, i, tc)
 	}
 }

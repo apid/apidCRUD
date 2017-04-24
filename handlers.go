@@ -39,7 +39,7 @@ func getDbTablesHandler(req *http.Request) (int, interface{}) {
 		ret[i] = *pname
 	}
 
-	return okRet(TablesResponse{Resource: ret})
+	return http.StatusOK, TablesResponse{Names: ret}
 }
 
 // createDbRecordsHandler() handles POST requests on /db/_table/{table_name} .
@@ -49,17 +49,17 @@ func createDbRecordsHandler(req *http.Request) (int, interface{}) {
 		return errorRet(badStat, err)
 	}
 
-	jrec, err := getJsonRecord(req)
+	body, err := getBodyRecord(req)
 	if err != nil {
 		return badStat, err
 	}
-	log.Debugf("jrec = %s", jrec)
+	log.Debugf("body = %s", body)
 
-	resources := jrec.Resource
-	idlist := make([]int, 0, len(resources))
+	records := body.Records
+	idlist := make([]int64, 0, len(records))
 	log.Debugf("... idlist = %s", idlist)
 
-	for _, rec := range resources {
+	for _, rec := range records {
 		log.Debugf("rec = (%T) %s", rec, rec)
 		keys := rec.Keys
 		values := rec.Values
@@ -75,10 +75,10 @@ func createDbRecordsHandler(req *http.Request) (int, interface{}) {
 		if err != nil {
 			return badStat, err
 		}
-		idlist = append(idlist, int(id))
+		idlist = append(idlist, int64(id))
 	}
 
-	return okRet(RecordIds{Ids: idlist})
+	return http.StatusCreated, IdsResponse{Ids: idlist}
 }
 
 // getDbRecordsHandler() handles GET requests on /db/_table/{table_name} .
@@ -189,12 +189,6 @@ func describeDbFieldHandler(req *http.Request) (int, interface{}) {
 // pair appropriate to the given code and error object.
 func errorRet(code int, err error) (int, interface{}) {
 	return code, ErrorResponse{code, err.Error()}
-}
-
-// okRet() is called by apiHandler routines to pass back the code/data
-// pair for http.StatusOK and the given data.
-func okRet(data interface{}) (int, interface{}) {
-	return http.StatusOK, data
 }
 
 // notImpemented() returns the code/data pair for an apiHandler
@@ -371,11 +365,11 @@ func delCommon(params map[string]string) (int, interface{}) {
 		return errorRet(badStat, err)
 	}
 
-	return okRet(DeleteResponse{nc})
+	return http.StatusOK, NumChangedResponse{nc}
 }
 
-func delRecs(db dbType, params map[string]string) (int, error) {
-	NORET := -1
+func delRecs(db dbType, params map[string]string) (int64, error) {
+	NORET := int64(-1)
 	idclause, idlist, err := mkIdClause(params)
 	if err != nil {
 		return NORET, err
@@ -415,9 +409,12 @@ func delRecs(db dbType, params map[string]string) (int, error) {
 	if int(ra) != len(idlist) {
 		return NORET, fmt.Errorf("mismatch in number of affected records")
 	}
-	return int(ra), nil
+	return ra, nil
 }
 
+// validateSQLKeys() checks an array of key names,
+// returning a non-nil error if anything is found that
+// would not be a valid SQL key.
 func validateSQLKeys(keys []string) error {
 	for _, k := range keys {
 		if !isValidIdent(k) {
@@ -427,12 +424,16 @@ func validateSQLKeys(keys []string) error {
 	return nil
 }
 
+// validateSQLValues() checks an array of string values,
+// returning a non-nil error if anything is found that
+// would not be a valid SQL value.
 func validateSQLValues(values []string) error {
 	return nil    // no error for now
 }
 
-func getJsonRecord(req *http.Request) (jsonRecord, error) {
-	jrec := jsonRecord{}
+// getBodyRecord() returns a json record from the body of the given request.
+func getBodyRecord(req *http.Request) (BodyRecord, error) {
+	jrec := BodyRecord{}
         err := json.NewDecoder(req.Body).Decode(&jrec)
 	return jrec, err
 }
@@ -490,9 +491,9 @@ func mkIdClauseUpdate(params map[string]string) (string, error) {
 
 func updateRec(db dbType,
 		params map[string]string,
-		jrec jsonRecord) (int, error) {
-	NORET := -1
-	dbrec := jrec.Resource[0]
+		body BodyRecord) (int64, error) {
+	NORET := int64(-1)
+	dbrec := body.Records[0]
 	keylist := dbrec.Keys
 	keystr := strings.Join(keylist, ",")
 	placestr := nstring("?", len(keylist))
@@ -525,7 +526,7 @@ func updateRec(db dbType,
 	if err != nil {
 		return NORET, err
 	}
-	return int(ra), nil
+	return ra, nil
 }
 
 func mkSelectString(params map[string]string) (string, []interface{}, error) {
@@ -558,18 +559,22 @@ func getCommon(params map[string]string) (int, interface{}) {
 		return errorRet(badStat, fmt.Errorf("no matching record"))
 	}
 
-	return okRet(GetRecordResponse{Record:result})
+	return http.StatusOK, RecordsResponse{Records:result}
 }
 
 func updateCommon(req *http.Request, params map[string]string) (int, interface{}) {
-	jrecs, err := getJsonRecord(req)
+	body, err := getBodyRecord(req)
 	if err != nil {
 		return errorRet(badStat, err)
+	}
+	if len(body.Records) < 1 {
+		return errorRet(badStat,
+			fmt.Errorf("update: no data records in body"))
 	}
 
-	ra, err := updateRec(db, params, jrecs)
+	ra, err := updateRec(db, params, body)
 	if err != nil {
 		return errorRet(badStat, err)
 	}
-	return okRet(DeleteResponse{ra})
+	return http.StatusOK, NumChangedResponse{ra}
 }
