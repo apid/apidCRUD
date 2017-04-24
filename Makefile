@@ -43,7 +43,7 @@ run: install
 	./runner.sh
 
 killer:
-	pkill -f $(MYAPP)
+	-pkill -f $(MYAPP)
 
 test: unit-test
 

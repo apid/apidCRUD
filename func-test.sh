@@ -1,4 +1,7 @@
 #! /bin/bash
+#	func-test.sh
+# runs the server, runs tester.sh, then kills the server.
+# the exit status is the exit status from tester.sh
 
 vrun()
 {

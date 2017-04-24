@@ -16,7 +16,8 @@ COV_FILE=${COV_FILE:-$COV_DIR/covdata.out}
 COV_HTML=${COV_HTML:-$COV_DIR/apidCRUD-coverage.html}
 
 ./logrun.sh "$LOG_DIR/unit-test.out" \
-go test -coverprofile="$COV_FILE"
+go test -coverprofile="$COV_FILE" \
+|| exit 1
 
 go tool cover -func="$COV_FILE" > "$LOG_DIR/cover-func.out"
 

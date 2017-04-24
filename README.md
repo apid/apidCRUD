@@ -81,17 +81,22 @@ this project follows the somewhat standard go testing pattern.
 
 Template:
 ```
+// template for unit tests of a function XYZ.
+
+// inputs and outputs for one XYZ testcase.
 type XYZ_TC struct {
 	// CUSTOMIZE
 	arg string
 	result string
 }
 
+// table of XYZ testcases.
 var XYZ_Tab = XYZ_TC {
 	// CUSTOMIZE
 	{ "arg1", "result1" },
 }
 
+// run one testcase for function XYZ.
 func XYZ_Checker(t *testing.T, testno int, tc XYZ_TC) {
 	// CUSTOMIZE
 	result := XYZ(tc.args)
@@ -101,6 +106,7 @@ func XYZ_Checker(t *testing.T, testno int, tc XYZ_TC) {
 	}
 }
 
+// the XYZ test suite.  run all XYZ testcases.
 func Test_XYZ(t *testing.T) {
 	for testno, tc := range XYZ_Tab {
 		XYZ_Checker(t, testno, tc)
