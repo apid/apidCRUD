@@ -25,10 +25,10 @@ type apiWiring struct {
 	pathsMap map[string]verbMap
 }
 
-// NewApiWiring returns an API configuration, after adding the APIs
+// newApiWiring returns an API configuration, after adding the APIs
 // from the given table.  basePath is prefixed to the paths
 // specified in the table items.
-func NewApiWiring(basePath string, tab []apiDesc) (*apiWiring) {
+func newApiWiring(basePath string, tab []apiDesc) (*apiWiring) {
 	pm := make(map[string]verbMap)
 	apiws := &apiWiring{pm}
 	for _, b := range(tab) {

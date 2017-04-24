@@ -50,10 +50,12 @@ code=${out##*:code:}
 # delete the trailing marker and code
 out=${out%:code:*}
 
-echo "$out"
-echo ""
+if [[ -n "$out" ]]; then
+	echo "$out"
+	echo ""
+fi
 
 if ! ((200 <= code && code < 300)); then
-	xstat=1
+	xstat=11
 fi
 exit $xstat

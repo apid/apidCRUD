@@ -51,7 +51,7 @@ func initPlugin(services apid.Services) (apid.PluginData, error) {
 
 // registerHandlers() register all our handlers with the given service.
 func registerHandlers(service apid.APIService) {
-	ws := NewApiWiring(basePath, apiTable)
+	ws := newApiWiring(basePath, apiTable)
 	maps := ws.GetMaps()
 	for path, vmap := range maps {
 		addHandler(service, path, vmap)

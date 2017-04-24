@@ -49,11 +49,11 @@ func countPaths(tab []apiDesc) int {
 	return len(paths)
 }
 
-// ----- unit tests for InitWiring, NewApiWiring, GetMaps
+// ----- unit tests for InitWiring, newApiWiring, GetMaps
 
-func Test_NewApiWiring(t *testing.T) {
-	fn := "NewApiWiring"
-	ws := NewApiWiring("", []apiDesc{})
+func Test_newApiWiring(t *testing.T) {
+	fn := "newApiWiring"
+	ws := newApiWiring("", []apiDesc{})
 	if ws == nil {
 		t.Errorf("%s failed", fn)
 		return
@@ -62,7 +62,7 @@ func Test_NewApiWiring(t *testing.T) {
 
 func Test_GetMaps(t *testing.T) {
 	fn := "GetMaps"
-	ws := NewApiWiring("", []apiDesc{})
+	ws := newApiWiring("", []apiDesc{})
 	maps := ws.GetMaps();
 	if len(maps) != 0 {
 		t.Errorf("%s unexpectedly nonempty", fn)
@@ -71,7 +71,7 @@ func Test_GetMaps(t *testing.T) {
 
 func Test_addApi(t *testing.T) {
 	fn := "addApi"
-	ws := NewApiWiring("", fakeApiTable)
+	ws := newApiWiring("", fakeApiTable)
 	maps := ws.GetMaps()
 	N := countPaths(fakeApiTable)
 	wslen := len(maps)
@@ -109,7 +109,7 @@ func callApiMethod_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_
 }
 
 func Test_callApiMethod(t *testing.T) {
-	ws := NewApiWiring("", fakeApiTable)
+	ws := newApiWiring("", fakeApiTable)
 	for i, tc := range callApiMethod_Tab {
 		callApiMethod_Checker(t, i, ws, tc)
 	}
@@ -139,7 +139,7 @@ func dispatch_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {
 }
 
 func Test_dispatch(t *testing.T) {
-	ws := NewApiWiring("", fakeApiTable)
+	ws := newApiWiring("", fakeApiTable)
 	for i, tc := range callApiMethod_Tab {
 		dispatch_Checker(t, i, ws, tc)
 	}
