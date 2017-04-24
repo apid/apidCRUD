@@ -33,7 +33,7 @@ paths:
       summary: getDbResources() - Get resources for this service.
       operationId: getDbResources
       description: Return an array of the resources available.
-      x-published	# notyet
+      x-published:	# notyet
         - db.list
       parameters:
         - name: as_list
@@ -89,7 +89,7 @@ paths:
       summary: getDbSchemas() - List all Schemas
       operationId: getDbSchemas
       description: Return a list of the resource identifiers.
-      x-published	# notyet
+      x-published:	# notyet
         - db._schema.list
       parameters:
         - name: as_list
@@ -131,7 +131,7 @@ paths:
         - schema
       summary: createDbTables() - Create one or more tables.
       operationId: createDbTables
-      x-published	# notyet
+      x-published:	# notyet
         - db._schema.create
       parameters:
         - name: tables
@@ -157,7 +157,7 @@ paths:
         - schema
       summary: replaceDbTables() - Update (replace) one or more tables.
       operationId: replaceDbTables
-      x-published	# notyet
+      x-published:	# notyet
         - db._schema.alter
       parameters:
         - name: tables
@@ -183,7 +183,7 @@ paths:
         - schema
       summary: updateDbTables() - Update (patch) one or more tables.
       operationId: updateDbTables
-      x-published	# notyet
+      x-published:	# notyet
         - db._schema.alter
       parameters:
         - name: tables
@@ -216,7 +216,7 @@ paths:
         - schema
       summary: describeDbTable() - Retrieve table definition for the given table.
       operationId: describeDbTable
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._schema.{table_name}.describe'
         - db._schema.table_described
       parameters:
@@ -239,7 +239,7 @@ paths:
         - schema
       summary: createDbTable() - Create a table with the given properties and fields.
       operationId: createDbTable
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._schema.{table_name}.create'
         - db._schema.table_created
       parameters:
@@ -266,7 +266,7 @@ paths:
         - schema
       summary: replaceDbTable() - Update (replace) a table with the given properties.
       operationId: replaceDbTable
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._schema.{table_name}.alter'
         - db._schema.table_altered
       parameters:
@@ -293,7 +293,7 @@ paths:
         - schema
       summary: updateDbTable() - Update (patch) a table with the given properties.
       operationId: updateDbTable
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._schema.{table_name}.alter'
         - db._schema.table_altered
       parameters:
@@ -320,7 +320,7 @@ paths:
         - schema
       summary: deleteDbTable() - Delete (aka drop) the given table.
       operationId: deleteDbTable
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._schema.{table_name}.drop'
         - db._schema.table_dropped
       parameters: []
@@ -353,7 +353,7 @@ paths:
         describeDbField() - Retrieve the definition of the given field for the
         given table.
       operationId: describeDbField
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._schema.{table_name}.{field_name}.describe'
         - 'db._schema.{table_name}.field_described'
       parameters:
@@ -376,7 +376,7 @@ paths:
         - schema
       summary: replaceDbField() - Update one record by identifier.
       operationId: replaceDbField
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._schema.{table_name}.{field_name}.alter'
         - 'db._schema.{table_name}.field_altered'
       parameters:
@@ -401,7 +401,7 @@ paths:
         - schema
       summary: updateDbField() - Update one record by identifier.
       operationId: updateDbField
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._schema.{table_name}.{field_name}.alter'
         - 'db._schema.{table_name}.field_altered'
       parameters:
@@ -426,7 +426,7 @@ paths:
         - schema
       summary: deleteDbField() - Remove the given field from the given table.
       operationId: deleteDbField
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._schema.{table_name}.{field_name}.drop'
         - 'db._schema.{table_name}.field_dropped'
       parameters: []
@@ -445,11 +445,10 @@ paths:
   /db/_table: # PATH
     get: # VERB
       tags: [table, getDbTables, implemented]
-        - table
       summary: getDbTables() - List all Tables
       operationId: getDbTables
       description: Return a list of the table names.
-      x-published	# notyet
+      x-published:	# notyet
         - db._table.list
       responses:
         '200':
@@ -490,7 +489,7 @@ paths:
         request.<br/> Use the <b>fields</b> parameter to limit properties
         returned for each record. By default, all fields are returned for all
         records.
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._table.{table_name}.select'
         - db._table.table_selected
       consumes:
@@ -544,7 +543,6 @@ paths:
           description: Error
           schema:
             $ref: '#/definitions/Error'
-
     post: # VERB
       tags: [table, post, record, createDbRecords, implemented]
       summary: createDbRecords() - Create one or more records.
@@ -553,7 +551,7 @@ paths:
         Posted data should be an array of records wrapped in a <b>record</b>
         element.<br/> By default, only the id property of the record is returned
         on success. Use <b>fields</b> parameter to return more info.
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._table.{table_name}.insert'
         - db._table.table_inserted
       consumes:
@@ -593,7 +591,6 @@ paths:
           description: Error
           schema:
             $ref: '#/definitions/Error'
-
     patch: # VERB
       tags: [table, patch, record, updateDbRecords, implemented]
       summary: updateDbRecords() - Update (patch) one or more records.
@@ -606,7 +603,7 @@ paths:
         posted body.<br/> Filter can be included via URL parameter or included
         in the posted body.<br/> By default, only the id property of the record
         is returned on success. Use <b>fields</b> parameter to return more info.
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._table.{table_name}.update'
         - db._table.table_updated
       consumes:
@@ -659,7 +656,6 @@ paths:
           description: Error
           schema:
             $ref: '#/definitions/Error'
-
     delete: # VERB
       tags: [table, delete, record, deleteDbRecords, implemented]
       summary: deleteDbRecords() - Delete one or more records.
@@ -679,7 +675,7 @@ paths:
         including the identifying fields, to delete specific records.<br/> By
         default, only the id property of the record is returned on success, use
         <b>fields</b> to return more info.
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._table.{table_name}.delete'
         - db._table.table_deleted
       consumes:
@@ -724,7 +720,6 @@ paths:
           description: Error
           schema:
             $ref: '#/definitions/Error'
-
   '/db/_table/{table_name}/{id}': # PATH
     parameters:
       - name: id
@@ -737,7 +732,6 @@ paths:
         type: string
         in: path
         required: true
-
     get: # VERB
       tags: [table, get, record, getDbRecord, implemented]
       summary: getDbRecord() - Retrieve one record by identifier.
@@ -745,7 +739,7 @@ paths:
       description: >-
         Use the <b>fields</b> parameter to limit properties that are returned.
         By default, all fields are returned.
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._table.{table_name}.{id}.select'
         - db._table.record_selected
       consumes:
@@ -783,7 +777,6 @@ paths:
           description: Error
           schema:
             $ref: '#/definitions/Error'
-
     patch: # VERB
       tags: [table, patch, record, updateDbRecord, implemented]
       summary: updateDbRecord() - Update (patch) one record by identifier.
@@ -792,7 +785,7 @@ paths:
         Post data should be an array of fields for a single record.<br/> Use the
         <b>fields</b> parameter to return more properties. By default, the id is
         returned.
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._table.{table_name}.{id}.update'
         - db._table.record_updated
       consumes:
@@ -825,7 +818,6 @@ paths:
           description: Error
           schema:
             $ref: '#/definitions/Error'
-
     delete: # VERB
       tags: [table, delete, record, deleteDbRecord, implemented]
       summary: deleteDbRecord() - Delete one record by identifier.
@@ -833,7 +825,7 @@ paths:
       description: >-
         Use the <b>fields</b> parameter to return more deleted properties. By
         default, the id is returned.
-      x-published	# notyet
+      x-published:	# notyet
         - 'db._table.{table_name}.{id}.delete'
         - db._table.record_deleted
       consumes:
@@ -870,7 +862,6 @@ paths:
           description: Error
           schema:
             $ref: '#/definitions/Error'
-
 definitions:
   Success:
     type: object
@@ -1092,7 +1083,7 @@ definitions:
         type: array
         description: array of ids
         items:
-          integer
+          type: integer
           format: int64
   RecordsResponse:
     type: object
