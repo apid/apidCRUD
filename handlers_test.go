@@ -65,12 +65,12 @@ func mkVmap_Checker(t *testing.T,
 		t.Errorf("#%d: %s(...) failed", i, fn)
 		return
 	}
-	if N != len(*res) {
+	if N != len(res) {
 		t.Errorf("#%d: %s(...) map length mismatch nkeys", i, fn)
 		return
 	}
 	for j, k := range keys {
-		v, err := interfaceToStr((*res)[k])
+		v, err := interfaceToStr(res[k])
 		if err != nil {
 			t.Errorf("#%d: %s(...) rawBytesToStr: %s", j, fn, err)
 			return
@@ -616,14 +616,14 @@ var convTableNames_Tab = []convTableNames_TC {
 
 // mimicTableNamesQuery() returns an object that mimics the return from
 // the query to the "tables" table.
-func mimicTableNamesQuery(names []string) []*map[string]interface{} {
+func mimicTableNamesQuery(names []string) []map[string]interface{} {
 	N := len(names)
-	ret := make([]*map[string]interface{}, N)
+	ret := make([]map[string]interface{}, N)
 	for i := 0; i < N; i++ {
 		row := make(map[string]interface{})
 		name := names[i]
 		row["name"] = interface{}(&name)
-		ret[i] = &row
+		ret[i] = row
 	}
 	return ret
 }
