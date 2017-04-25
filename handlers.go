@@ -196,7 +196,7 @@ func initDB() (dbType, error) {
 // and returns a map from key to corresponding value.
 // these map values are *string as interface{}.
 // this is somewhat like python's zip function.
-func mkVmap(keys []string, values []interface{}) (*map[string]interface{}, error) {
+func mkVmap(keys []string, values []interface{}) (map[string]interface{}, error) {
 	N := len(keys)
 	if N != len(values) {
 		return nil, fmt.Errorf("nkeys different from nvalues")
@@ -206,12 +206,12 @@ func mkVmap(keys []string, values []interface{}) (*map[string]interface{}, error
 		// convert from sql.RawBytes to string
 		rbp, ok := values[i].(*sql.RawBytes)
 		if !ok {
-			return &ret, fmt.Errorf("sql conversion error")
+			return ret, fmt.Errorf("sql conversion error")
 		}
 		s := string(*rbp)
 		ret[keys[i]] = interface{}(&s)
 	}
-	return &ret, nil
+	return ret, nil
 }
 
 // mkSQLRow() returns a list of interface{} of the given length,
@@ -228,10 +228,10 @@ func mkSQLRow(N int) []interface{} {
 // the return value is a list of the retrieved records.
 func runQuery(db dbType,
 		qstring string,
-		ivals []interface{}) ([]*map[string]interface{}, error) {
+		ivals []interface{}) ([]map[string]interface{}, error) {
 	log.Debugf("query = %s", qstring)
 
-	ret := make([]*map[string]interface{}, 0, maxRecs)
+	ret := make([]map[string]interface{}, 0, maxRecs)
 
 	rownum := 0
 	rows, err := db.handle.Query(qstring, ivals...)
@@ -586,11 +586,11 @@ func updateCommon(req *http.Request, params map[string]string) (int, interface{}
 
 // convTableNames() converts the return format from runQuery()
 // into a simple list of names.
-func convTableNames(result []*map[string]interface{}) ([]string, error) {
+func convTableNames(result []map[string]interface{}) ([]string, error) {
 	// convert from query format to simple list of names
 	ret := make([]string, len(result))
 	for i, row := range result {
-		name, err := grabNameField(*row)
+		name, err := grabNameField(row)
 		if err != nil {
 			return ret, err
 		}

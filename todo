@@ -1,4 +1,7 @@
-getJsonRecord
+reconcile error messages
+implement xml option?
+further flatten responses
+write SDK functions
 
 createDbRecordsHandler
 createDbTableHandler

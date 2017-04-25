@@ -14,6 +14,7 @@ const (
 	abcGetRet = 123
 	abcPostRet = 456
 	xyzPutRet = 789
+	xyzPatchRet = http.StatusMethodNotAllowed
 )
 
 // ----- unit tests for initWiring()
@@ -88,10 +89,12 @@ type callApiMethod_TC struct {
 	xcode int
 }
 
+// test cases for callApiMethod
 var callApiMethod_Tab = []callApiMethod_TC {
 	{ "/abc", http.MethodGet, abcGetRet },
 	{ "/abc", http.MethodPost, abcPostRet },
 	{ "/xyz", http.MethodPut, xyzPutRet },
+	{ "/xyz", http.MethodPatch, xyzPatchRet },
 }
 
 func callApiMethod_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {

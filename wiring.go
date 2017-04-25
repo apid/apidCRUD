@@ -60,8 +60,8 @@ func (apiws *apiWiring) GetMaps() map[string]verbMap {
 func callApiMethod(vmap verbMap, verb string, req *http.Request) (int, interface{}) {
 	verbFunc, ok := vmap.methods[verb]
 	if !ok {
-		return badStat, fmt.Errorf("internal wiring error for %s on %s",
-			verb, vmap.path)
+		return http.StatusMethodNotAllowed,
+			fmt.Errorf(`No handler for %s on %s`, verb, vmap.path)
 	}
 
 	return verbFunc(req)
