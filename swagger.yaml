@@ -798,7 +798,7 @@ paths:
         - name: body
           description: Data containing name-value pairs of the fields to update.
           schema:
-            $ref: '#/definitions/RecordRequest'
+            $ref: '#/definitions/KVRecord'
           in: body
           required: true
         - name: id_field
@@ -1051,7 +1051,7 @@ definitions:
         description: Array of resources available to this path.
         items:
           type: string
-  RecordRequest:
+  KVRecord:
     type: object
     properties:
       keys:
@@ -1069,7 +1069,7 @@ definitions:
         type: array
         description: Array of keynames.
         items:
-          $ref: '#/definitions/RecordRequest'
+          $ref: '#/definitions/KVRecord'
   NumChangedResponse:
     type: object
     properties:

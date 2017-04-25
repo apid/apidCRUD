@@ -2,6 +2,8 @@ package apidCRUD
 
 import (
 	"testing"
+	"net/http"
+	"github.com/30x/apid-core"
 	)
 
 // ----- unit tests for confGet()
@@ -54,5 +56,44 @@ func Test_initDB(t *testing.T) {
 	}
 	if x.handle == nil {
 		t.Errorf(`initDB() returned nil handle`)
+	}
+}
+
+// ----- unit tests for initConfig()
+
+func Test_initConfig(t *testing.T) {
+	// this just proves it can be called without crashing
+	initConfig()
+}
+
+// ----- unit tests for registerHandlers() and addPath()
+
+type mockApiService struct {
+	hfmap map[string]http.HandlerFunc
+}
+
+func newMockApiService() *mockApiService {
+	fmap := make(map[string]http.HandlerFunc)
+	return &mockApiService{fmap}
+}
+
+func (self mockApiService) HandleFunc(path string,
+				hf http.HandlerFunc) apid.Route {
+	// record the handler that is being registered.
+	self.hfmap[path] = hf
+	return nil
+}
+
+func Test_registerHandlers(t *testing.T) {
+	fn := "registerHandlers"
+	service := newMockApiService()
+	registerHandlers(service, apiTable)
+
+	// check that the expected paths were in fact registered.
+	for _, desc := range apiTable {
+		path := basePath + desc.path
+		if service.hfmap[path] == nil {
+			t.Errorf("%s handler for %s is nil", fn, path)
+		}
 	}
 }

@@ -115,10 +115,10 @@ func Test_callApiMethod(t *testing.T) {
 	}
 }
 
-// ----- unit tests for dispatch()
+// ----- unit tests for pathDispatch()
 
-func dispatch_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {
-	fn := "dispatch"
+func pathDispatch_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {
+	fn := "pathDispatch"
 
 	vmap, ok := ws.pathsMap[tc.path]
 	if !ok {
@@ -130,7 +130,7 @@ func dispatch_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {
 	req, _ := http.NewRequest(tc.verb, tc.path, rdr)
 	w := httptest.NewRecorder()
 
-	dispatch(vmap, w, req)
+	pathDispatch(vmap, w, req)
 	code := w.Code
 	if tc.xcode != code {
 		t.Errorf(`#%d: %s("%s","%s") code=%d; expected %d`,
@@ -138,10 +138,10 @@ func dispatch_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {
 	}
 }
 
-func Test_dispatch(t *testing.T) {
+func Test_pathDispatch(t *testing.T) {
 	ws := newApiWiring("", fakeApiTable)
 	for i, tc := range callApiMethod_Tab {
-		dispatch_Checker(t, i, ws, tc)
+		pathDispatch_Checker(t, i, ws, tc)
 	}
 }
 

@@ -600,3 +600,101 @@ func Test_getBodyRecord(t *testing.T) {
 		getBodyRecord_Checker(t, testno, tc)
 	}
 }
+
+// ----- unit tests for convTableNames() and grabNameField()
+
+type convTableNames_TC struct {
+	names string
+}
+
+var convTableNames_Tab = []convTableNames_TC {
+	{""},
+	{"a"},
+	{"a,b"},
+	{"abc,def,ghi"},
+}
+
+// mimicTableNamesQuery() returns an object that mimics the return from
+// the query to the "tables" table.
+func mimicTableNamesQuery(names []string) []*map[string]interface{} {
+	N := len(names)
+	ret := make([]*map[string]interface{}, N)
+	for i := 0; i < N; i++ {
+		row := make(map[string]interface{})
+		name := names[i]
+		row["name"] = interface{}(&name)
+		ret[i] = &row
+	}
+	return ret
+}
+
+func convTableNames_Checker(t *testing.T, testno int, tc convTableNames_TC) {
+	fn := "convTableNames"
+	names := mySplit(tc.names, ",")
+	obj := mimicTableNamesQuery(names)
+	// fmt.Printf("obj=%s\n", obj)
+	res, err := convTableNames(obj)
+	if err != nil {
+		t.Errorf("#%d: %s([%s]) returned error", testno, fn, tc.names)
+		return
+	}
+	resJoin := strings.Join(res, ",")
+	if tc.names != resJoin {
+		t.Error(`#%d: %s([%s]) = "%s"; expected "%s"`,
+			testno, fn, tc.names, resJoin, tc.names)
+	}
+}
+
+func Test_convTableNames(t *testing.T) {
+	for testno, tc := range convTableNames_Tab {
+		convTableNames_Checker(t, testno, tc)
+	}
+}
+
+// ----- unit tests for validateRecords()
+
+type validateRecords_TC struct {
+	desc string
+	xsucc bool
+}
+
+// mkRecords() turns a description string into an array of records.
+// the description is parsed as follows.
+// record descriptions are separated by ';' chars.
+// within each record, '|' separates the list of keys from the list of values.
+// the keys (names) are comma-separated.
+func mkRecords(desc string) []KVRecord {
+	desclist := mySplit(desc, ";")
+	nrecs := len(desclist)
+	ret := make([]KVRecord, nrecs)
+	for i, rdesc := range desclist {
+		parts := mySplit(rdesc, "|")
+		ret[i].Keys = mySplit(parts[0], ",")
+		ret[i].Values = mySplit(parts[1], ",")
+	}
+	return ret
+}
+
+var validateRecords_Tab = []validateRecords_TC {
+	{"", true},		// 0 records
+	{"k1,k2,k3|v1,v2,v3", true},  // 1 record, valid
+	{"k1,,k3|v1,v2,v3", false},   // 1 record, invalid
+	{"k1,k2,k3|v1,v2,v3;k4|v4", true}, // 2 records, valid
+	{"k1,k2,k3|v1,v2,v3;|v4", false}, // 2 records, invalid
+}
+
+func validateRecords_Checker(t *testing.T, testno int, tc validateRecords_TC) {
+	fn := "validateRecords"
+	records := mkRecords(tc.desc)
+	res := validateRecords(records)
+	if tc.xsucc != (res == nil) {
+		t.Errorf(`#%d: %s([%s]) = [%s]; expected %t`,
+			testno, fn, tc.desc, errRep(nil), tc.xsucc)
+	}
+}
+
+func Test_validateRecords(t *testing.T) {
+	for testno, tc := range validateRecords_Tab {
+		validateRecords_Checker(t, testno, tc)
+	}
+}

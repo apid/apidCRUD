@@ -65,11 +65,12 @@ func callApiMethod(vmap verbMap, verb string, req *http.Request) (int, interface
 	return verbFunc(req)
 }
 
-// dispatch() is the general handler for all our APIs.
+// pathDispatch() is the general handler for all our APIs.
 // it is called indirectly thru a closure function that
 // supplies the vmap argument.
-func dispatch(vmap verbMap, w http.ResponseWriter, req *http.Request) {
-	log.Debugf("in dispatch: method=%s path=%s", req.Method, req.URL.Path)
+func pathDispatch(vmap verbMap, w http.ResponseWriter, req *http.Request) {
+	log.Debugf("in pathDispatch: method=%s path=%s",
+		req.Method, req.URL.Path)
 	defer func() {
 		_ = req.Body.Close()
 	}()
@@ -85,7 +86,7 @@ func dispatch(vmap verbMap, w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(code)
 	_, _ = w.Write(rawdata)
 
-	log.Debugf("in dispatch: code=%d", code)
+	log.Debugf("in pathDispatch: code=%d", code)
 }
 
 func convData(data interface{}) ([]byte, error) {

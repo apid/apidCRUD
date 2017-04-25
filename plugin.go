@@ -10,6 +10,12 @@ type getStringer interface {
 	GetString(string) string
 }
 
+type serviceHandler func(w http.ResponseWriter, r *http.Request)
+
+type handleFuncer interface {
+	HandleFunc(path string, hf http.HandlerFunc) apid.Route
+}
+
 // apiTable is the list of APIs that need to be wired up.
 var apiTable = []apiDesc{
 	{ "/db", http.MethodGet, getDbResourcesHandler },
@@ -23,7 +29,6 @@ var apiTable = []apiDesc{
 	{ "/db/_table/{table_name}/{id}", http.MethodDelete, deleteDbRecordHandler },
 	{ "/db/_schema", http.MethodGet, getDbSchemasHandler },
 	{ "/db/_schema", http.MethodPost, createDbTablesHandler },
-	{ "/db/_schema", http.MethodPut, replaceDbTablesHandler },
 	{ "/db/_schema", http.MethodPatch, updateDbTablesHandler },
 	{ "/db/_schema/{table_name}", http.MethodGet, describeDbTableHandler },
 	{ "/db/_schema/{table_name}", http.MethodPost, createDbTableHandler },
@@ -31,7 +36,7 @@ var apiTable = []apiDesc{
 	{ "/db/_schema/{table_name}/{field_name}", http.MethodGet, describeDbFieldHandler },
 }
 
-// initPlugin() is called by the apid-core startup
+// initPlugin() is called by the apid-core startup.
 func initPlugin(services apid.Services) (apid.PluginData, error) {
 	log = services.Log().ForModule(pluginData.Name)
 	log.Printf("in initPlugin")
@@ -44,29 +49,29 @@ func initPlugin(services apid.Services) (apid.PluginData, error) {
 		return pluginData, err
 	}
 
-	registerHandlers(services.API())
+	registerHandlers(services.API(), apiTable)
 
 	return pluginData, nil
 }
 
 // registerHandlers() register all our handlers with the given service.
-func registerHandlers(service apid.APIService) {
-	ws := newApiWiring(basePath, apiTable)
+func registerHandlers(service handleFuncer, tab []apiDesc) {
+	ws := newApiWiring(basePath, tab)
 	maps := ws.GetMaps()
 	for path, vmap := range maps {
-		addHandler(service, path, vmap)
+		addPath(service, path, vmap)
 	}
 }
 
-// addHandler() registers the given path with the given service,
-// so that it will be handled indirectly by dispatch().
+// addPath() registers the given path with the given service,
+// so that it will be handled indirectly by pathDispatch().
 // when an API call is made on this path, the vmap argument from
 // this context will be suppllied, along with the w and r arguments
 // passed in by the service framework.
-func addHandler(service apid.APIService, path string, vmap verbMap) {
+func addPath(service handleFuncer, path string, vmap verbMap) {
 	service.HandleFunc(path,
 		func(w http.ResponseWriter, r *http.Request) {
-			dispatch(vmap, w, r)
+			pathDispatch(vmap, w, r)
 		})
 }
 

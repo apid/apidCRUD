@@ -27,16 +27,9 @@ func getDbTablesHandler(req *http.Request) (int, interface{}) {
 	if err != nil {
 		return errorRet(badStat, err)
 	}
-
-	// convert from query format to simple list of names
-	ret := make([]string, len(result))
-	for i, tab := range result {
-		obj := (*tab)["name"]
-		pname, ok := obj.(*string)
-		if !ok {
-			return errorRet(badStat, fmt.Errorf("conversion error"))
-		}
-		ret[i] = *pname
+	ret, err := convTableNames(result)
+	if err != nil {
+		return errorRet(badStat, err)
 	}
 
 	return http.StatusOK, TablesResponse{Names: ret}
@@ -59,19 +52,14 @@ func createDbRecordsHandler(req *http.Request) (int, interface{}) {
 	idlist := make([]int64, 0, len(records))
 	log.Debugf("... idlist = %s", idlist)
 
+	err = validateRecords(records)
+	if err != nil {
+		return badStat, err
+	}
+
 	for _, rec := range records {
-		log.Debugf("rec = (%T) %s", rec, rec)
-		keys := rec.Keys
-		values := rec.Values
-		err := validateSQLKeys(keys)
-		if err != nil {
-			return badStat, err
-		}
-		err = validateSQLValues(values)
-		if err != nil {
-			return badStat, err
-		}
-		id, err := runInsert(db, params["table_name"], keys, values)
+		// log.Debugf("rec = (%T) %s", rec, rec)
+		id, err := runInsert(db, params["table_name"], rec.Keys, rec.Values)
 		if err != nil {
 			return badStat, err
 		}
@@ -125,8 +113,7 @@ func updateDbRecordHandler(req *http.Request) (int, interface{}) {
 
 // deleteDbRecordsHandler handles DELETE requests on /db/_table/{table_name} .
 func deleteDbRecordsHandler(req *http.Request) (int, interface{}) {
-	params, err := fetchParams(req,
-		"table_name", "id_field", "ids")
+	params, err := fetchParams(req, "table_name", "id_field", "ids")
 	if err != nil {
 		return errorRet(badStat, err)
 	}
@@ -150,11 +137,6 @@ func getDbSchemasHandler(req *http.Request) (int, interface{}) {
 
 // createDbTableHandler handles POST requests on /db/_schema .
 func createDbTableHandler(req *http.Request) (int, interface{}) {
-	return notImplemented()
-}
-
-// replaceDbTables handles PUT requests on /db/_schema .
-func replaceDbTablesHandler(req *http.Request) (int, interface{}) {
 	return notImplemented()
 }
 
@@ -213,6 +195,7 @@ func initDB() (dbType, error) {
 // the values are *sql.RawBytes as interface{}.
 // and returns a map from key to corresponding value.
 // these map values are *string as interface{}.
+// this is somewhat like python's zip function.
 func mkVmap(keys []string, values []interface{}) (*map[string]interface{}, error) {
 	N := len(keys)
 	if N != len(values) {
@@ -590,4 +573,51 @@ func updateCommon(req *http.Request, params map[string]string) (int, interface{}
 		return errorRet(badStat, err)
 	}
 	return http.StatusOK, NumChangedResponse{ra}
+}
+
+// convTableNames() converts the return format from runQuery()
+// into a simple list of names.
+func convTableNames(result []*map[string]interface{}) ([]string, error) {
+	// convert from query format to simple list of names
+	ret := make([]string, len(result))
+	for i, row := range result {
+		name, err := grabNameField(*row)
+		if err != nil {
+			return ret, err
+		}
+		ret[i] = name
+	}
+	return ret, nil
+}
+
+// grabNameField() grabs the name field from this row object.
+func grabNameField(row map[string]interface{}) (string, error) {
+	obj := row["name"]
+	pname, ok := obj.(*string)
+	if !ok {
+		return "", fmt.Errorf("sql table name conversion error")
+	}
+	return *pname, nil
+}
+
+// validateRecords() checks the validity of an array of KVRecord.
+// returns an error if any record has an invalid key or value.
+func validateRecords(records []KVRecord) error {
+	for i, rec := range records {
+		// log.Debugf("rec = (%T) %s", rec, rec)
+		keys := rec.Keys
+		values := rec.Values
+		if len(keys) != len(values) {
+			return fmt.Errorf("Record %d nkeys != nvalues", i)
+		}
+		err := validateSQLKeys(keys)
+		if err != nil {
+			return err
+		}
+		err = validateSQLValues(values)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
