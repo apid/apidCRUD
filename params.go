@@ -240,7 +240,7 @@ func isValidIdent(s string) bool {
 // aToIdType() converts a string to idType.
 // on error, return -1.  note that -1 is also a legitimate value,
 // so should use this only on strings that are known to be valid.
-func aToIdType(idstr string) int64 {
+func aToIdType(idstr string) int64 {	// nolint
 	id, err := strconv.ParseInt(idstr, idTypeRadix, idTypeBits)
 	if err != nil {
 		return -1

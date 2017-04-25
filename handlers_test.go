@@ -351,7 +351,7 @@ var idclause_Tab = []idclause_TC {
 	{ "id_field=id", "", "", true },
 }
 
-func aToIdList(s string) []interface{} {
+func aToIdList(s string) []interface{} {	// nolint
 	if s == "" {
 		return []interface{}{}
 	}
@@ -495,10 +495,10 @@ type mkSelectString_TC struct {
 
 var mkSelectString_Tab = []mkSelectString_TC {
 	{"table_name=T&id_field=id&id=456&fields=a&limit=1&offset=0",
-		"SELECT a FROM T WHERE id = ? LIMIT 1 OFFSET 0;",
+		"SELECT a FROM T WHERE id = ? LIMIT 1 OFFSET 0",
 		"456", true},
 	{"table_name=T&id_field=id&ids=123,456&fields=a,b,c&limit=1&offset=0",
-		"SELECT a,b,c FROM T WHERE id in (?,?) LIMIT 1 OFFSET 0;",
+		"SELECT a,b,c FROM T WHERE id in (?,?) LIMIT 1 OFFSET 0",
 		"123,456", true},
 }
 
@@ -640,7 +640,7 @@ func convTableNames_Checker(t *testing.T, testno int, tc convTableNames_TC) {
 	}
 	resJoin := strings.Join(res, ",")
 	if tc.names != resJoin {
-		t.Error(`#%d: %s([%s]) = "%s"; expected "%s"`,
+		t.Errorf(`#%d: %s([%s]) = "%s"; expected "%s"`,
 			testno, fn, tc.names, resJoin, tc.names)
 	}
 }

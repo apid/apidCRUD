@@ -28,7 +28,7 @@ type apiWiring struct {
 // newApiWiring returns an API configuration, after adding the APIs
 // from the given table.  basePath is prefixed to the paths
 // specified in the table items.
-func newApiWiring(basePath string, tab []apiDesc) (*apiWiring) {
+func newApiWiring(basePath string, tab []apiDesc) (*apiWiring) {  // nolint
 	pm := make(map[string]verbMap)
 	apiws := &apiWiring{pm}
 	for _, b := range(tab) {
@@ -38,7 +38,9 @@ func newApiWiring(basePath string, tab []apiDesc) (*apiWiring) {
 }
 
 // AddApi() configures the wiring for one path and verb to their handler.
-func (apiws *apiWiring) AddApi(path string, verb string, handler apiHandler) {
+func (apiws *apiWiring) AddApi(path string,
+		verb string,
+		handler apiHandler) { // nolint
 	vmap, ok := apiws.pathsMap[path]
 	if !ok {
 		vmap = verbMap{path: path, methods: map[string]apiHandler{}}

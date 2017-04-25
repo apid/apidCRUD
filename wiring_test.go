@@ -33,7 +33,7 @@ func xyzPutHandler(req *http.Request) (int, interface{}) {
 	return xyzPutRet, ""
 }
 
-var fakeApiTable = []apiDesc {
+var fakeApiTable = []apiDesc {	// nolint
 	{ "/abc", http.MethodGet, abcGetHandler },
 	{ "/abc", http.MethodPost, abcPostHandler },
 	{ "/xyz", http.MethodPut, xyzPutHandler },

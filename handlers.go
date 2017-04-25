@@ -316,13 +316,16 @@ func runInsert(db dbType, tabname string, keys []string, values []string) (idTyp
 	keystr := strings.Join(keys, ",")
 	placestr := nstring("?", nvalues)
 
-	qstring := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);",
+	qstring := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
 		tabname, keystr, placestr)
 
 	stmt, err := db.handle.Prepare(qstring)
 	if err != nil {
 		return NORET, err
 	}
+	defer func() {
+		stmt.Close()
+	}()
 
 	ivalues := strListToInterfaces(values)
 
@@ -368,7 +371,7 @@ func delRecs(db dbType, params map[string]string) (int64, error) {
 		return NORET,
 			fmt.Errorf("id or ids must be specified")
 	}
-	qstring := fmt.Sprintf("DELETE FROM %s %s;",
+	qstring := fmt.Sprintf("DELETE FROM %s %s",
 		params["table_name"],
 		idclause)
 	log.Debugf("qstring = %s\n", qstring)
@@ -377,6 +380,9 @@ func delRecs(db dbType, params map[string]string) (int64, error) {
 	if err != nil {
 		return NORET, err
 	}
+	defer func() {
+		stmt.Close()
+	}()
 
 	result, err := stmt.Exec(idlist...)
 	if err != nil {
@@ -435,7 +441,7 @@ func getBodyRecord(req *http.Request) (BodyRecord, error) {
 // the params examined include id_field, id, and/or ids.
 // if id is specified, that is used; otherwise ids.
 // if neither id nor ids is specified, the WHERE clause is empty.
-func mkIdClause(params map[string]string) (string, []interface{}, error) {
+func mkIdClause(params map[string]string) (string, []interface{}, error) { // nolint
 	id_field := params["id_field"]
 	id, ok := params["id"]
 	if ok {
@@ -463,7 +469,7 @@ func mkIdClause(params map[string]string) (string, []interface{}, error) {
 // the difference is, for now, that the id values are formatted directly
 // into the WHERE string, rather than being subbed in by Exec.
 // don't allow the case where neither id nor ids is specified.
-func mkIdClauseUpdate(params map[string]string) (string, error) {
+func mkIdClauseUpdate(params map[string]string) (string, error) {  // nolint
 	id_field := params["id_field"]
 	id, ok := params["id"]
 	if ok {
@@ -499,7 +505,7 @@ func updateRec(db dbType,
 			fmt.Errorf("id or ids must be specified")
 	}
 
-	qstring := fmt.Sprintf("UPDATE %s SET (%s) = (%s) %s;",
+	qstring := fmt.Sprintf("UPDATE %s SET (%s) = (%s) %s",
 			params["table_name"],
 			keystr,
 			placestr,
@@ -510,6 +516,9 @@ func updateRec(db dbType,
 	if err != nil {
 		return NORET, err
 	}
+	defer func() {
+		stmt.Close()
+	}()
 	ivals := strListToInterfaces(dbrec.Values)
 	result, err := stmt.Exec(ivals...)
 	if err != nil {
@@ -529,7 +538,7 @@ func mkSelectString(params map[string]string) (string, []interface{}, error) {
 		return idclause, idlist, err
 	}
 
-	qstring := fmt.Sprintf("SELECT %s FROM %s %s LIMIT %s OFFSET %s;",
+	qstring := fmt.Sprintf("SELECT %s FROM %s %s LIMIT %s OFFSET %s",
 		params["fields"],
 		params["table_name"],
 		idclause,

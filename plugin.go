@@ -10,8 +10,6 @@ type getStringer interface {
 	GetString(string) string
 }
 
-type serviceHandler func(w http.ResponseWriter, r *http.Request)
-
 type handleFuncer interface {
 	HandleFunc(path string, hf http.HandlerFunc) apid.Route
 }

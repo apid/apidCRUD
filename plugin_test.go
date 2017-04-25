@@ -24,8 +24,8 @@ type mockGetStringer struct {
 	data map[string]string
 }
 
-func (self mockGetStringer) GetString(name string) string {
-	return self.data[name]
+func (gs mockGetStringer) GetString(name string) string {
+	return gs.data[name]
 }
 
 var fakeConfData = map[string]string{"there": "yes"}
@@ -77,10 +77,10 @@ func newMockApiService() *mockApiService {
 	return &mockApiService{fmap}
 }
 
-func (self mockApiService) HandleFunc(path string,
+func (service mockApiService) HandleFunc(path string,
 				hf http.HandlerFunc) apid.Route {
 	// record the handler that is being registered.
-	self.hfmap[path] = hf
+	service.hfmap[path] = hf
 	return nil
 }
 
