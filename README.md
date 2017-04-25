@@ -113,3 +113,7 @@ func Test_XYZ(t *testing.T) {
 	}
 }
 ```
+
+## Badges
+
+[![Coverage Status](https://coveralls.io/repos/github/30x/apidCRUD/badge.svg?branch=master)](https://coveralls.io/github/30x/apidCRUD?branch=master)
