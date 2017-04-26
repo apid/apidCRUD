@@ -331,51 +331,91 @@ func Test_getParam(t *testing.T) {
 // ----- unit tests for fetchParams()
 
 type fetchParams_TC struct {
-	arg string	// query params to use in call
-	xsucc bool	// expected success
+	pathStr string		// path params
+	queryStr string		// query params to use in call
+	nameStr string		// list of names to fetch
+	xsucc bool		// expected success
 }
 
 var fetchParams_Tab = []fetchParams_TC {
-	{ "id=123", true },
-	{ "id=123&ids=123,456", true },
-	{ "id=1&fields=a,b,c", true },
-	{ "junk=1&fields=a,b,c", false },
+	{ "table_name=faketab&id=123", "", "id,table_name", true },
+	{ "", "id=123&ids=123,456", "id,ids", true },
+	{ "", "id=1&fields=a,b,c", "id,fields", true },
+	{ "", "junk=1&fields=a,b,c", "junk,fields", false },
 }
 
-func fetchParamsHelper(qp string) (map[string]string, error) {
-	qplist := strings.Split(qp, "&")
-	names := make([]string, len(qplist))
-	for i, parm := range qplist {
-		nv := strings.SplitN(parm, "=", 2)
-		names[i] = nv[0]
+// getKeys() returns the list of keys from the given map
+func getKeys(vmap map[string]string) []string {
+	N := len(vmap)
+	ret := make([]string, N, N)
+	i := 0
+	for k, _ := range vmap {
+		ret[i] = k
+		i++
+	}
+	return ret
+}
+
+// strToMap() constructs a map object from a string
+// in which mappings K=V are separated by & chars.
+func strToMap(vars string) map[string]string {
+	vlist := mySplit(vars, "&")
+	ret := map[string]string{}
+	for _, parm := range vlist {
+		words := strings.SplitN(parm, "=", 2)
+		switch len(words) {
+		case 1:
+			ret[words[0]] = ""
+		case 2:
+			ret[words[0]] = words[1]
+		}
+	}
+	// fmt.Printf("strToMap(%s) = %s\n", vars, ret)
+	return ret
+}
+
+func fetchParamsHelper(pathStr string, queryStr string,
+		nameStr string) (map[string]string, error) {
+
+	pathMap := strToMap(pathStr)
+
+	// monkey-patch the getPathParams() function temporarily
+	// while newExtReq runs.
+	old := getPathParams
+	getPathParams = func(req *http.Request) map[string]string {
+		// fmt.Printf("in params_test.getPathParams")
+		return pathMap
 	}
 
-	req, err := mkRequest("/api/db?" + qp)
+	// clean up monkey-patching on return.
+	defer func() {
+		getPathParams = old
+	}()
+
+	req, err := mkRequest("/api/db?" + queryStr)
 	if err != nil {
-		vmap := map[string]string{}
-		return vmap, err
+		return map[string]string{}, err
 	}
 
-	vmap, err := fetchParams(req, names...)
+	namesList := mySplit(nameStr, ",")
+	vmap, err := fetchParams(req, namesList...)
 	if err != nil {
 		return vmap, err
 	}
 
 	// check that the map has the expected number of keys
 	nvmap := len(vmap)
-	nnames := len(names)
+	nnames := len(namesList)
 	if nvmap != nnames {
-		err := fmt.Errorf("map has %d entries; expected %d",
+		return vmap, fmt.Errorf("map has %d entries; expected %d",
 				nvmap, nnames)
-		return vmap, err
 	}
 
 	// check that each expected name is there
-	for _, name := range names {
+	for _, name := range namesList {
 		_, ok := vmap[name]
 		if !ok {
-			err := fmt.Errorf("map does not have %s", name)
-			return vmap, err
+			return vmap, fmt.Errorf("map does not have %s", name)
 		}
 	}
 
@@ -383,18 +423,18 @@ func fetchParamsHelper(qp string) (map[string]string, error) {
 }
 
 // handle one testcase
-func fetchParams_Checker(t *testing.T, i int, qp string, xsucc bool) {
-	_, err := fetchParamsHelper(qp)
-	if xsucc != (err == nil) {
+func fetchParams_Checker(t *testing.T, i int, tc fetchParams_TC) {
+	_, err := fetchParamsHelper(tc.pathStr, tc.queryStr, tc.nameStr)
+	if tc.xsucc != (err == nil) {
 		msg := errRep(err)
-		t.Errorf(`#%d: fetchParams("%s")=(%s); expected (%t)`,
-			i, qp, msg, xsucc)
+		t.Errorf(`#%d: fetchParams("%s","%s")=[%s]; expected %t`,
+			i, tc.pathStr, tc.queryStr, msg, tc.xsucc)
 	}
 }
 
 func Test_fetchParams(t *testing.T) {
-	for i, tc := range fetchParams_Tab {
-		fetchParams_Checker(t, i, tc.arg, tc.xsucc)
+	for testno, tc := range fetchParams_Tab {
+		fetchParams_Checker(t, testno, tc)
 	}
 }
 

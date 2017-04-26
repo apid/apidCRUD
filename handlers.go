@@ -240,9 +240,7 @@ func runQuery(db dbType,
 	}
 
 	// ensure rows gets closed at end
-	defer func() {
-		_ = rows.Close()
-	}()
+	defer rows.Close()
 
 	cols, err := rows.Columns() // Remember to check err afterwards
 	if err != nil {
@@ -323,9 +321,7 @@ func runInsert(db dbType, tabname string, keys []string, values []string) (idTyp
 	if err != nil {
 		return NORET, err
 	}
-	defer func() {
-		stmt.Close()
-	}()
+	defer stmt.Close()
 
 	ivalues := strListToInterfaces(values)
 
@@ -380,9 +376,7 @@ func delRecs(db dbType, params map[string]string) (int64, error) {
 	if err != nil {
 		return NORET, err
 	}
-	defer func() {
-		stmt.Close()
-	}()
+	defer stmt.Close()
 
 	result, err := stmt.Exec(idlist...)
 	if err != nil {
@@ -516,9 +510,7 @@ func updateRec(db dbType,
 	if err != nil {
 		return NORET, err
 	}
-	defer func() {
-		stmt.Close()
-	}()
+	defer stmt.Close()
 	ivals := strListToInterfaces(dbrec.Values)
 	result, err := stmt.Exec(ivals...)
 	if err != nil {

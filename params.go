@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"net/http"
 	"unicode"
-	"github.com/30x/apid-core"
 )
 
 // idType is an alias for the type of the database's rowid.
@@ -46,7 +45,8 @@ type extReq struct {
 // ----- start of functions
 
 // newExtReq returns a constructed extReq object.
-func newExtReq(req *http.Request, validators map[string]paramValidator) (*extReq, error) {
+func newExtReq(req *http.Request,
+		validators map[string]paramValidator) (*extReq, error) {
 
 	// make the query params available via FormValue().
 	err := req.ParseForm()
@@ -55,7 +55,7 @@ func newExtReq(req *http.Request, validators map[string]paramValidator) (*extReq
 	}
 
 	return &extReq{req: req,
-		pathParams: apid.API().Vars(req),
+		pathParams: getPathParams(req),
 		validators: validators}, nil
 }
 
