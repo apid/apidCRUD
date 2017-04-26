@@ -34,10 +34,16 @@ func xyzPutHandler(req *http.Request) (int, interface{}) {
 	return xyzPutRet, ""
 }
 
+// a dummy handler, returns a value that causes convData() to fail
+func badHandler(req *http.Request) (int, interface{}) {
+	return http.StatusInternalServerError, badconv
+}
+
 var fakeApiTable = []apiDesc {	// nolint
 	{ "/abc", http.MethodGet, abcGetHandler },
 	{ "/abc", http.MethodPost, abcPostHandler },
 	{ "/xyz", http.MethodPut, xyzPutHandler },
+	{ "/xyz", http.MethodDelete, badHandler },
 }
 
 // countPaths returns the number of unique paths in the given tab.
@@ -95,6 +101,7 @@ var callApiMethod_Tab = []callApiMethod_TC {
 	{ "/abc", http.MethodPost, abcPostRet },
 	{ "/xyz", http.MethodPut, xyzPutRet },
 	{ "/xyz", http.MethodPatch, xyzPatchRet },
+	{ "/xyz", http.MethodDelete, http.StatusInternalServerError },
 }
 
 func callApiMethod_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {
@@ -167,10 +174,13 @@ var erdata = ErrorResponse{567, "junk"}
 
 var erjson = `{"Code":567,"Message":"junk"}`
 
+var badconv = func() { }	// cause convData to choke.
+
 var convData_Tab = []convData_TC {
 	{"abc", []byte("abc"), true},
 	{[]byte("xyz"), []byte("xyz"), true},
 	{erdata, []byte(erjson), true},
+	{badconv, []byte(""), false},
 }
 
 func convData_Checker(t *testing.T, i int, tc convData_TC) {
