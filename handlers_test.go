@@ -7,6 +7,7 @@ import (
 	"os"
 	"net/http"
 	"database/sql"
+	// "gopkg.in/DATA-DOG/sqlmock.v1"
 	"github.com/30x/apid-core"
 	"github.com/30x/apid-core/factory"
 )
