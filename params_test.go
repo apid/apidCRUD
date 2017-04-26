@@ -259,6 +259,24 @@ func Test_isValidIdent(t *testing.T) {
 
 // ----- unit tests for newExtReq()
 
+// type errReader obeys the io.Reader interface,
+// but the Read method always errors.
+type errReader struct {
+}
+
+func (er *errReader) Read(p []byte) (int, error) {
+	panic("abc")
+	return 0, fmt.Errorf("READ ERROR")
+}
+
+func newErrReader() *errReader {
+	return &errReader{}
+}
+
+func mkErrRequest() (*http.Request, error) {
+	return http.NewRequest(http.MethodGet, "", newErrReader())
+}
+
 func mkRequest(path string) (*http.Request, error) {
 	return http.NewRequest(http.MethodGet, path, nil)
 }
@@ -331,6 +349,7 @@ func Test_getParam(t *testing.T) {
 // ----- unit tests for fetchParams()
 
 type fetchParams_TC struct {
+	path string
 	pathStr string		// path params
 	queryStr string		// query params to use in call
 	nameStr string		// list of names to fetch
@@ -338,10 +357,11 @@ type fetchParams_TC struct {
 }
 
 var fetchParams_Tab = []fetchParams_TC {
-	{ "table_name=faketab&id=123", "", "id,table_name", true },
-	{ "", "id=123&ids=123,456", "id,ids", true },
-	{ "", "id=1&fields=a,b,c", "id,fields", true },
-	{ "", "junk=1&fields=a,b,c", "junk,fields", false },
+	{ "/db/abc?", "table_name=faketab&id=123", "", "id,table_name", true },
+	{ "/db/abc?", "", "id=123&ids=123,456", "id,ids", true },
+	{ "/db/abc?", "", "id=1&fields=a,b,c", "id,fields", true },
+	{ "/db/abc?", "", "junk=1&fields=a,b,c", "junk,fields", false },
+	// { "", "fields=a,b,c", "", "fields", false },
 }
 
 // getKeys() returns the list of keys from the given map
@@ -374,7 +394,8 @@ func strToMap(vars string) map[string]string {
 	return ret
 }
 
-func fetchParamsHelper(pathStr string, queryStr string,
+func fetchParamsHelper(path string,
+		pathStr string, queryStr string,
 		nameStr string) (map[string]string, error) {
 
 	pathMap := strToMap(pathStr)
@@ -392,7 +413,13 @@ func fetchParamsHelper(pathStr string, queryStr string,
 		getPathParams = old
 	}()
 
-	req, err := mkRequest("/api/db?" + queryStr)
+	var err error
+	var req *http.Request
+	if path == "" {
+		req, err = mkErrRequest()
+	} else {
+		req, err = mkRequest(path + queryStr)
+	}
 	if err != nil {
 		return map[string]string{}, err
 	}
@@ -424,7 +451,7 @@ func fetchParamsHelper(pathStr string, queryStr string,
 
 // handle one testcase
 func fetchParams_Checker(t *testing.T, i int, tc fetchParams_TC) {
-	_, err := fetchParamsHelper(tc.pathStr, tc.queryStr, tc.nameStr)
+	_, err := fetchParamsHelper(tc.path, tc.pathStr, tc.queryStr, tc.nameStr)
 	if tc.xsucc != (err == nil) {
 		msg := errRep(err)
 		t.Errorf(`#%d: fetchParams("%s","%s")=[%s]; expected %t`,
