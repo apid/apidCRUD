@@ -4,9 +4,19 @@ import (
 	"fmt"
 	"net/http"
 	"encoding/json"
+	"io"
 )
 
-type apiHandler func(*http.Request) (int, interface{})
+type apiHandlerRet struct {
+	code int
+	data interface{}
+}
+
+type apiHandlerArg struct {
+	req *http.Request
+}
+
+type apiHandler func(apiHandlerArg) apiHandlerRet
 
 // type verbMap maps each wired verb for a given path, to its handler function.
 type verbMap struct {
@@ -57,11 +67,11 @@ func (apiws *apiWiring) GetMaps() map[string]verbMap {
 
 // callApiMethod() calls the handler that was configured for
 // the given verbMap and verb.
-func callApiMethod(vmap verbMap, verb string, req *http.Request) (int, interface{}) {
+func callApiMethod(vmap verbMap, verb string, req apiHandlerArg) apiHandlerRet {
 	verbFunc, ok := vmap.methods[verb]
 	if !ok {
-		return http.StatusMethodNotAllowed,
-			fmt.Errorf(`No handler for %s on %s`, verb, vmap.path)
+		return apiHandlerRet{http.StatusMethodNotAllowed,
+			fmt.Errorf(`No handler for %s on %s`, verb, vmap.path)}
 	}
 
 	return verbFunc(req)
@@ -70,25 +80,25 @@ func callApiMethod(vmap verbMap, verb string, req *http.Request) (int, interface
 // pathDispatch() is the general handler for all our APIs.
 // it is called indirectly thru a closure function that
 // supplies the vmap argument.
-func pathDispatch(vmap verbMap, w http.ResponseWriter, req *http.Request) {
+func pathDispatch(vmap verbMap, w http.ResponseWriter, arg apiHandlerArg) {
 	log.Debugf("in pathDispatch: method=%s path=%s",
-		req.Method, req.URL.Path)
+		arg.req.Method, arg.req.URL.Path)
 	defer func() {
-		_ = req.Body.Close()
+		_ = arg.bodyClose()
 	}()
 
-	code, data := callApiMethod(vmap, req.Method, req)
+	res := callApiMethod(vmap, arg.req.Method, arg)
 
-	rawdata, err := convData(data)
+	rawdata, err := convData(res.data)
 	if err != nil {
 		writeErrorResponse(w, err)
 		return
 	}
 
-	w.WriteHeader(code)
+	w.WriteHeader(res.code)
 	_, _ = w.Write(rawdata)
 
-	log.Debugf("in pathDispatch: code=%d", code)
+	log.Debugf("in pathDispatch: code=%d", res.code)
 }
 
 func convData(data interface{}) ([]byte, error) {
@@ -113,4 +123,26 @@ func writeErrorResponse(w http.ResponseWriter, err error) {
         _, _ = w.Write(data)
 
         log.Errorf("error handling API request: %s", msg)
+}
+
+// ----- methods for apiHandlerArg
+
+func (arg *apiHandlerArg) parseForm() error {
+	return arg.req.ParseForm()
+}
+
+func (arg *apiHandlerArg) formValue(name string) string {
+	return arg.req.FormValue(name)
+}
+
+func (arg *apiHandlerArg) getBody() io.ReadCloser {
+	return arg.req.Body
+}
+
+func (arg *apiHandlerArg) bodyClose() error {
+	return arg.req.Body.Close()
+}
+
+func (arg *apiHandlerArg) ParseForm() error {
+	return arg.req.ParseForm()
 }

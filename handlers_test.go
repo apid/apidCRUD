@@ -32,74 +32,6 @@ func mySplit(str string, sep string) []string {
 	return strings.Split(str, sep)
 }
 
-// ----- unit tests for mkVmap()
-
-func strToRawBytes(data string) interface{} {
-	rb := sql.RawBytes([]byte(data))
-	return &rb
-}
-
-func interfaceToStr(data interface{}) (string, error) {
-	sp, ok := data.(*string)
-	if !ok {
-		return "", fmt.Errorf("string conversion error")
-	}
-	return *sp, nil
-}
-
-func rawBytesHelper(strlist []string) []interface{} {
-	ret := make([]interface{}, len(strlist))
-	for i, s := range strlist {
-		ret[i] = interface{}(strToRawBytes(s))
-	}
-	return ret
-}
-
-func mkVmap_Checker(t *testing.T,
-		i int,
-		keys []string,
-		values []string) {
-	fn := "mkVmap"
-	N := len(keys)
-	res, err := mkVmap(keys, rawBytesHelper(values))
-	if err != nil {
-		t.Errorf("#%d: %s(...) failed", i, fn)
-		return
-	}
-	if N != len(res) {
-		t.Errorf("#%d: %s(...) map length mismatch nkeys", i, fn)
-		return
-	}
-	for j, k := range keys {
-		v, err := interfaceToStr(res[k])
-		if err != nil {
-			t.Errorf("#%d: %s(...) rawBytesToStr: %s", j, fn, err)
-			return
-		}
-		if values[j] != v {
-			t.Errorf("#%d: %s(...) map value mismatch", j, fn)
-			return
-		}
-	}
-}
-
-func Test_mkVmap(t *testing.T) {
-	N := 4
-
-	// create the keys and values arrays, with canned values.
-	keys := make([]string, N)
-	values := make([]string, N)
-	for i := 0; i < N; i++ {
-		keys[i] = fmt.Sprintf("K%d", i)
-		values[i] = fmt.Sprintf("V%d", i)
-	}
-
-	// test against initial slices of keys and values arrays.
-	for i := 0; i < N+1; i++ {
-		mkVmap_Checker(t, i, keys[0:i], values[0:i])
-	}
-}
-
 // ----- unit tests for mkSQLRow()
 
 func mkSQLRow_Checker(t *testing.T, i int, N int) {
@@ -130,11 +62,12 @@ func Test_mkSQLRow(t *testing.T) {
 func Test_notImplemented(t *testing.T) {
 	fn := "notImplemented"
 	xcode := http.StatusNotImplemented
-	code, err := notImplemented()
-	if code != xcode {
-		t.Errorf("%s returned code %d; expected %d", fn, code, xcode)
+	res := notImplemented()
+	if res.code != xcode {
+		t.Errorf("%s returned code %d; expected %d",
+			fn, res.code, xcode)
 	}
-	if err == nil {
+	if res.data == nil {
 		t.Errorf("%s returned nil error; expected non-nil", fn)
 	}
 }
@@ -149,9 +82,17 @@ func genList(form string, N int) []string {
 	return ret
 }
 
+func genListInterface(form string, N int) []interface{} {
+	ret := make([]interface{}, N)
+	for i := 0; i < N; i++ {
+		ret[i] = fmt.Sprintf(form, i)
+	}
+	return ret
+}
+
 func sqlValues_Checker(t *testing.T, form string, N int) {
 	fn := "validateSQLValues"
-	values := genList(form, N)
+	values := genListInterface(form, N)
 	err := validateSQLValues(values)
 	if err != nil {
 		t.Errorf("%s(...) failed on length=%d", fn, N)
@@ -233,36 +174,6 @@ func Test_nstring(t *testing.T) {
 	}
 }
 
-// ----- unit tests for strListToInterfaces()
-
-func strListToInterfaces_Checker(t *testing.T, form string, M int) {
-	fn := "strListToInterfaces"
-	strlist := genList(form, M)
-	res := strListToInterfaces(strlist)
-	n := len(res)
-	if M != n {
-		t.Errorf(`%s returned length is %d; expected %d`, fn, n, M)
-	}
-	for i, si := range res {
-		str, ok := si.(string)
-		if !ok {
-			t.Errorf("%s length %d: result item is not a string",
-				fn, M)
-		}
-		if str != strlist[i] {
-			t.Errorf(`%s length %d: item="%s"; expected "%s"`,
-				fn, M, str, strlist[i])
-		}
-	}
-}
-
-func Test_strListToInterfaces(t *testing.T) {
-	M := 3
-	for j := 0; j < M; j++ {
-		strListToInterfaces_Checker(t, "S%d", j)
-	}
-}
-
 // ----- unit tests for errorRet()
 
 type errorRet_TC struct {
@@ -279,13 +190,13 @@ var errorRet_Tab = []errorRet_TC {
 func errorRet_Checker(t *testing.T, i int, code int, msg string) {
 	fn := "errorRet"
 	err := fmt.Errorf("%s", msg)
-	rescode, resdata := errorRet(code, err)
-	if code != rescode {
+	res := errorRet(code, err)
+	if code != res.code {
 		t.Errorf(`#%d: %s returned (%d,); expected %d`,
-			i, fn, rescode, code)
+			i, fn, res.code, code)
 		return
 	}
-	eresp, ok := resdata.(ErrorResponse)
+	eresp, ok := res.data.(ErrorResponse)
 	if !ok {
 		t.Errorf(`#%d: %s ErrorResponse conversion error`, i, fn)
 		return
@@ -547,6 +458,27 @@ type getBodyRecord_TC struct {
 	values string
 }
 
+// turn a list of strings masked as interfaces, back to list of strings.
+func unmaskStrings(ilist []interface{}) []string {
+	N := len(ilist)
+	ret := make([]string, N)
+	for i := 0; i < N; i++ {
+		s, _ := ilist[i].(string)
+		ret[i] = s
+	}
+	return ret
+}
+
+// turn a list of strings, into strings masked by interface.
+func maskStrings(slist []string) []interface{} {
+	N := len(slist)
+	ret := make([]interface{}, N)
+	for i := 0; i < N; i++ {
+		ret[i] = slist[i]
+	}
+	return ret
+}
+
 var getBodyRecord_Tab = []getBodyRecord_TC {
 	{`{"Records":[{"Keys":[], "Values":[]}]}`,
 		"",
@@ -569,7 +501,7 @@ func getBodyRecord_Checker(t *testing.T, testno int, tc getBodyRecord_TC) {
 	tcvalues := strings.Split(tc.values, "&")
 	nkeys := len(tckeys)
 
-	body, err := getBodyRecord(req)
+	body, err := getBodyRecord(apiHandlerArg{req})
 	if err != nil {
 		t.Errorf("#%d: %s([%s]) failed, error=%s",
 			testno, fn, tc.data, err)
@@ -588,7 +520,7 @@ func getBodyRecord_Checker(t *testing.T, testno int, tc getBodyRecord_TC) {
 			t.Errorf(`#%d %s Record[%d] keys=%s; expected %s`,
 				testno, fn, j, keystr, tckeys[j])
 		}
-		valstr := strings.Join(rec.Values, ",")
+		valstr := strings.Join(unmaskStrings(rec.Values), ",")
 		if tcvalues[j] != valstr {
 			t.Errorf(`#%d %s Record[%d] values=%s; expected %s`,
 				testno, fn, j, valstr, tcvalues[j])
@@ -617,14 +549,13 @@ var convTableNames_Tab = []convTableNames_TC {
 
 // mimicTableNamesQuery() returns an object that mimics the return from
 // the query to the "tables" table.
-func mimicTableNamesQuery(names []string) []map[string]interface{} {
+func mimicTableNamesQuery(names []string) []*KVRecord {
 	N := len(names)
-	ret := make([]map[string]interface{}, N)
+	ret := make([]*KVRecord, N)
 	for i := 0; i < N; i++ {
-		row := make(map[string]interface{})
-		name := names[i]
-		row["name"] = interface{}(&name)
-		ret[i] = row
+		Keys := []string{"name"}
+		Values := []interface{}{names[i]}
+		ret[i] = &KVRecord{Keys, Values}
 	}
 	return ret
 }
@@ -671,7 +602,7 @@ func mkRecords(desc string) []KVRecord {
 	for i, rdesc := range desclist {
 		parts := mySplit(rdesc, "|")
 		ret[i].Keys = mySplit(parts[0], ",")
-		ret[i].Values = mySplit(parts[1], ",")
+		ret[i].Values = maskStrings(mySplit(parts[1], ","))
 	}
 	return ret
 }

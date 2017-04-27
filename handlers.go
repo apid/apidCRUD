@@ -12,13 +12,13 @@ import (
 // ----- plain old handlers that are compatible with the apiHandler type.
 
 // getDbResourcesHandler handles GET requests on /db
-func getDbResourcesHandler(req *http.Request) (int, interface{}) {
+func getDbResourcesHandler(req apiHandlerArg) apiHandlerRet {
 	// not sure what this should do
 	return notImplemented()
 }
 
 // getDbTablesHandler handles GET requests on /db/_table
-func getDbTablesHandler(req *http.Request) (int, interface{}) {
+func getDbTablesHandler(req apiHandlerArg) apiHandlerRet {
 	// the "tables" table is our convention, not maintained by sqlite.
 
 	idlist := []interface{}{}
@@ -32,11 +32,11 @@ func getDbTablesHandler(req *http.Request) (int, interface{}) {
 		return errorRet(badStat, err)
 	}
 
-	return http.StatusOK, TablesResponse{Names: ret}
+	return apiHandlerRet{http.StatusOK, TablesResponse{Names: ret}}
 }
 
 // createDbRecordsHandler() handles POST requests on /db/_table/{table_name} .
-func createDbRecordsHandler(req *http.Request) (int, interface{}) {
+func createDbRecordsHandler(req apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(req, "table_name")
 	if err != nil {
 		return errorRet(badStat, err)
@@ -44,7 +44,7 @@ func createDbRecordsHandler(req *http.Request) (int, interface{}) {
 
 	body, err := getBodyRecord(req)
 	if err != nil {
-		return badStat, err
+		return apiHandlerRet{badStat, err}
 	}
 	log.Debugf("body = %s", body)
 
@@ -54,23 +54,23 @@ func createDbRecordsHandler(req *http.Request) (int, interface{}) {
 
 	err = validateRecords(records)
 	if err != nil {
-		return badStat, err
+		return apiHandlerRet{badStat, err}
 	}
 
 	for _, rec := range records {
 		// log.Debugf("rec = (%T) %s", rec, rec)
 		id, err := runInsert(db, params["table_name"], rec.Keys, rec.Values)
 		if err != nil {
-			return badStat, err
+			return apiHandlerRet{badStat, err}
 		}
 		idlist = append(idlist, int64(id))
 	}
 
-	return http.StatusCreated, IdsResponse{Ids: idlist}
+	return apiHandlerRet{http.StatusCreated, IdsResponse{Ids: idlist}}
 }
 
 // getDbRecordsHandler() handles GET requests on /db/_table/{table_name} .
-func getDbRecordsHandler(req *http.Request) (int, interface{}) {
+func getDbRecordsHandler(req apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(req,
 		"table_name", "fields", "id_field", "ids", "limit", "offset")
 	if err != nil {
@@ -81,7 +81,7 @@ func getDbRecordsHandler(req *http.Request) (int, interface{}) {
 }
 
 // getDbRecordHandler() handles GET requests on /db/_table/{table_name}/{id} .
-func getDbRecordHandler(req *http.Request) (int, interface{}) {
+func getDbRecordHandler(req apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(req,
 		"table_name", "id", "fields", "id_field")
 	if err != nil {
@@ -94,7 +94,7 @@ func getDbRecordHandler(req *http.Request) (int, interface{}) {
 }
 
 // updateDbRecordsHandler() handles PATCH requests on /db/_table/{table_name} .
-func updateDbRecordsHandler(req *http.Request) (int, interface{}) {
+func updateDbRecordsHandler(req apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(req, "table_name", "id_field", "ids")
 	if err != nil {
 		return errorRet(badStat, err)
@@ -103,7 +103,7 @@ func updateDbRecordsHandler(req *http.Request) (int, interface{}) {
 }
 
 // updateDbRecordHandler() handles PATCH requests on /db/_table/{table_name}/{id} .
-func updateDbRecordHandler(req *http.Request) (int, interface{}) {
+func updateDbRecordHandler(req apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(req, "table_name", "id", "id_field")
 	if err != nil {
 		return errorRet(badStat, err)
@@ -112,7 +112,7 @@ func updateDbRecordHandler(req *http.Request) (int, interface{}) {
 }
 
 // deleteDbRecordsHandler handles DELETE requests on /db/_table/{table_name} .
-func deleteDbRecordsHandler(req *http.Request) (int, interface{}) {
+func deleteDbRecordsHandler(req apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(req, "table_name", "id_field", "ids")
 	if err != nil {
 		return errorRet(badStat, err)
@@ -122,7 +122,7 @@ func deleteDbRecordsHandler(req *http.Request) (int, interface{}) {
 }
 
 // deleteDbRecordHandler handles DELETE requests on /db/_table/{table_name}/{id} .
-func deleteDbRecordHandler(req *http.Request) (int, interface{}) {
+func deleteDbRecordHandler(req apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(req, "table_name", "id", "id_field")
 	if err != nil {
 		return errorRet(badStat, err)
@@ -131,37 +131,37 @@ func deleteDbRecordHandler(req *http.Request) (int, interface{}) {
 }
 
 // getDbSchemasHandler handles GET requests on /db/_schema .
-func getDbSchemasHandler(req *http.Request) (int, interface{}) {
+func getDbSchemasHandler(req apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // createDbTableHandler handles POST requests on /db/_schema .
-func createDbTableHandler(req *http.Request) (int, interface{}) {
+func createDbTableHandler(req apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // updateDbTables handles PATCH requests on /db/_schema .
-func updateDbTablesHandler(req *http.Request) (int, interface{}) {
+func updateDbTablesHandler(req apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // describeDbTableHandler handles GET requests on /db/_schema/{table_name} .
-func describeDbTableHandler(req *http.Request) (int, interface{}) {
+func describeDbTableHandler(req apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // createDbTablesHandler handles POST requests on /db/_schema/{table_name} .
-func createDbTablesHandler(req *http.Request) (int, interface{}) {
+func createDbTablesHandler(req apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // deleteDbTableHandler handles DELETE requests on /db/_schema/{table_name} .
-func deleteDbTableHandler(req *http.Request) (int, interface{}) {
+func deleteDbTableHandler(req apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // describeDbFieldHandler handles GET requests on /db/_schema/{table_name} .
-func describeDbFieldHandler(req *http.Request) (int, interface{}) {
+func describeDbFieldHandler(req apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
@@ -169,15 +169,15 @@ func describeDbFieldHandler(req *http.Request) (int, interface{}) {
 
 // errorRet() is called by apiHandler routines to pass back the code/data
 // pair appropriate to the given code and error object.
-func errorRet(code int, err error) (int, interface{}) {
-	return code, ErrorResponse{code, err.Error()}
+func errorRet(code int, err error) apiHandlerRet {
+	return apiHandlerRet{code, ErrorResponse{code, err.Error()}}
 }
 
 // notImpemented() returns the code/data pair for an apiHandler
 // that is not implemented.
-func notImplemented() (int, interface{}) {
-	code := http.StatusNotImplemented
-	return errorRet(code, fmt.Errorf("API not implemented yet"))
+func notImplemented() apiHandlerRet {
+	return errorRet(http.StatusNotImplemented,
+		fmt.Errorf("API not implemented yet"))
 }
 
 // initDB() initializes the global db variable
@@ -189,29 +189,6 @@ func initDB() (dbType, error) {
 
 	// assign the global db variable
 	return dbType{handle: h}, nil
-}
-
-// mkVmap() takes a list of keys (string) and a list of values.
-// the values are *sql.RawBytes as interface{}.
-// and returns a map from key to corresponding value.
-// these map values are *string as interface{}.
-// this is somewhat like python's zip function.
-func mkVmap(keys []string, values []interface{}) (map[string]interface{}, error) {
-	N := len(keys)
-	if N != len(values) {
-		return nil, fmt.Errorf("nkeys different from nvalues")
-	}
-	ret := make(map[string]interface{}, N)
-	for i := 0; i < N; i++ {
-		// convert from sql.RawBytes to string
-		rbp, ok := values[i].(*sql.RawBytes)
-		if !ok {
-			return ret, fmt.Errorf("sql conversion error")
-		}
-		s := string(*rbp)
-		ret[keys[i]] = interface{}(&s)
-	}
-	return ret, nil
 }
 
 // mkSQLRow() returns a list of interface{} of the given length,
@@ -228,10 +205,10 @@ func mkSQLRow(N int) []interface{} {
 // the return value is a list of the retrieved records.
 func runQuery(db dbType,
 		qstring string,
-		ivals []interface{}) ([]map[string]interface{}, error) {
+		ivals []interface{}) ([]*KVRecord, error) {
 	log.Debugf("query = %s", qstring)
 
-	ret := make([]map[string]interface{}, 0, maxRecs)
+	ret := make([]*KVRecord, 0, 1)
 
 	rownum := 0
 	rows, err := db.handle.Query(qstring, ivals...)
@@ -240,28 +217,37 @@ func runQuery(db dbType,
 	}
 
 	// ensure rows gets closed at end
-	defer rows.Close()
+	defer rows.Close()	// nolint
 
 	cols, err := rows.Columns() // Remember to check err afterwards
 	if err != nil {
 		return ret, err
 	}
 	log.Debugf("cols = %s", cols)
+	ncols := len(cols)
+
+	count := 0
 
 	for rows.Next() {
 		rownum ++
 
-		vals := mkSQLRow(len(cols))
+		vals := mkSQLRow(ncols)
 		err := rows.Scan(vals...)
-		if err != nil {
-			return ret, fmt.Errorf("scan error at rownum %d", rownum)
-		}
-
-		m, err := mkVmap(cols, vals)
 		if err != nil {
 			return ret, err
 		}
-		ret = append(ret, m)
+
+		svals, err := convValues(vals)
+		if err != nil {
+			return ret, err
+		}
+		kvrow := KVRecord{Keys: cols, Values: svals}
+		ret = append(ret, &kvrow)
+		count++
+		if count >= maxRecs {
+			// safety check
+			break
+		}
 	}
 
 	if rows.Err() != nil {
@@ -269,15 +255,6 @@ func runQuery(db dbType,
 	}
 
 	return ret, nil
-}
-
-// strListToInterfaces() converts a list of strings to a list of interface{}.
-func strListToInterfaces(vals []string) []interface{} {
-	ret := make([]interface{}, len(vals))
-	for i, v := range vals {
-		ret[i] = interface{}(v)
-	}
-	return ret
 }
 
 // idTypesToInterface() convert a list of strings to
@@ -302,7 +279,10 @@ func nstring(s string, n int) string {
 
 // runInsert() inserts a record whose data is specified by the
 // given keys and values.  it returns the id of the inserted record.
-func runInsert(db dbType, tabname string, keys []string, values []string) (idType, error) {
+func runInsert(db dbType,
+		tabname string,
+		keys []string,
+		values []interface{}) (idType, error) {
 	NORET := idType(-1)
 
 	nkeys := len(keys)
@@ -314,19 +294,19 @@ func runInsert(db dbType, tabname string, keys []string, values []string) (idTyp
 	keystr := strings.Join(keys, ",")
 	placestr := nstring("?", nvalues)
 
-	qstring := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+	qstring := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",	// nolint
 		tabname, keystr, placestr)
 
 	stmt, err := db.handle.Prepare(qstring)
 	if err != nil {
 		return NORET, err
 	}
-	defer stmt.Close()
+	defer stmt.Close()	// nolint
 
-	ivalues := strListToInterfaces(values)
+	// ivalues := strListToInterfaces(values)
 
 	log.Debugf("qstring = %s\n", qstring)
-	result, err := stmt.Exec(ivalues...)
+	result, err := stmt.Exec(values...)
 	if err != nil {
 		return NORET, err
 	}
@@ -346,13 +326,13 @@ func runInsert(db dbType, tabname string, keys []string, values []string) (idTyp
 }
 
 // delCommon() is the common part of record deletion APIs.
-func delCommon(params map[string]string) (int, interface{}) {
+func delCommon(params map[string]string) apiHandlerRet {
 	nc, err := delRecs(db, params)
 	if err != nil {
 		return errorRet(badStat, err)
 	}
 
-	return http.StatusOK, NumChangedResponse{nc}
+	return apiHandlerRet{http.StatusOK, NumChangedResponse{nc}}
 }
 
 // delRecs() deletes multiple records, using parameters in the params map.
@@ -367,7 +347,7 @@ func delRecs(db dbType, params map[string]string) (int64, error) {
 		return NORET,
 			fmt.Errorf("id or ids must be specified")
 	}
-	qstring := fmt.Sprintf("DELETE FROM %s %s",
+	qstring := fmt.Sprintf("DELETE FROM %s %s",		// nolint
 		params["table_name"],
 		idclause)
 	log.Debugf("qstring = %s\n", qstring)
@@ -376,7 +356,7 @@ func delRecs(db dbType, params map[string]string) (int64, error) {
 	if err != nil {
 		return NORET, err
 	}
-	defer stmt.Close()
+	defer stmt.Close()	// nolint
 
 	result, err := stmt.Exec(idlist...)
 	if err != nil {
@@ -417,14 +397,14 @@ func validateSQLKeys(keys []string) error {
 // validateSQLValues() checks an array of string values,
 // returning a non-nil error if anything is found that
 // would not be a valid SQL value.
-func validateSQLValues(values []string) error {
+func validateSQLValues(values []interface{}) error {
 	return nil    // no error for now
 }
 
 // getBodyRecord() returns a json record from the body of the given request.
-func getBodyRecord(req *http.Request) (BodyRecord, error) {
+func getBodyRecord(req apiHandlerArg) (BodyRecord, error) {
 	jrec := BodyRecord{}
-        err := json.NewDecoder(req.Body).Decode(&jrec)
+        err := json.NewDecoder(req.getBody()).Decode(&jrec)
 	return jrec, err
 }
 
@@ -441,7 +421,8 @@ func mkIdClause(params map[string]string) (string, []interface{}, error) { // no
 	if ok {
 		idlist := []interface{}{aToIdType(id)}
 		placestr := "?"
-		idclause := fmt.Sprintf("WHERE %s = %s", id_field, placestr)
+		idclause := fmt.Sprintf("WHERE %s = %s",	// nolint
+				id_field, placestr)
 		return idclause, idlist, nil
 	}
 
@@ -450,7 +431,7 @@ func mkIdClause(params map[string]string) (string, []interface{}, error) { // no
 		idstrings := strings.Split(ids, ",")
 		idlist := idTypesToInterface(idstrings)
 		placestr := nstring("?", len(idlist))
-		idclause := fmt.Sprintf("WHERE %s in (%s)", id_field, placestr)
+		idclause := fmt.Sprintf("WHERE %s in (%s)", id_field, placestr) // nolint
 		return idclause, idlist, nil
 	}
 
@@ -467,11 +448,11 @@ func mkIdClauseUpdate(params map[string]string) (string, error) {  // nolint
 	id_field := params["id_field"]
 	id, ok := params["id"]
 	if ok {
-		return fmt.Sprintf("WHERE %s = %s", id_field, id), nil
+		return fmt.Sprintf("WHERE %s = %s", id_field, id), nil // nolint
 	}
 	ids, ok := params["ids"]
 	if ok && ids != "" {
-		return fmt.Sprintf("WHERE %s in (%s)", id_field, ids), nil
+		return fmt.Sprintf("WHERE %s in (%s)", id_field, ids), nil // nolint
 	}
 
 	// no id and no ids implies everything matches.
@@ -499,7 +480,7 @@ func updateRec(db dbType,
 			fmt.Errorf("id or ids must be specified")
 	}
 
-	qstring := fmt.Sprintf("UPDATE %s SET (%s) = (%s) %s",
+	qstring := fmt.Sprintf("UPDATE %s SET (%s) = (%s) %s",	// nolint
 			params["table_name"],
 			keystr,
 			placestr,
@@ -510,9 +491,9 @@ func updateRec(db dbType,
 	if err != nil {
 		return NORET, err
 	}
-	defer stmt.Close()
-	ivals := strListToInterfaces(dbrec.Values)
-	result, err := stmt.Exec(ivals...)
+	defer stmt.Close()	// nolint
+	// ivals := strListToInterfaces(dbrec.Values)
+	result, err := stmt.Exec(dbrec.Values...)
 	if err != nil {
 		return NORET, err
 	}
@@ -530,7 +511,7 @@ func mkSelectString(params map[string]string) (string, []interface{}, error) {
 		return idclause, idlist, err
 	}
 
-	qstring := fmt.Sprintf("SELECT %s FROM %s %s LIMIT %s OFFSET %s",
+	qstring := fmt.Sprintf("SELECT %s FROM %s %s LIMIT %s OFFSET %s", // nolint
 		params["fields"],
 		params["table_name"],
 		idclause,
@@ -541,7 +522,7 @@ func mkSelectString(params map[string]string) (string, []interface{}, error) {
 }
 
 // getCommon() is common code for selection APIs.
-func getCommon(params map[string]string) (int, interface{}) {
+func getCommon(params map[string]string) apiHandlerRet {
 	qstring, idlist, err := mkSelectString(params)
 	if err != nil {
 		return errorRet(badStat, err)
@@ -555,11 +536,11 @@ func getCommon(params map[string]string) (int, interface{}) {
 		return errorRet(badStat, fmt.Errorf("no matching record"))
 	}
 
-	return http.StatusOK, RecordsResponse{Records:result}
+	return apiHandlerRet{http.StatusOK, RecordsResponse{Records:result}}
 }
 
 // updateCommon is common code for update APIs.
-func updateCommon(req *http.Request, params map[string]string) (int, interface{}) {
+func updateCommon(req apiHandlerArg, params map[string]string) apiHandlerRet {
 	body, err := getBodyRecord(req)
 	if err != nil {
 		return errorRet(badStat, err)
@@ -573,32 +554,22 @@ func updateCommon(req *http.Request, params map[string]string) (int, interface{}
 	if err != nil {
 		return errorRet(badStat, err)
 	}
-	return http.StatusOK, NumChangedResponse{ra}
+	return apiHandlerRet{http.StatusOK, NumChangedResponse{ra}}
 }
 
 // convTableNames() converts the return format from runQuery()
 // into a simple list of names.
-func convTableNames(result []map[string]interface{}) ([]string, error) {
+func convTableNames(result []*KVRecord) ([]string, error) {
 	// convert from query format to simple list of names
 	ret := make([]string, len(result))
 	for i, row := range result {
-		name, err := grabNameField(row)
-		if err != nil {
-			return ret, err
+		str, ok := (*row).Values[0].(string)
+		if !ok {
+			return ret, fmt.Errorf("table name conversion error")
 		}
-		ret[i] = name
+		ret[i] = str
 	}
 	return ret, nil
-}
-
-// grabNameField() grabs the name field from this row object.
-func grabNameField(row map[string]interface{}) (string, error) {
-	obj := row["name"]
-	pname, ok := obj.(*string)
-	if !ok {
-		return "", fmt.Errorf("sql table name conversion error")
-	}
-	return *pname, nil
 }
 
 // validateRecords() checks the validity of an array of KVRecord.
@@ -621,4 +592,17 @@ func validateRecords(records []KVRecord) error {
 		}
 	}
 	return nil
+}
+
+func convValues(vals []interface{}) ([]interface{}, error) {
+	N := len(vals)
+	for i := 0; i < N; i++ {
+		v := vals[i]
+		rbp, ok := v.(*sql.RawBytes)
+		if !ok {
+			return vals, fmt.Errorf("SQL conversion error")
+		}
+		vals[i] = string(*rbp)
+	}
+	return vals, nil
 }

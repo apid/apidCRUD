@@ -6,8 +6,7 @@
 get_rec_ids()
 {
 	./recstest.sh '*' 2>/dev/null \
-	| jq -S '.Records' \
-	| jq -S -r '.[].id'
+	| jq -S '.Records[].Values[0]'
 }
 
 get_rec_uri()
@@ -18,7 +17,7 @@ get_rec_uri()
 	API_PATH=db/_table
 	VERBOSE=
 	./appcurl.sh GET "$API_PATH/$TABLE/$ID?fields=$FIELDS" $VERBOSE 2>/dev/null \
-	| jq -S '.Records' | jq -r -S '.[].uri'
+	| jq -r -S '.Records[].Values[0]'
 }
 
 fail()
@@ -103,8 +102,9 @@ else
 	echo OK
 fi
 
-echo "# check rec 6 uri before update (getrec.sh)"
+echo "# check rec 6 uri before update (get_rec_uri)"
 uri1=$(get_rec_uri 6)
+# echo "uri1=$uri1"
 
 echo "# updating 2 records (upstest.sh)"
 nc=$(./upstest.sh 1,6 2>/dev/null)
@@ -114,8 +114,9 @@ else
 	echo OK
 fi
 
-echo "# checking the update (getrec.sh)"
+echo "# checking the update (get_rec_uri)"
 uri2=$(get_rec_uri 6)
+# echo "uri2=$uri2"
 
 if [[ "$uri1" == "$uri2" ]]; then
 	fail "update did not change uri = $uri1"

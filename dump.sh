@@ -1,3 +1,4 @@
 #! /bin/bash
 
-echo "select * from bundles;" | sqlite3 dbapid.db
+DATABASE=apidCRUD.db
+echo "select * from bundles;" | sqlite3 "$DATABASE"

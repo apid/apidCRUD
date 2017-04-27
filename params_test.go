@@ -265,28 +265,26 @@ type errReader struct {
 }
 
 func (er *errReader) Read(p []byte) (int, error) {
-	panic("abc")
-	return 0, fmt.Errorf("READ ERROR")
+	return -1, fmt.Errorf("READ ERROR")
 }
 
 func newErrReader() *errReader {
 	return &errReader{}
 }
 
-func mkErrRequest() (*http.Request, error) {
-	return http.NewRequest(http.MethodGet, "", newErrReader())
+func mkErrRequest() apiHandlerArg {
+	req, _ := http.NewRequest(http.MethodGet, "", newErrReader())
+	return apiHandlerArg{req}
 }
 
-func mkRequest(path string) (*http.Request, error) {
-	return http.NewRequest(http.MethodGet, path, nil)
+func mkRequest(path string) apiHandlerArg {
+	req, _ := http.NewRequest(http.MethodGet, path, nil)
+	return apiHandlerArg{req}
 }
 
 // return an ExtReq object for testing, based on the given path.
 func mkExtReq(path string) (*extReq, error) {
-	req, err := mkRequest(path)
-	if err != nil {
-		return nil, err
-	}
+	req := mkRequest(path)
 	return newExtReq(req, validators)
 }
 
@@ -369,7 +367,7 @@ func getKeys(vmap map[string]string) []string {
 	N := len(vmap)
 	ret := make([]string, N, N)
 	i := 0
-	for k, _ := range vmap {
+	for k := range vmap {
 		ret[i] = k
 		i++
 	}
@@ -403,7 +401,7 @@ func fetchParamsHelper(path string,
 	// monkey-patch the getPathParams() function temporarily
 	// while newExtReq runs.
 	old := getPathParams
-	getPathParams = func(req *http.Request) map[string]string {
+	getPathParams = func(req apiHandlerArg) map[string]string {
 		// fmt.Printf("in params_test.getPathParams")
 		return pathMap
 	}
@@ -413,15 +411,15 @@ func fetchParamsHelper(path string,
 		getPathParams = old
 	}()
 
-	var err error
-	var req *http.Request
+	var req apiHandlerArg
 	if path == "" {
-		req, err = mkErrRequest()
+		req = mkErrRequest()
+		err2 := req.ParseForm()
+		if err2 == nil {
+			fmt.Printf("errRequest should have failed here, but didn't")
+		}
 	} else {
-		req, err = mkRequest(path + queryStr)
-	}
-	if err != nil {
-		return map[string]string{}, err
+		req = mkRequest(path + queryStr)
 	}
 
 	namesList := mySplit(nameStr, ",")

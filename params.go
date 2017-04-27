@@ -4,21 +4,22 @@ import (
 	"fmt"
 	"strings"
 	"strconv"
-	"net/http"
 	"unicode"
 )
 
 // idType is an alias for the type of the database's rowid.
 type idType int64
 
-// idTypeBits is the number of bits in idType.
-const idTypeBits = 64
+const (
+	// idTypeBits is the number of bits in idType.
+	idTypeBits = 64
 
-// idTypeRadix is the base to use when converting an id string to int.
-const idTypeRadix = 10
+	// idTypeRadix is the base to use when converting an id string to int.
+	idTypeRadix = 10
 
-// maxRecs is the maximum number of results allowed in a single bulk request.
-const maxRecs = 1000
+	// maxRecs is the max number of results allowed in a bulk request.
+	maxRecs = 1000
+)
 
 // the type of parameter validator function
 type paramValidator func (value string) (string, error)
@@ -37,7 +38,7 @@ var validators = map[string]paramValidator {
 // extReq is an object encapsulating an http request's parameters,
 // unifying path parameters and query parameters.
 type extReq struct {
-	req *http.Request
+	req apiHandlerArg
 	pathParams map[string]string
 	validators map[string]paramValidator
 }
@@ -45,11 +46,11 @@ type extReq struct {
 // ----- start of functions
 
 // newExtReq returns a constructed extReq object.
-func newExtReq(req *http.Request,
+func newExtReq(req apiHandlerArg,
 		validators map[string]paramValidator) (*extReq, error) {
 
 	// make the query params available via FormValue().
-	err := req.ParseForm()
+	err := req.parseForm()
 	if err != nil {
 		return nil, err
 	}
@@ -69,11 +70,11 @@ func (xr *extReq) getParam(name string) (string, error) {
 	case "id":
 		id, ok := xr.pathParams[name]
 		if !ok {
-			id = xr.req.FormValue(name)
+			id = xr.req.formValue(name)
 		}
 		return validate_id(id)
 	default:
-		val := xr.req.FormValue(name)
+		val := xr.req.formValue(name)
 		vfunc, ok := xr.validators[name]
 		if ! ok {
 			return val, fmt.Errorf("no validator for %s", name)
@@ -87,7 +88,7 @@ func (xr *extReq) getParam(name string) (string, error) {
 // each parameter must have a validator function.
 // the call returns an error if a validator function fails on any parameter.
 // the parameter values are returned as a map of string.
-func fetchParams(req *http.Request, names ...string) (map[string]string, error) {
+func fetchParams(req apiHandlerArg, names ...string) (map[string]string, error) {
 	ret := map[string]string{}
 
 	xr, err := newExtReq(req, validators)

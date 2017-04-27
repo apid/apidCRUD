@@ -69,7 +69,7 @@ func registerHandlers(service handleFuncer, tab []apiDesc) {
 func addPath(service handleFuncer, path string, vmap verbMap) {
 	service.HandleFunc(path,
 		func(w http.ResponseWriter, r *http.Request) {
-			pathDispatch(vmap, w, r)
+			pathDispatch(vmap, w, apiHandlerArg{r})
 		})
 }
 

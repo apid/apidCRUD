@@ -21,7 +21,7 @@ type BodyRecord struct {
 // KVRecord represents record data in requests, used in multiple APIs.
 type KVRecord struct {
 	Keys []string
-	Values []string
+	Values []interface{}
 }
 
 // RecordsResponse is the type for multiple get*Record* APIs.

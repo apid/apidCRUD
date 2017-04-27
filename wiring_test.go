@@ -20,23 +20,23 @@ const (
 // ----- unit tests for initWiring()
 
 // a dummy handler, returns abcGetRet.
-func abcGetHandler(req *http.Request) (int, interface{}) {
-	return abcGetRet, ""
+func abcGetHandler(req apiHandlerArg) apiHandlerRet {
+	return apiHandlerRet{abcGetRet, ""}
 }
 
 // a dummy handler, returns abcPostRet.
-func abcPostHandler(req *http.Request) (int, interface{}) {
-	return abcPostRet, ""
+func abcPostHandler(req apiHandlerArg) apiHandlerRet {
+	return apiHandlerRet{abcPostRet, ""}
 }
 
 // a dummy handler, returns xyzPutRet.
-func xyzPutHandler(req *http.Request) (int, interface{}) {
-	return xyzPutRet, ""
+func xyzPutHandler(req apiHandlerArg) apiHandlerRet {
+	return apiHandlerRet{xyzPutRet, ""}
 }
 
 // a dummy handler, returns a value that causes convData() to fail
-func badHandler(req *http.Request) (int, interface{}) {
-	return http.StatusInternalServerError, badconv
+func badHandler(req apiHandlerArg) apiHandlerRet {
+	return apiHandlerRet{http.StatusInternalServerError, badconv}
 }
 
 var fakeApiTable = []apiDesc {	// nolint
@@ -111,10 +111,10 @@ func callApiMethod_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_
 		t.Errorf(`#%d: %s bad path "%s"`, i, fn, tc.path)
 		return
 	}
-	code, _ := callApiMethod(vmap, tc.verb, nil)
-	if tc.xcode != code {
+	res := callApiMethod(vmap, tc.verb, apiHandlerArg{nil})
+	if tc.xcode != res.code {
 		t.Errorf(`#%d: %s("%s","%s")=%d; expected %d`,
-			i, fn, tc.path, tc.verb, code, tc.xcode)
+			i, fn, tc.path, tc.verb, res.code, tc.xcode)
 	}
 }
 
@@ -140,7 +140,7 @@ func pathDispatch_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_T
 	req, _ := http.NewRequest(tc.verb, tc.path, rdr)
 	w := httptest.NewRecorder()
 
-	pathDispatch(vmap, w, req)
+	pathDispatch(vmap, w, apiHandlerArg{req})
 	code := w.Code
 	if tc.xcode != code {
 		t.Errorf(`#%d: %s("%s","%s") code=%d; expected %d`,
