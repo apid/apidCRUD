@@ -414,7 +414,7 @@ func fetchParamsHelper(path string,
 	var req apiHandlerArg
 	if path == "" {
 		req = mkErrRequest()
-		err2 := req.ParseForm()
+		err2 := req.parseForm()
 		if err2 == nil {
 			fmt.Printf("errRequest should have failed here, but didn't")
 		}
