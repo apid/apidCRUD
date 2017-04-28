@@ -180,17 +180,6 @@ func notImplemented() apiHandlerRet {
 		fmt.Errorf("API not implemented yet"))
 }
 
-// initDB() initializes the global db variable
-func initDB() (dbType, error) {
-	h, err := sql.Open("sqlite3", dbName)
-	if err != nil {
-		return dbType{}, err
-	}
-
-	// assign the global db variable
-	return dbType{handle: h}, nil
-}
-
 // mkSQLRow() returns a list of interface{} of the given length,
 // each element is actually a pointer to sql.RawBytes .
 func mkSQLRow(N int) []interface{} {
@@ -210,7 +199,6 @@ func runQuery(db dbType,
 
 	ret := make([]*KVRecord, 0, 1)
 
-	rownum := 0
 	rows, err := db.handle.Query(qstring, ivals...)
 	if err != nil {
 		return ret, err
@@ -226,32 +214,26 @@ func runQuery(db dbType,
 	log.Debugf("cols = %s", cols)
 	ncols := len(cols)
 
-	count := 0
-
 	for rows.Next() {
-		rownum ++
-
 		vals := mkSQLRow(ncols)
-		err := rows.Scan(vals...)
+		err = rows.Scan(vals...)
 		if err != nil {
 			return ret, err
 		}
 
-		svals, err := convValues(vals)
+		err = convValues(vals)
 		if err != nil {
 			return ret, err
 		}
-		kvrow := KVRecord{Keys: cols, Values: svals}
+		kvrow := KVRecord{Keys: cols, Values: vals}
 		ret = append(ret, &kvrow)
-		count++
-		if count >= maxRecs {
-			// safety check
+		if len(ret) >= maxRecs { // safety check
 			break
 		}
 	}
 
 	if rows.Err() != nil {
-		return ret, fmt.Errorf("rows ended with error at rownum %d", rownum)
+		return ret, fmt.Errorf("rows error at rownum %d", len(ret))
 	}
 
 	return ret, nil
@@ -596,15 +578,15 @@ func validateRecords(records []KVRecord) error {
 
 // convValues() converts masked *sql.RawBytes to masked strings.
 // the slice is changed in-place.
-func convValues(vals []interface{}) ([]interface{}, error) {
+func convValues(vals []interface{}) error {
 	N := len(vals)
 	for i := 0; i < N; i++ {
 		v := vals[i]
 		rbp, ok := v.(*sql.RawBytes)
 		if !ok {
-			return vals, fmt.Errorf("SQL conversion error")
+			return fmt.Errorf("SQL conversion error")
 		}
 		vals[i] = string(*rbp)
 	}
-	return vals, nil
+	return nil
 }

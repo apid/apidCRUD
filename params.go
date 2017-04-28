@@ -19,6 +19,11 @@ const (
 
 	// maxRecs is the max number of results allowed in a bulk request.
 	maxRecs = 1000
+
+	// types of parameters we recognize in an http request.
+	paramOther = 0
+	paramPathOnly = 1
+	paramPathOrQuery = 2
 )
 
 // the type of parameter validator function
@@ -33,6 +38,11 @@ var validators = map[string]paramValidator {
 	"ids": validate_ids,
 	"limit": validate_limit,
 	"offset": validate_offset,
+}
+
+var paramType = map[string]int {
+	"table_name": paramPathOnly,
+	"id": paramPathOrQuery,
 }
 
 // extReq is an object encapsulating an http request's parameters,
@@ -64,23 +74,24 @@ func newExtReq(arg apiHandlerArg,
 // the parameter must have a validator function.
 // the call fails if the validator function fails.
 func (xr *extReq) getParam(name string) (string, error) {
-	switch (name) {
-	case "table_name":
-		return validate_table_name(xr.pathParams[name])
-	case "id":
-		id, ok := xr.pathParams[name]
+	var val string
+	var ok bool
+	switch (paramType[name]) {
+	case paramPathOnly:
+		val = xr.pathParams[name]
+	case paramPathOrQuery:
+		val, ok = xr.pathParams[name]
 		if !ok {
-			id = xr.req.formValue(name)
+			val = xr.req.formValue(name)
 		}
-		return validate_id(id)
 	default:
-		val := xr.req.formValue(name)
-		vfunc, ok := xr.validators[name]
-		if ! ok {
-			return val, fmt.Errorf("no validator for %s", name)
-		}
-		return vfunc(val)
+		val = xr.req.formValue(name)
 	}
+	vfunc, ok := xr.validators[name]
+	if ! ok {
+		return val, fmt.Errorf("no validator for %s", name)
+	}
+	return vfunc(val)
 }
 
 // fetchParams() gets the named parameters from the given Request.

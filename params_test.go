@@ -273,7 +273,7 @@ func newErrReader() *errReader {
 }
 
 func mkErrRequest() apiHandlerArg {
-	req, _ := http.NewRequest("failme", "", newErrReader())
+	req, _ := http.NewRequest("failmefortestingpurposes", "", newErrReader())
 	return apiHandlerArg{req}
 }
 
@@ -360,8 +360,7 @@ var fetchParams_Tab = []fetchParams_TC {
 	{ http.MethodGet, "/db/abc?", "", "id=123&ids=123,456", "id,ids", true },
 	{ http.MethodGet, "/db/abc?", "", "id=1&fields=a,b,c", "id,fields", true },
 	{ http.MethodGet, "/db/abc?", "", "junk=1&fields=a,b,c", "junk,fields", false },
-	{ "failme", "/db/abc?", "", "junk=1&fields=a,b,c", "junk,fields", false },
-	// { "", "fields=a,b,c", "", "fields", false },
+	{ "failmefortestingpurposes", "/db/abcd?", "fields=a,b,c", "", "fields", false },
 }
 
 // getKeys() returns the list of keys from the given map

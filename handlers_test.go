@@ -630,3 +630,53 @@ func Test_validateRecords(t *testing.T) {
 		validateRecords_Checker(t, testno, tc)
 	}
 }
+
+// ----- unit tests for convValues()
+
+// inputs and outputs for one convValues testcase.
+type convValues_TC struct {
+	arg string
+}
+
+// table of convValues testcases.
+var convValues_Tab = []convValues_TC {
+	{ "" },
+	{ "abc" },
+	{ "abc,def" },
+	{ "abc,def,ghi" },
+}
+
+func strToSQLValues(arg string) []interface{} {
+	args := mySplit(arg, ",")
+	N := len(args)
+	ret := make([]interface{}, N)
+	for i, s := range args {
+		rb := sql.RawBytes(s)
+		ret[i] = &rb;
+	}
+	return ret
+}
+
+// run one testcase for function convValues.
+func convValues_Checker(t *testing.T, testno int, tc convValues_TC) {
+	fn := "convValues"
+	argInter := strToSQLValues(tc.arg)
+	err := convValues(argInter)
+	if err != nil {
+		t.Errorf(`#%d: %s([%s]) failed [%s]`,
+			testno, fn, tc.arg, err)
+	}
+	argStrings := unmaskStrings(argInter)
+	resultStr := strings.Join(argStrings, ",")
+	if tc.arg != resultStr {
+		t.Errorf(`#%d: %s("%s")="%s"; expected "%s"`,
+			testno, fn, tc.arg, resultStr, tc.arg)
+	}
+}
+
+// the convValues test suite.  run all convValues testcases.
+func Test_convValues(t *testing.T) {
+	for testno, tc := range convValues_Tab {
+		convValues_Checker(t, testno, tc)
+	}
+}

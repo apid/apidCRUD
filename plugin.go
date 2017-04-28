@@ -36,18 +36,17 @@ var apiTable = []apiDesc{
 
 // initPlugin() is called by the apid-core startup.
 func initPlugin(services apid.Services) (apid.PluginData, error) {
-	log = services.Log().ForModule(pluginData.Name)
-	log.Printf("in initPlugin")
+	log = apid.Log().ForModule(pluginData.Name)
 
 	initConfig()
 
 	var err error
-	db, err = initDB()
+	db, err = initDB(dbName)
 	if err != nil {
 		return pluginData, err
 	}
 
-	registerHandlers(services.API(), apiTable)
+	registerHandlers(apid.API(), apiTable)
 
 	return pluginData, nil
 }
@@ -86,10 +85,6 @@ func confGet(cfg getStringer, vname string, defval string) string {
 // initConfig() sets up some global configuration parameters for this plugin.
 func initConfig() {
 	cfg := apid.Config()
-
-	dbName := confGet(cfg, "apidCRUD_db_name", "apidCRUD.db")
-	log.Debugf("apidCRUD_db_name = %s", dbName)
-
-	base_path := confGet(cfg, "apidCRUD_base_path", "/apid")
-	log.Debugf("apidCRUD_base_path = %s", base_path)
+	dbName = confGet(cfg, "apidCRUD_db_name", "apidCRUD.db")
+	basePath = confGet(cfg, "apidCRUD_base_path", "/apid")
 }

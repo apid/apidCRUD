@@ -1,4 +1,7 @@
-// template for unit tests of a function XYZ.
+// template for table-driven unit tests of a function XYZ.
+
+
+// ----- unit tests for XYZ().
 
 // inputs and outputs for one XYZ testcase.
 type XYZ_TC struct {

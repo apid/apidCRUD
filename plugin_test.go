@@ -52,7 +52,7 @@ func Test_confGet(t *testing.T) {
 // ----- unit tests for initDB()
 
 func Test_initDB(t *testing.T) {
-	x, err := initDB()
+	x, err := initDB(dbName)
 	if err != nil {
 		t.Errorf(`initDB() error %s`, err)
 		return
