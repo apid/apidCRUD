@@ -128,6 +128,9 @@ func writeErrorResponse(w http.ResponseWriter, err error) {
 // ----- methods for apiHandlerArg
 
 func (arg *apiHandlerArg) parseForm() error {
+	if arg.req.Method == "failme" {
+		return fmt.Errorf("illegal verb")
+	}
 	return arg.req.ParseForm()
 }
 

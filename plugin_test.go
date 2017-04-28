@@ -104,7 +104,6 @@ func registerHandler_Checker(t *testing.T,
 	w := httptest.NewRecorder()
 
 	// make the call
-	fmt.Printf("calling fp for %s %s\n", tc.verb, path)
 	fp(w, r)
 
 	// check the recorded response

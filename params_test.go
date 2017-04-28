@@ -273,24 +273,24 @@ func newErrReader() *errReader {
 }
 
 func mkErrRequest() apiHandlerArg {
-	req, _ := http.NewRequest(http.MethodGet, "", newErrReader())
+	req, _ := http.NewRequest("failme", "", newErrReader())
 	return apiHandlerArg{req}
 }
 
-func mkRequest(path string) apiHandlerArg {
-	req, _ := http.NewRequest(http.MethodGet, path, nil)
+func mkRequest(verb string, path string) apiHandlerArg {
+	req, _ := http.NewRequest(verb, path, nil)
 	return apiHandlerArg{req}
 }
 
 // return an ExtReq object for testing, based on the given path.
-func mkExtReq(path string) (*extReq, error) {
-	req := mkRequest(path)
+func mkExtReq(verb string, path string) (*extReq, error) {
+	req := mkRequest(verb, path)
 	return newExtReq(req, validators)
 }
 
 func Test_newExtReq(t *testing.T) {
 	fn := "newExtReq"
-	xr, err := mkExtReq("/apid/db")
+	xr, err := mkExtReq("GET", "/apid/db")
 	if err != nil {
 		t.Errorf("%s failure: %s", fn, err)
 		return
@@ -306,7 +306,7 @@ func getParam_Checker(t *testing.T,
 		paramName string,
 		val string) (string, error) {
 	path := fmt.Sprintf("/apid/db?%s=%s", paramName, val)
-	xr, err := mkExtReq(path)
+	xr, err := mkExtReq("GET", path)
 	if err != nil {
 		return "", nil
 	}
@@ -347,6 +347,7 @@ func Test_getParam(t *testing.T) {
 // ----- unit tests for fetchParams()
 
 type fetchParams_TC struct {
+	verb string
 	path string
 	pathStr string		// path params
 	queryStr string		// query params to use in call
@@ -355,10 +356,11 @@ type fetchParams_TC struct {
 }
 
 var fetchParams_Tab = []fetchParams_TC {
-	{ "/db/abc?", "table_name=faketab&id=123", "", "id,table_name", true },
-	{ "/db/abc?", "", "id=123&ids=123,456", "id,ids", true },
-	{ "/db/abc?", "", "id=1&fields=a,b,c", "id,fields", true },
-	{ "/db/abc?", "", "junk=1&fields=a,b,c", "junk,fields", false },
+	{ http.MethodGet, "/db/abc?", "table_name=faketab&id=123", "", "id,table_name", true },
+	{ http.MethodGet, "/db/abc?", "", "id=123&ids=123,456", "id,ids", true },
+	{ http.MethodGet, "/db/abc?", "", "id=1&fields=a,b,c", "id,fields", true },
+	{ http.MethodGet, "/db/abc?", "", "junk=1&fields=a,b,c", "junk,fields", false },
+	{ "failme", "/db/abc?", "", "junk=1&fields=a,b,c", "junk,fields", false },
 	// { "", "fields=a,b,c", "", "fields", false },
 }
 
@@ -392,15 +394,17 @@ func strToMap(vars string) map[string]string {
 	return ret
 }
 
-func fetchParamsHelper(path string,
+func fetchParamsHelper(verb string,
+		path string,
 		pathStr string, queryStr string,
 		nameStr string) (map[string]string, error) {
 
 	pathMap := strToMap(pathStr)
 
 	// monkey-patch the getPathParams() function temporarily
-	// while newExtReq runs.
-	old := getPathParams
+	// while newExtReq() runs.
+	oldGetPathParams := getPathParams
+	
 	getPathParams = func(req apiHandlerArg) map[string]string {
 		// fmt.Printf("in params_test.getPathParams")
 		return pathMap
@@ -408,19 +412,11 @@ func fetchParamsHelper(path string,
 
 	// clean up monkey-patching on return.
 	defer func() {
-		getPathParams = old
+		getPathParams = oldGetPathParams
+		
 	}()
 
-	var req apiHandlerArg
-	if path == "" {
-		req = mkErrRequest()
-		err2 := req.parseForm()
-		if err2 == nil {
-			fmt.Printf("errRequest should have failed here, but didn't")
-		}
-	} else {
-		req = mkRequest(path + queryStr)
-	}
+	req := mkRequest(verb, path + queryStr)
 
 	namesList := mySplit(nameStr, ",")
 	vmap, err := fetchParams(req, namesList...)
@@ -449,7 +445,11 @@ func fetchParamsHelper(path string,
 
 // handle one testcase
 func fetchParams_Checker(t *testing.T, i int, tc fetchParams_TC) {
-	_, err := fetchParamsHelper(tc.path, tc.pathStr, tc.queryStr, tc.nameStr)
+	_, err := fetchParamsHelper(tc.verb,
+			tc.path,
+			tc.pathStr,
+			tc.queryStr,
+			tc.nameStr)
 	if tc.xsucc != (err == nil) {
 		msg := errRep(err)
 		t.Errorf(`#%d: fetchParams("%s","%s")=[%s]; expected %t`,

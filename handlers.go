@@ -594,6 +594,8 @@ func validateRecords(records []KVRecord) error {
 	return nil
 }
 
+// convValues() converts masked *sql.RawBytes to masked strings.
+// the slice is changed in-place.
 func convValues(vals []interface{}) ([]interface{}, error) {
 	N := len(vals)
 	for i := 0; i < N; i++ {
