@@ -128,10 +128,16 @@ func writeErrorResponse(w http.ResponseWriter, err error) {
 // ----- methods for apiHandlerArg
 
 func (arg *apiHandlerArg) parseForm() error {
+	if arg.req == nil {
+		return nil
+	}
 	return arg.req.ParseForm()
 }
 
 func (arg *apiHandlerArg) formValue(name string) string {
+	if arg.req == nil {
+		return ""
+	}
 	return arg.req.FormValue(name)
 }
 
@@ -140,9 +146,15 @@ func (arg *apiHandlerArg) getBody() io.ReadCloser {
 }
 
 func (arg *apiHandlerArg) bodyClose() error {
+	if arg.req == nil {
+		return nil
+	}
 	return arg.req.Body.Close()
 }
 
 func (arg *apiHandlerArg) ParseForm() error {
+	if arg.req == nil {
+		return nil
+	}
 	return arg.req.ParseForm()
 }

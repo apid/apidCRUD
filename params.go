@@ -46,17 +46,17 @@ type extReq struct {
 // ----- start of functions
 
 // newExtReq returns a constructed extReq object.
-func newExtReq(req apiHandlerArg,
+func newExtReq(arg apiHandlerArg,
 		validators map[string]paramValidator) (*extReq, error) {
 
 	// make the query params available via FormValue().
-	err := req.parseForm()
+	err := arg.parseForm()
 	if err != nil {
 		return nil, err
 	}
 
-	return &extReq{req: req,
-		pathParams: getPathParams(req),
+	return &extReq{req: arg,
+		pathParams: getPathParams(arg),
 		validators: validators}, nil
 }
 

@@ -2,8 +2,11 @@ package apidCRUD
 
 import (
 	"testing"
+	"strings"
 	"net/http"
+	"net/http/httptest"
 	"github.com/30x/apid-core"
+	"fmt"
 	)
 
 // ----- unit tests for confGet()
@@ -84,16 +87,40 @@ func (service mockApiService) HandleFunc(path string,
 	return nil
 }
 
-func Test_registerHandlers(t *testing.T) {
+func registerHandler_Checker(t *testing.T,
+		testno int,
+		service *mockApiService,
+		tc callApiMethod_TC) {
 	fn := "registerHandlers"
+	path := basePath + tc.path
+	fp := service.hfmap[path]
+	if fp == nil {
+		t.Errorf("%s handler for %s is nil", fn, path)
+		fmt.Printf("hfmap = %s\n", service.hfmap)
+		return
+	}
+
+	r, _ := http.NewRequest(tc.verb, path, strings.NewReader(""))
+	w := httptest.NewRecorder()
+
+	// make the call
+	fmt.Printf("calling fp for %s %s\n", tc.verb, path)
+	fp(w, r)
+
+	// check the recorded response
+	if tc.xcode != w.Code {
+		t.Errorf(`#%d: %s returned code=%d; expected %d`,
+			testno, fn, w.Code, tc.xcode)
+		return
+	}
+}
+
+func Test_registerHandlers(t *testing.T) {
 	service := newMockApiService()
-	registerHandlers(service, apiTable)
+	registerHandlers(service, fakeApiTable)
 
 	// check that the expected paths were in fact registered.
-	for _, desc := range apiTable {
-		path := basePath + desc.path
-		if service.hfmap[path] == nil {
-			t.Errorf("%s handler for %s is nil", fn, path)
-		}
+	for testno, desc := range callApiMethod_Tab {
+		registerHandler_Checker(t, testno, service, desc)
 	}
 }
