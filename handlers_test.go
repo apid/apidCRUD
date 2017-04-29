@@ -658,6 +658,14 @@ func strToSQLValues(arg string) []interface{} {
 	return ret
 }
 
+// return something that can't be converted by convValues().
+func mkIllegalValues() []interface{} {
+	ret := make([]interface{}, 1)
+	val := 555
+	ret[0] = &val
+	return ret
+}
+
 // run one testcase for function convValues.
 func convValues_Checker(t *testing.T, testno int, tc convValues_TC) {
 	fn := "convValues"
@@ -675,9 +683,19 @@ func convValues_Checker(t *testing.T, testno int, tc convValues_TC) {
 	}
 }
 
-// the convValues test suite.  run all convValues testcases.
+// main test suite for convValues().
 func Test_convValues(t *testing.T) {
 	for testno, tc := range convValues_Tab {
 		convValues_Checker(t, testno, tc)
+	}
+}
+
+// test suite for testing error return.
+func Test_convValues_illegal(t *testing.T) {
+	fn := "convValues"
+	vals := mkIllegalValues()
+	err := convValues(vals)
+	if err == nil {
+		t.Errorf(`%s on illegal value failed to return error`, fn)
 	}
 }

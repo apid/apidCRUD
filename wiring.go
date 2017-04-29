@@ -7,15 +7,18 @@ import (
 	"io"
 )
 
+// apiHandlerRet is the return type from an apiHandler function.
 type apiHandlerRet struct {
 	code int
 	data interface{}
 }
 
+// apiHandlerArg is the type of the parameter to an apiHandler function.
 type apiHandlerArg struct {
 	req *http.Request
 }
 
+// apiHandler is the type an API handler function.
 type apiHandler func(apiHandlerArg) apiHandlerRet
 
 // type verbMap maps each wired verb for a given path, to its handler function.
@@ -24,13 +27,14 @@ type verbMap struct {
 	methods map[string]apiHandler
 }
 
+// type apiDesc describes the wiring for one API.
 type apiDesc struct {
 	path string
 	verb string
 	handler apiHandler
 }
 
-// type apiWiring is the current state of the API wiring.
+// type apiWiring is the state needed to dispatch an incoming API call.
 type apiWiring struct {
 	pathsMap map[string]verbMap
 }
@@ -101,6 +105,9 @@ func pathDispatch(vmap verbMap, w http.ResponseWriter, arg apiHandlerArg) {
 	log.Debugf("in pathDispatch: code=%d", res.code)
 }
 
+// convData() converts the interface{} data part returned by
+// an apiHandler function.  the return value is a byte slice.
+// if the data is json, it essentially gets ascii-fied.
 func convData(data interface{}) ([]byte, error) {
 	switch data := data.(type) {
 	case []byte:
@@ -127,6 +134,7 @@ func writeErrorResponse(w http.ResponseWriter, err error) {
 
 // ----- methods for apiHandlerArg
 
+// parseForm() is a wrapper for http.Request.ParseForm().
 func (arg *apiHandlerArg) parseForm() error {
 	if arg.req.Method == "failmefortestingpurposes" {
 		return fmt.Errorf("illegal verb")
@@ -134,14 +142,17 @@ func (arg *apiHandlerArg) parseForm() error {
 	return arg.req.ParseForm()
 }
 
+// formValue() is a wrapper for http.Request.FormValue().
 func (arg *apiHandlerArg) formValue(name string) string {
 	return arg.req.FormValue(name)
 }
 
+// getBody() is an accessor for http.Request.Body .
 func (arg *apiHandlerArg) getBody() io.ReadCloser {
 	return arg.req.Body
 }
 
+// bodyClose() is a wrapper for http.Request.Body.Close()
 func (arg *apiHandlerArg) bodyClose() error {
 	return arg.req.Body.Close()
 }

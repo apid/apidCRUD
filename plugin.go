@@ -5,7 +5,7 @@ import (
 	"github.com/30x/apid-core"
 )
 
-// ----- narrowed-down versions of interfaces from apid.
+// ----- narrowed-down versions of apid service interfaces
 
 // these narrowed interfaces make testing easier,
 // by making it easier to hand craft a simple mock interface
