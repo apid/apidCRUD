@@ -1,12 +1,12 @@
 package apidCRUD
 
 import (
+	"fmt"
 	"testing"
 	"strings"
 	"net/http"
 	"net/http/httptest"
 	"github.com/30x/apid-core"
-	"fmt"
 	)
 
 // ----- unit tests for confGet()
@@ -22,7 +22,7 @@ var confGet_Tab = []confGet_TC {
 	{"not-there", "no", "no"},	// this key is not present
 }
 
-// mockGetStringer is the interface expected by confGet()
+// mockGetStringer is compatible with the interface expected by confGet().
 type mockGetStringer struct {
 	data map[string]string
 }
@@ -66,7 +66,8 @@ func Test_initDB(t *testing.T) {
 
 func Test_initConfig(t *testing.T) {
 	// this just proves it can be called without crashing
-	initConfig()
+	gs := mockGetStringer{fakeConfData}
+	initConfig(gs)
 }
 
 // ----- unit tests for registerHandlers() and addPath()
@@ -121,5 +122,27 @@ func Test_registerHandlers(t *testing.T) {
 	// check that the expected paths were in fact registered.
 	for testno, desc := range callApiMethod_Tab {
 		registerHandler_Checker(t, testno, service, desc)
+	}
+}
+
+// ----- unit tests for initPlugin()
+
+type mockForModuler struct {
+	name string
+}
+
+func (fmi mockForModuler) ForModule(name string) apid.LogService {
+	fmi.name = name
+	return apid.Log()
+}
+
+func Test_realInitPlugin(t *testing.T) {
+	fn := "realInitPlugin"
+	gsi := mockGetStringer{}
+	fmi := mockForModuler{}
+	hfi := newMockApiService()
+	_, err := realInitPlugin(gsi, fmi, *hfi)
+	if err != nil {
+		t.Errorf(`%s returned error [%s]`, fn, err)
 	}
 }

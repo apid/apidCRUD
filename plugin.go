@@ -5,16 +5,31 @@ import (
 	"github.com/30x/apid-core"
 )
 
+// ----- narrowed-down versions of interfaces from apid.
+
+// these narrowed interfaces make testing easier,
+// by making it easier to hand craft a simple mock interface
+// that can be used as an argument to pieces of code under test.
+
 // getStringer is an interface that supports GetString().
+// narrowed from apid.ConfigService.
 type getStringer interface {
-	GetString(string) string
+	GetString(vname string) string
 }
 
+// handleFuncer interface provides the HandleFunc() method.
+// narrowed from apid.APISerivce.
 type handleFuncer interface {
 	HandleFunc(path string, hf http.HandlerFunc) apid.Route
 }
 
-// apiTable is the list of APIs that need to be wired up.
+// forModuler interface proviees the ForModule() method.
+// narrowed from apid.LogService.
+type forModuler interface {
+	ForModule(name string) apid.LogService
+}
+
+// ----- apiTable is the list of APIs that need to be wired up.
 var apiTable = []apiDesc{
 	{ "/db", http.MethodGet, getDbResourcesHandler },
 	{ "/db/_table", http.MethodGet, getDbTablesHandler },
@@ -34,21 +49,32 @@ var apiTable = []apiDesc{
 	{ "/db/_schema/{table_name}/{field_name}", http.MethodGet, describeDbFieldHandler },
 }
 
-// initPlugin() is called by the apid-core startup.
-func initPlugin(services apid.Services) (apid.PluginData, error) {
-	log = apid.Log().ForModule(pluginData.Name)
+// ----- functions go below this line
 
-	initConfig()
+// initPlugin() is called by the apid-core startup.
+// just calls realInitPlugin() which has been designed to simplify unit testing.
+func initPlugin(services apid.Services) (apid.PluginData, error) {
+	return realInitPlugin(services.Config(), services.Log(), services.API())
+}
+
+// realInitPlugin() drives miscellaneous plugin-specific setup activities,
+// then returns apidCRUD's pluginData.
+//	reads in the plugin-specific configuration data.
+//	sets the log variable.
+//	sets the db variable.
+//	registers the API handlers.
+func realInitPlugin(gsi getStringer,
+		fmi forModuler,
+		hfi handleFuncer) (apid.PluginData, error) {
+
+	initConfig(gsi)
+	log = fmi.ForModule(pluginData.Name)	// NOTE: non-local var
+	registerHandlers(hfi, apiTable)
 
 	var err error
-	db, err = initDB(dbName)
-	if err != nil {
-		return pluginData, err
-	}
+	db, err = initDB(dbName)		// NOTE: non-local var
 
-	registerHandlers(apid.API(), apiTable)
-
-	return pluginData, nil
+	return pluginData, err
 }
 
 // registerHandlers() register all our handlers with the given service.
@@ -74,8 +100,8 @@ func addPath(service handleFuncer, path string, vmap verbMap) {
 
 // confGet() returns the config value of the named string,
 // or if there is no configured value, the given default value.
-func confGet(cfg getStringer, vname string, defval string) string {
-	ret := cfg.GetString(vname)
+func confGet(gsi getStringer, vname string, defval string) string {
+	ret := gsi.GetString(vname)
 	if ret == "" {
 		return defval
 	}
@@ -83,8 +109,7 @@ func confGet(cfg getStringer, vname string, defval string) string {
 }
 
 // initConfig() sets up some global configuration parameters for this plugin.
-func initConfig() {
-	cfg := apid.Config()
-	dbName = confGet(cfg, "apidCRUD_db_name", "apidCRUD.db")
-	basePath = confGet(cfg, "apidCRUD_base_path", "/apid")
+func initConfig(gsi getStringer) {
+	dbName = confGet(gsi, "apidCRUD_db_name", "apidCRUD.db")
+	basePath = confGet(gsi, "apidCRUD_base_path", "/apid")
 }
