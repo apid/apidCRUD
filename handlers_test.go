@@ -4,25 +4,9 @@ import (
 	"testing"
 	"fmt"
 	"strings"
-	"os"
 	"net/http"
 	"database/sql"
-	"github.com/30x/apid-core"
-	"github.com/30x/apid-core/factory"
 )
-
-var testServices = factory.DefaultServicesFactory()
-
-// TestMain() is called by the test framework before running the tests.
-// we use it to initialize the log variable.
-func TestMain(m *testing.M) {
-	// do this in case functions under test need to log something
-	apid.Initialize(testServices)
-	log = apid.Log()
-
-	// required boilerplate
-	os.Exit(m.Run())
-}
 
 // mySplit() is like strings.Split() except that
 // it returns a 0-length slice when s is the empty string.
@@ -698,4 +682,115 @@ func Test_convValues_illegal(t *testing.T) {
 	if err == nil {
 		t.Errorf(`%s on illegal value failed to return error`, fn)
 	}
+}
+
+// ----- unit tests for getDbResourcesHandler
+
+type apiCall_TC struct {
+	verb string
+	path string
+	query string
+	body string
+	xcode int
+}
+
+var getDbResources_Tab = []apiCall_TC {
+	{http.MethodGet, "/db", "", "", http.StatusNotImplemented},
+}
+
+func apiCall_Checker(t *testing.T,
+		testno int,
+		f apiHandler,
+		fn string,
+		tc apiCall_TC) {
+	rdr := strings.NewReader(tc.body)
+	req, _ := http.NewRequest(tc.verb, tc.path, rdr)
+	arg := apiHandlerArg{req}
+	res := f(arg)
+	if tc.xcode != res.code {
+		t.Errorf(`#%d: %s(%s,%s?%s) = %d; expected %d`,
+			testno, fn, tc.verb, tc.path, tc.query,
+			res.code, tc.xcode)
+	}
+}
+
+func apiCalls_Runner(t *testing.T, f apiHandler, tab []apiCall_TC) {
+	fn := getFunctionName(f)
+	for testno, tc := range tab {
+		apiCall_Checker(t, testno, f, fn, tc)
+	}
+}
+
+func Test_getDbResourcesHandler(t *testing.T) {
+	apiCalls_Runner(t, getDbResourcesHandler, getDbResources_Tab)
+}
+
+// ----- unit tests for getDbSchemasHandler()
+
+var getDbSchemas_Tab = []apiCall_TC {
+	{http.MethodGet, "/db/_schema", "", "", http.StatusNotImplemented},
+}
+
+func Test_getDbSchemasHandler(t *testing.T) {
+	apiCalls_Runner(t, getDbSchemasHandler, getDbSchemas_Tab)
+}
+
+// ----- unit tests for createDbTableHandler()
+
+var createDbTable_Tab = []apiCall_TC {
+	{http.MethodPost, "/db/_schema", "", "", http.StatusNotImplemented},
+}
+
+func Test_getDbTableHandler(t *testing.T) {
+	apiCalls_Runner(t, createDbTableHandler, createDbTable_Tab)
+}
+
+// ----- unit tests for updateDbTablesHandler()
+
+var updateDbTables_Tab = []apiCall_TC {
+	{http.MethodPatch, "/db/_schema", "", "", http.StatusNotImplemented},
+}
+
+func Test_updateDbTablesHandler(t *testing.T) {
+	apiCalls_Runner(t, updateDbTablesHandler, updateDbTables_Tab)
+}
+
+// ----- unit tests for describeDbTableHandler()
+
+var describeDbTable_Tab = []apiCall_TC {
+	{http.MethodGet, "/db/_schema/tabname", "", "", http.StatusNotImplemented},
+}
+
+func Test_describeDbTableHandler(t *testing.T) {
+	apiCalls_Runner(t, describeDbTableHandler, describeDbTable_Tab)
+}
+
+// ----- unit tests for createDbTablesHandler()
+
+var createDbTables_Tab = []apiCall_TC {
+	{http.MethodPost, "/db/_schema/tabname", "", "", http.StatusNotImplemented},
+}
+
+func Test_createDbTablesHandler(t *testing.T) {
+	apiCalls_Runner(t, createDbTablesHandler, createDbTables_Tab)
+}
+
+// ----- unit tests for deleteDbTableHandler()
+
+var deleteDbTable_Tab = []apiCall_TC {
+	{http.MethodDelete, "/db/_schema/tabname", "", "", http.StatusNotImplemented},
+}
+
+func Test_deleteDbTableHandler(t *testing.T) {
+	apiCalls_Runner(t, deleteDbTableHandler, deleteDbTable_Tab)
+}
+
+// ----- unit tests for describeDbField()
+
+var describeDbField_Tab = []apiCall_TC {
+	{http.MethodDelete, "/db/_schema/tabname", "", "", http.StatusNotImplemented},
+}
+
+func Test_describeDbFieldHandler(t *testing.T) {
+	apiCalls_Runner(t, describeDbFieldHandler, describeDbField_Tab)
 }
