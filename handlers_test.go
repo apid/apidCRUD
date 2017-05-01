@@ -809,6 +809,7 @@ var getDbRecord_Tab = []apiCall_TC {
 	 */
 }
 
+/*
 func Test_getDbRecordHandler(t *testing.T) {
 	var err error
 	db, err = fakeInitDb()
@@ -817,6 +818,7 @@ func Test_getDbRecordHandler(t *testing.T) {
 	}
 	apiCalls_Runner(t, getDbRecordHandler, getDbRecord_Tab)
 }
+ */
 
 // ----- unit tests for createDbRecords()
 
