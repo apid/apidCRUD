@@ -3,7 +3,8 @@ import:
 - package: github.com/30x/apid-core
 - package: github.com/30x/goscaffold
 - package: github.com/mattn/sqlite3
-- package: github.com/DATA-DOG/sqlmock.v1
+- package: github.com/proulon/ramsql/driver
+#- package: gopkg.in/DATA-DOG/go-sqlmock.v1
 testImport:
 - package: github.com/onsi/ginkgo/ginkgo
 - package: github.com/onsi/gomega

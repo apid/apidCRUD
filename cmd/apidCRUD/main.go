@@ -26,5 +26,5 @@ func main() {
 	// if we got here, an error occurred
 	config := apid.Config()
 	api_listen := config.GetString("api_listen")
-	log.Fatalf("Error. Is something already running on %s? %s", api_listen, err)
+	log.Fatalf("api.Listen() on %s returned [%s]", api_listen, err)
 }
