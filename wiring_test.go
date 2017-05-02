@@ -20,22 +20,22 @@ const (
 // ----- unit tests for initWiring()
 
 // a dummy handler, returns abcGetRet.
-func abcGetHandler(req apiHandlerArg) apiHandlerRet {
+func abcGetHandler(harg apiHandlerArg) apiHandlerRet {
 	return apiHandlerRet{abcGetRet, ""}
 }
 
 // a dummy handler, returns abcPostRet.
-func abcPostHandler(req apiHandlerArg) apiHandlerRet {
+func abcPostHandler(harg apiHandlerArg) apiHandlerRet {
 	return apiHandlerRet{abcPostRet, ""}
 }
 
 // a dummy handler, returns xyzPutRet.
-func xyzPutHandler(req apiHandlerArg) apiHandlerRet {
+func xyzPutHandler(harg apiHandlerArg) apiHandlerRet {
 	return apiHandlerRet{xyzPutRet, ""}
 }
 
 // a dummy handler, returns a value that causes convData() to fail
-func badHandler(req apiHandlerArg) apiHandlerRet {
+func badHandler(harg apiHandlerArg) apiHandlerRet {
 	return apiHandlerRet{http.StatusInternalServerError, badconv}
 }
 
@@ -90,7 +90,7 @@ func Test_addApi(t *testing.T) {
 // ----- unit tests for callApiMethod()
 
 type callApiMethod_TC struct {
-	path string
+	descStr string
 	verb string
 	xcode int
 }
@@ -106,15 +106,15 @@ var callApiMethod_Tab = []callApiMethod_TC {
 
 func callApiMethod_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {
 	fn := "callApiMethod"
-	vmap, ok := ws.pathsMap[tc.path]
+	vmap, ok := ws.pathsMap[tc.descStr]
 	if !ok {
-		t.Errorf(`#%d: %s bad path "%s"`, i, fn, tc.path)
+		t.Errorf(`#%d: %s bad path "%s"`, i, fn, tc.descStr)
 		return
 	}
-	res := callApiMethod(vmap, tc.verb, apiHandlerArg{nil})
+	res := callApiMethod(vmap, tc.verb, mkHandlerArg(tc.verb, tc.descStr))
 	if tc.xcode != res.code {
 		t.Errorf(`#%d: %s("%s","%s")=%d; expected %d`,
-			i, fn, tc.path, tc.verb, res.code, tc.xcode)
+			i, fn, tc.verb, tc.descStr, res.code, tc.xcode)
 	}
 }
 
@@ -130,21 +130,21 @@ func Test_callApiMethod(t *testing.T) {
 func pathDispatch_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {
 	fn := "pathDispatch"
 
-	vmap, ok := ws.pathsMap[tc.path]
+	vmap, ok := ws.pathsMap[tc.descStr]
 	if !ok {
-		t.Errorf(`#%d: %s bad path "%s"`, i, fn, tc.path)
+		t.Errorf(`#%d: %s bad path "%s"`, i, fn, tc.descStr)
 		return
 	}
 
 	rdr := strings.NewReader("")
-	req, _ := http.NewRequest(tc.verb, tc.path, rdr)
+	req, _ := http.NewRequest(tc.verb, tc.descStr, rdr)
 	w := httptest.NewRecorder()
 
-	pathDispatch(vmap, w, apiHandlerArg{req})
+	pathDispatch(vmap, w, mkApiHandlerArg(req, nil))
 	code := w.Code
 	if tc.xcode != code {
 		t.Errorf(`#%d: %s("%s","%s") code=%d; expected %d`,
-			i, fn, tc.path, tc.verb, code, tc.xcode)
+			i, fn, tc.verb, tc.descStr, code, tc.xcode)
 	}
 }
 

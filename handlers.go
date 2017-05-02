@@ -12,13 +12,13 @@ import (
 // ----- plain old handlers that are compatible with the apiHandler type.
 
 // getDbResourcesHandler handles GET requests on /db
-func getDbResourcesHandler(req apiHandlerArg) apiHandlerRet {
+func getDbResourcesHandler(harg apiHandlerArg) apiHandlerRet {
 	// not sure what this should do
 	return notImplemented()
 }
 
 // getDbTablesHandler handles GET requests on /db/_table
-func getDbTablesHandler(req apiHandlerArg) apiHandlerRet {
+func getDbTablesHandler(harg apiHandlerArg) apiHandlerRet {
 	// the "tables" table is our convention, not maintained by sqlite.
 
 	idlist := []interface{}{}
@@ -36,13 +36,13 @@ func getDbTablesHandler(req apiHandlerArg) apiHandlerRet {
 }
 
 // createDbRecordsHandler() handles POST requests on /db/_table/{table_name} .
-func createDbRecordsHandler(req apiHandlerArg) apiHandlerRet {
-	params, err := fetchParams(req, "table_name")
+func createDbRecordsHandler(harg apiHandlerArg) apiHandlerRet {
+	params, err := fetchParams(harg, "table_name")
 	if err != nil {
 		return errorRet(badStat, err)
 	}
 
-	body, err := getBodyRecord(req)
+	body, err := getBodyRecord(harg)
 	if err != nil {
 		return apiHandlerRet{badStat, err}
 	}
@@ -70,8 +70,8 @@ func createDbRecordsHandler(req apiHandlerArg) apiHandlerRet {
 }
 
 // getDbRecordsHandler() handles GET requests on /db/_table/{table_name} .
-func getDbRecordsHandler(req apiHandlerArg) apiHandlerRet {
-	params, err := fetchParams(req,
+func getDbRecordsHandler(harg apiHandlerArg) apiHandlerRet {
+	params, err := fetchParams(harg,
 		"table_name", "fields", "id_field", "ids", "limit", "offset")
 	if err != nil {
 		return errorRet(badStat, err)
@@ -81,8 +81,8 @@ func getDbRecordsHandler(req apiHandlerArg) apiHandlerRet {
 }
 
 // getDbRecordHandler() handles GET requests on /db/_table/{table_name}/{id} .
-func getDbRecordHandler(req apiHandlerArg) apiHandlerRet {
-	params, err := fetchParams(req,
+func getDbRecordHandler(harg apiHandlerArg) apiHandlerRet {
+	params, err := fetchParams(harg,
 		"table_name", "id", "fields", "id_field")
 	if err != nil {
 		return errorRet(badStat, err)
@@ -94,26 +94,26 @@ func getDbRecordHandler(req apiHandlerArg) apiHandlerRet {
 }
 
 // updateDbRecordsHandler() handles PATCH requests on /db/_table/{table_name} .
-func updateDbRecordsHandler(req apiHandlerArg) apiHandlerRet {
-	params, err := fetchParams(req, "table_name", "id_field", "ids")
+func updateDbRecordsHandler(harg apiHandlerArg) apiHandlerRet {
+	params, err := fetchParams(harg, "table_name", "id_field", "ids")
 	if err != nil {
 		return errorRet(badStat, err)
 	}
-	return updateCommon(req, params)
+	return updateCommon(harg, params)
 }
 
 // updateDbRecordHandler() handles PATCH requests on /db/_table/{table_name}/{id} .
-func updateDbRecordHandler(req apiHandlerArg) apiHandlerRet {
-	params, err := fetchParams(req, "table_name", "id", "id_field")
+func updateDbRecordHandler(harg apiHandlerArg) apiHandlerRet {
+	params, err := fetchParams(harg, "table_name", "id", "id_field")
 	if err != nil {
 		return errorRet(badStat, err)
 	}
-	return updateCommon(req, params)
+	return updateCommon(harg, params)
 }
 
 // deleteDbRecordsHandler handles DELETE requests on /db/_table/{table_name} .
-func deleteDbRecordsHandler(req apiHandlerArg) apiHandlerRet {
-	params, err := fetchParams(req, "table_name", "id_field", "ids")
+func deleteDbRecordsHandler(harg apiHandlerArg) apiHandlerRet {
+	params, err := fetchParams(harg, "table_name", "id_field", "ids")
 	if err != nil {
 		return errorRet(badStat, err)
 	}
@@ -122,8 +122,8 @@ func deleteDbRecordsHandler(req apiHandlerArg) apiHandlerRet {
 }
 
 // deleteDbRecordHandler handles DELETE requests on /db/_table/{table_name}/{id} .
-func deleteDbRecordHandler(req apiHandlerArg) apiHandlerRet {
-	params, err := fetchParams(req, "table_name", "id", "id_field")
+func deleteDbRecordHandler(harg apiHandlerArg) apiHandlerRet {
+	params, err := fetchParams(harg, "table_name", "id", "id_field")
 	if err != nil {
 		return errorRet(badStat, err)
 	}
@@ -131,37 +131,37 @@ func deleteDbRecordHandler(req apiHandlerArg) apiHandlerRet {
 }
 
 // getDbSchemasHandler handles GET requests on /db/_schema .
-func getDbSchemasHandler(req apiHandlerArg) apiHandlerRet {
+func getDbSchemasHandler(harg apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // createDbTableHandler handles POST requests on /db/_schema .
-func createDbTableHandler(req apiHandlerArg) apiHandlerRet {
+func createDbTableHandler(harg apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // updateDbTables handles PATCH requests on /db/_schema .
-func updateDbTablesHandler(req apiHandlerArg) apiHandlerRet {
+func updateDbTablesHandler(harg apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // describeDbTableHandler handles GET requests on /db/_schema/{table_name} .
-func describeDbTableHandler(req apiHandlerArg) apiHandlerRet {
+func describeDbTableHandler(harg apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // createDbTablesHandler handles POST requests on /db/_schema/{table_name} .
-func createDbTablesHandler(req apiHandlerArg) apiHandlerRet {
+func createDbTablesHandler(harg apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // deleteDbTableHandler handles DELETE requests on /db/_schema/{table_name} .
-func deleteDbTableHandler(req apiHandlerArg) apiHandlerRet {
+func deleteDbTableHandler(harg apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // describeDbFieldHandler handles GET requests on /db/_schema/{table_name} .
-func describeDbFieldHandler(req apiHandlerArg) apiHandlerRet {
+func describeDbFieldHandler(harg apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
@@ -384,9 +384,9 @@ func validateSQLValues(values []interface{}) error {
 }
 
 // getBodyRecord() returns a json record from the body of the given request.
-func getBodyRecord(req apiHandlerArg) (BodyRecord, error) {
+func getBodyRecord(harg apiHandlerArg) (BodyRecord, error) {
 	jrec := BodyRecord{}
-        err := json.NewDecoder(req.getBody()).Decode(&jrec)
+        err := json.NewDecoder(harg.getBody()).Decode(&jrec)
 	return jrec, err
 }
 
@@ -522,8 +522,8 @@ func getCommon(params map[string]string) apiHandlerRet {
 }
 
 // updateCommon is common code for update APIs.
-func updateCommon(req apiHandlerArg, params map[string]string) apiHandlerRet {
-	body, err := getBodyRecord(req)
+func updateCommon(harg apiHandlerArg, params map[string]string) apiHandlerRet {
+	body, err := getBodyRecord(harg)
 	if err != nil {
 		return errorRet(badStat, err)
 	}

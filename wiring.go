@@ -16,6 +16,8 @@ type apiHandlerRet struct {
 // apiHandlerArg is the type of the parameter to an apiHandler function.
 type apiHandlerArg struct {
 	req *http.Request
+	pathParams map[string]string
+	err error
 }
 
 // apiHandler is the type an API handler function.
@@ -71,27 +73,27 @@ func (apiws *apiWiring) GetMaps() map[string]verbMap {
 
 // callApiMethod() calls the handler that was configured for
 // the given verbMap and verb.
-func callApiMethod(vmap verbMap, verb string, req apiHandlerArg) apiHandlerRet {
+func callApiMethod(vmap verbMap, verb string, harg apiHandlerArg) apiHandlerRet {
 	verbFunc, ok := vmap.methods[verb]
 	if !ok {
 		return apiHandlerRet{http.StatusMethodNotAllowed,
 			fmt.Errorf(`No handler for %s on %s`, verb, vmap.path)}
 	}
 
-	return verbFunc(req)
+	return verbFunc(harg)
 }
 
 // pathDispatch() is the general handler for all our APIs.
 // it is called indirectly thru a closure function that
 // supplies the vmap argument.
-func pathDispatch(vmap verbMap, w http.ResponseWriter, arg apiHandlerArg) {
+func pathDispatch(vmap verbMap, w http.ResponseWriter, harg apiHandlerArg) {
 	log.Debugf("in pathDispatch: method=%s path=%s",
-		arg.req.Method, arg.req.URL.Path)
+		harg.req.Method, harg.req.URL.Path)
 	defer func() {
-		_ = arg.bodyClose()
+		_ = harg.bodyClose()
 	}()
 
-	res := callApiMethod(vmap, arg.req.Method, arg)
+	res := callApiMethod(vmap, harg.req.Method, harg)
 
 	rawdata, err := convData(res.data)
 	if err != nil {
@@ -100,7 +102,7 @@ func pathDispatch(vmap verbMap, w http.ResponseWriter, arg apiHandlerArg) {
 	}
 
 	w.WriteHeader(res.code)
-	_, _ = w.Write(rawdata)
+	w.Write(rawdata)	// nolint
 
 	log.Debugf("in pathDispatch: code=%d", res.code)
 }
@@ -134,25 +136,25 @@ func writeErrorResponse(w http.ResponseWriter, err error) {
 
 // ----- methods for apiHandlerArg
 
-// parseForm() is a wrapper for http.Request.ParseForm().
-func (arg *apiHandlerArg) parseForm() error {
-	if arg.req.Method == "failmefortestingpurposes" {
-		return fmt.Errorf("illegal verb")
-	}
-	return arg.req.ParseForm()
-}
-
 // formValue() is a wrapper for http.Request.FormValue().
-func (arg *apiHandlerArg) formValue(name string) string {
-	return arg.req.FormValue(name)
+// it returns the value, if any, of the named parameter from
+// the query portion of the request's URL (or body params).
+func (harg *apiHandlerArg) formValue(name string) string {
+	return harg.req.FormValue(name)
 }
 
 // getBody() is an accessor for http.Request.Body .
-func (arg *apiHandlerArg) getBody() io.ReadCloser {
-	return arg.req.Body
+func (harg *apiHandlerArg) getBody() io.ReadCloser {
+	return harg.req.Body
 }
 
 // bodyClose() is a wrapper for http.Request.Body.Close()
-func (arg *apiHandlerArg) bodyClose() error {
-	return arg.req.Body.Close()
+func (harg *apiHandlerArg) bodyClose() error {
+	return harg.req.Body.Close()
+}
+
+func mkApiHandlerArg(req *http.Request,
+		pathParams map[string]string) apiHandlerArg {
+	err := req.ParseForm()
+	return apiHandlerArg{req, pathParams, err}
 }

@@ -1,7 +1,6 @@
 package apidCRUD
 
 import (
-	"fmt"
 	"testing"
 	"strings"
 	"net/http"
@@ -93,11 +92,10 @@ func registerHandler_Checker(t *testing.T,
 		service *mockApiService,
 		tc callApiMethod_TC) {
 	fn := "registerHandlers"
-	path := basePath + tc.path
+	path := basePath + tc.descStr
 	fp := service.hfmap[path]
 	if fp == nil {
 		t.Errorf("%s handler for %s is nil", fn, path)
-		fmt.Printf("hfmap = %s\n", service.hfmap)
 		return
 	}
 

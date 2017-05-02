@@ -486,7 +486,7 @@ func getBodyRecord_Checker(t *testing.T, testno int, tc getBodyRecord_TC) {
 	tcvalues := strings.Split(tc.values, "&")
 	nkeys := len(tckeys)
 
-	body, err := getBodyRecord(apiHandlerArg{req})
+	body, err := getBodyRecord(mkApiHandlerArg(req, nil))
 	if err != nil {
 		t.Errorf("#%d: %s([%s]) failed, error=%s",
 			testno, fname, tc.data, err)
@@ -706,7 +706,7 @@ func apiCall_Checker(t *testing.T,
 	rdr := strings.NewReader(tc.body)
 	url := fmt.Sprintf("%s?%s", tc.path, tc.query)
 	req, _ := http.NewRequest(tc.verb, url, rdr)
-	arg := apiHandlerArg{req}
+	arg := mkApiHandlerArg(req, nil)
 	res := f(arg)
 	if tc.xcode != res.code {
 		t.Errorf(`#%d: %s(%s,%s) = %d; expected %d`,
@@ -840,12 +840,10 @@ var createDbRecords_Tab = []apiCall_TC {
 }
 
 func Test_createDbRecordsHandler(t *testing.T) {
-	/*
 	var err error
 	db, err = fakeInitDb()
 	if err != nil {
 		t.Errorf(`fakeInitDb failed: [%s]`, err)
 	}
 	apiCalls_Runner(t, createDbRecordsHandler, createDbRecords_Tab)
-	 */
 }

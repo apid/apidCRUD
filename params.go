@@ -45,49 +45,26 @@ var paramType = map[string]int {
 	"id": paramPathOrQuery,
 }
 
-// extReq is an object encapsulating an http request's parameters,
-// unifying path parameters and query parameters.
-type extReq struct {
-	req apiHandlerArg
-	pathParams map[string]string
-	validators map[string]paramValidator
-}
-
 // ----- start of functions
-
-// newExtReq returns a constructed extReq object.
-func newExtReq(arg apiHandlerArg,
-		validators map[string]paramValidator) (*extReq, error) {
-
-	// make the query params available via FormValue().
-	err := arg.parseForm()
-	if err != nil {
-		return nil, err
-	}
-
-	return &extReq{req: arg,
-		pathParams: getPathParams(arg),
-		validators: validators}, nil
-}
 
 // fetch_param() fetches the named parameter from the Request as a string.
 // the parameter must have a validator function.
 // the call fails if the validator function fails.
-func (xr *extReq) getParam(name string) (string, error) {
+func (harg *apiHandlerArg) getParam(name string) (string, error) {
 	var val string
 	var ok bool
 	switch (paramType[name]) {
 	case paramPathOnly:
-		val = xr.pathParams[name]
+		val = harg.pathParams[name]
 	case paramPathOrQuery:
-		val, ok = xr.pathParams[name]
+		val, ok = harg.pathParams[name]
 		if !ok {
-			val = xr.req.formValue(name)
+			val = harg.formValue(name)
 		}
 	default:
-		val = xr.req.formValue(name)
+		val = harg.formValue(name)
 	}
-	vfunc, ok := xr.validators[name]
+	vfunc, ok := validators[name]
 	if ! ok {
 		return val, fmt.Errorf("no validator for %s", name)
 	}
@@ -99,17 +76,12 @@ func (xr *extReq) getParam(name string) (string, error) {
 // each parameter must have a validator function.
 // the call returns an error if a validator function fails on any parameter.
 // the parameter values are returned as a map of string.
-func fetchParams(req apiHandlerArg, names ...string) (map[string]string, error) {
+func fetchParams(harg apiHandlerArg, names ...string) (map[string]string, error) {
 	ret := map[string]string{}
-
-	xr, err := newExtReq(req, validators)
-	if err != nil {
-		return ret, err
-	}
 
 	// fetch and validate each named param, storing values in ret[]
 	for _, name := range names {
-		val, err := xr.getParam(name)
+		val, err := harg.getParam(name)
 		if err != nil {
 			return ret, err
 		}

@@ -94,8 +94,9 @@ func registerHandlers(service handleFuncer, tab []apiDesc) {
 func addPath(service handleFuncer, path string, vmap verbMap) {
 	service.HandleFunc(path,
 		func(w http.ResponseWriter, r *http.Request) {
-			pathDispatch(vmap, w, apiHandlerArg{r})
+			pathDispatch(vmap, w, mkApiHandlerArg(r, getPathParams(r)))
 		})
+
 }
 
 // confGet() returns the config value of the named string,
@@ -112,4 +113,9 @@ func confGet(gsi getStringer, vname string, defval string) string {
 func initConfig(gsi getStringer) {
 	dbName = confGet(gsi, "apidCRUD_db_name", "apidCRUD.db")
 	basePath = confGet(gsi, "apidCRUD_base_path", "/apid")
+}
+
+// getPathParams() returns a map of path params from the given http request.
+func getPathParams(req *http.Request) map[string]string {
+	return apid.API().Vars(req)
 }

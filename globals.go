@@ -28,8 +28,3 @@ var log apid.LogService
 
 // basePath is the prefix applied to paths in the API description table
 var basePath = "/apid"
-
-// getPathParams is a function pointer, the default should never be called
-var getPathParams = func(arg apiHandlerArg) map[string]string {
-			return apid.API().Vars(arg.req)
-		}
