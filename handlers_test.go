@@ -703,14 +703,12 @@ func Test_convValues_illegal(t *testing.T) {
 
 type apiCall_TC struct {
 	verb string
-	path string
-	query string
-	body string
+	descStr string
 	xcode int
 }
 
 var getDbResources_Tab = []apiCall_TC {
-	{http.MethodGet, "/db", "", "", http.StatusNotImplemented},
+	{http.MethodGet, "/db", http.StatusNotImplemented},
 }
 
 func apiCall_Checker(t *testing.T,
@@ -718,14 +716,11 @@ func apiCall_Checker(t *testing.T,
 		f apiHandler,
 		fname string,
 		tc apiCall_TC) {
-	rdr := strings.NewReader(tc.body)
-	url := fmt.Sprintf("%s?%s", tc.path, tc.query)
-	req, _ := http.NewRequest(tc.verb, url, rdr)
-	arg := mkApiHandlerArg(req, nil)
+	arg := mkHandlerArg(tc.verb, tc.descStr)
 	res := f(arg)
 	if tc.xcode != res.code {
 		t.Errorf(`#%d: %s(%s,%s) = %d; expected %d`,
-			testno, fname, tc.verb, url,
+			testno, fname, tc.verb, tc.descStr,
 			res.code, tc.xcode)
 	}
 }
@@ -744,7 +739,7 @@ func Test_getDbResourcesHandler(t *testing.T) {
 // ----- unit tests for getDbSchemasHandler()
 
 var getDbSchemas_Tab = []apiCall_TC {
-	{http.MethodGet, "/db/_schema", "", "", http.StatusNotImplemented},
+	{http.MethodGet, "/db/_schema", http.StatusNotImplemented},
 }
 
 func Test_getDbSchemasHandler(t *testing.T) {
@@ -754,7 +749,7 @@ func Test_getDbSchemasHandler(t *testing.T) {
 // ----- unit tests for createDbTableHandler()
 
 var createDbTable_Tab = []apiCall_TC {
-	{http.MethodPost, "/db/_schema", "", "", http.StatusNotImplemented},
+	{http.MethodPost, "/db/_schema", http.StatusNotImplemented},
 }
 
 func Test_getDbTableHandler(t *testing.T) {
@@ -764,7 +759,7 @@ func Test_getDbTableHandler(t *testing.T) {
 // ----- unit tests for updateDbTablesHandler()
 
 var updateDbTables_Tab = []apiCall_TC {
-	{http.MethodPatch, "/db/_schema", "", "", http.StatusNotImplemented},
+	{http.MethodPatch, "/db/_schema", http.StatusNotImplemented},
 }
 
 func Test_updateDbTablesHandler(t *testing.T) {
@@ -774,7 +769,7 @@ func Test_updateDbTablesHandler(t *testing.T) {
 // ----- unit tests for describeDbTableHandler()
 
 var describeDbTable_Tab = []apiCall_TC {
-	{http.MethodGet, "/db/_schema/tabname", "", "", http.StatusNotImplemented},
+	{http.MethodGet, "/db/_schema/tabname", http.StatusNotImplemented},
 }
 
 func Test_describeDbTableHandler(t *testing.T) {
@@ -784,7 +779,7 @@ func Test_describeDbTableHandler(t *testing.T) {
 // ----- unit tests for createDbTablesHandler()
 
 var createDbTables_Tab = []apiCall_TC {
-	{http.MethodPost, "/db/_schema/tabname", "", "", http.StatusNotImplemented},
+	{http.MethodPost, "/db/_schema/tabname", http.StatusNotImplemented},
 }
 
 func Test_createDbTablesHandler(t *testing.T) {
@@ -794,7 +789,7 @@ func Test_createDbTablesHandler(t *testing.T) {
 // ----- unit tests for deleteDbTableHandler()
 
 var deleteDbTable_Tab = []apiCall_TC {
-	{http.MethodDelete, "/db/_schema/tabname", "", "", http.StatusNotImplemented},
+	{http.MethodDelete, "/db/_schema/tabname", http.StatusNotImplemented},
 }
 
 func Test_deleteDbTableHandler(t *testing.T) {
@@ -804,7 +799,7 @@ func Test_deleteDbTableHandler(t *testing.T) {
 // ----- unit tests for describeDbField()
 
 var describeDbField_Tab = []apiCall_TC {
-	{http.MethodDelete, "/db/_schema/tabname", "", "", http.StatusNotImplemented},
+	{http.MethodDelete, "/db/_schema/tabname", http.StatusNotImplemented},
 }
 
 func Test_describeDbFieldHandler(t *testing.T) {
@@ -815,12 +810,9 @@ func Test_describeDbFieldHandler(t *testing.T) {
 
 var getDbRecord_Tab = []apiCall_TC {
 	/*
-	{http.MethodGet, "/db/_table/tabname",
-		"table_name=bundles&id=123", "", http.StatusBadRequest},
-	{http.MethodGet, "/db/_table/tabname",
-		"table_name=bundles&id=1", "", http.StatusOK},
-	{http.MethodGet, "/db/_table/tabname",
-		"table_name=bundles&id=3", "", http.StatusOK},
+	{http.MethodGet, "/db/_table/tabname|table_name=bundles&id=123", http.StatusBadRequest},
+	{http.MethodGet, "/db/_table/tabname|table_name=bundles&id=1", http.StatusOK},
+	{http.MethodGet, "/db/_table/tabname|table_name=bundles&id=3", http.StatusOK},
 	 */
 }
 
@@ -838,23 +830,16 @@ func Test_getDbRecordHandler(t *testing.T) {
 // ----- unit tests for createDbRecords()
 
 var createDbRecords_Tab = []apiCall_TC {
-	/*
-	{http.MethodPost, "/db/_table/tabname", "table_name=bundles",
-		`{"Records":[{"Keys":["name","uri"],"Values":["abc1","xyz1"]}]}`,
-		http.StatusBadRequest},
-	{http.MethodPost, "/db/_table/tabname", "table_name=bundles",
-		`{"Records":[{"Keys":["name","uri"],"Values":["abc2","xyz2"]}]}`,
-		http.StatusOK},
-	{http.MethodPost, "/db/_table/tabname", "table_name=bundles",
-		`{"Records":[{"Keys":["name","uri"],"Values":["abc3","xyz3"]}]}`,
-		http.StatusOK},
-	{http.MethodPost, "/db/_table/tabname", "table_name=bundles",
-		`{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4"]}]}`,
-		http.StatusOK},
-	 */
+	{http.MethodPost, `/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc1","xyz1"]}]}`,
+		http.StatusCreated},
+	{http.MethodPost, `/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc2","xyz2"]}]}`,
+		http.StatusCreated},
+	{http.MethodPost, `/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc3","xyz3"]}]}`,
+		http.StatusCreated},
+	{http.MethodPost, `/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4"]}]}`,
+		http.StatusCreated},
 }
 
-/*
 func Test_createDbRecordsHandler(t *testing.T) {
 	var err error
 	db, err = fakeInitDb()
@@ -863,4 +848,3 @@ func Test_createDbRecordsHandler(t *testing.T) {
 	}
 	apiCalls_Runner(t, createDbRecordsHandler, createDbRecords_Tab)
 }
- */
