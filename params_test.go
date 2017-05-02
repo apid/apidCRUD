@@ -51,7 +51,7 @@ type validator_TC struct {
 
 // run thru the table of test cases for the given validator function.
 func run_validator(t *testing.T, vf validatorFunc, tab []validator_TC) {
-	fname := t.Name()
+	fname := getFunctionName(vf)
 	for i, tc := range tab {
 		validator_Checker(t, fname, vf, i, tc)
 	}

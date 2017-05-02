@@ -839,6 +839,7 @@ var createDbRecords_Tab = []apiCall_TC {
 	 */
 }
 
+/*
 func Test_createDbRecordsHandler(t *testing.T) {
 	var err error
 	db, err = fakeInitDb()
@@ -847,3 +848,4 @@ func Test_createDbRecordsHandler(t *testing.T) {
 	}
 	apiCalls_Runner(t, createDbRecordsHandler, createDbRecords_Tab)
 }
+ */
