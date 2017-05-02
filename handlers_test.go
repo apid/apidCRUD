@@ -568,6 +568,21 @@ func Test_convTableNames(t *testing.T) {
 	}
 }
 
+func Test_convTableNames_bad(t *testing.T) {
+	fn := "convTableNames"
+
+	// create a good object, then munge it to force error
+	names := []string{"abc", "def"}
+	obj := mimicTableNamesQuery(names)
+	vals := obj[0].Values
+	vals[0] = Test_convTableNames_bad  // junk that can't be converted
+
+	_, err := convTableNames(obj)
+	if err == nil {
+		t.Errorf("%s call succeeded; expected error", fn)
+	}
+}
+
 // ----- unit tests for validateRecords()
 
 type validateRecords_TC struct {
