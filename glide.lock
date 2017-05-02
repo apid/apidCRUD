@@ -1,8 +1,9 @@
-hash: f90503eef9dbb6ed49fad30b5ca9e16e0de4e99bfd44706f95588313f2078dfe
-updated: 2017-04-11T21:36:10.77938417-07:00
+hash: ce62fe362cfba6f1f67bc2693a5281985798029ff5eb91677956c664018860e9
+updated: 2017-05-02T16:06:41.98456942-07:00
 imports:
 - name: github.com/30x/apid-core
-  version: 95a9c4f3e421171c4539548ad1a90c1c25595410
+  version: b601a5f26268b404a32fbd104dafb6f98d47934c
+  repo: git@github.com:30x/apid-core.git
   subpackages:
   - api
   - config
@@ -13,6 +14,7 @@ imports:
   - logger
 - name: github.com/30x/goscaffold
   version: 68835e7a23284346c2a11ad43effe69197c71b26
+  repo: git@github.com:30x/goscaffold.git
 - name: github.com/fsnotify/fsnotify
   version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
 - name: github.com/gorilla/context
@@ -38,12 +40,22 @@ imports:
   version: 00ec919ecb56326853e2c1eee377fa324bc23a79
 - name: github.com/mattn/go-sqlite3
   version: ca5e3819723d8eeaf170ad510e7da1d6d2e94a08
+  repo: git@github.com:mattn/go-sqlite3.git
 - name: github.com/mitchellh/mapstructure
   version: bfdb1a85537d60bc7e954e600c250219ea497417
 - name: github.com/pelletier/go-buffruneio
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml
   version: 439fbba1f887c286024370cb4f281ba815c4c7d7
+- name: github.com/proullon/ramsql
+  version: 647ba4b3f57d857065183608f5ec75156bfd4cf1
+  repo: git@github.com:proullon/ramsql.git
+  subpackages:
+  - driver
+  - engine
+  - engine/log
+  - engine/parser
+  - engine/protocol
 - name: github.com/SermoDigital/jose
   version: f6df55f235c24f236d11dbcf665249a59ac2021f
   subpackages:
@@ -79,10 +91,4 @@ imports:
   - unicode/norm
 - name: gopkg.in/yaml.v2
   version: a5b47d31c556af34a302ce5d659e6fea44d90de0
-testImports:
-- name: github.com/onsi/ginkgo
-  version: f40a49d81e5c12e90400620b6242fb29a8e7c9d9
-  subpackages:
-  - ginkgo
-- name: github.com/onsi/gomega
-  version: 9b8c753e8dfb382618ba8fa19b4197b5dcb0434c
+testImports: []

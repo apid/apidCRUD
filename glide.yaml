@@ -1,10 +1,10 @@
 package: github.com/30x/apidCRUD
 import:
 - package: github.com/30x/apid-core
+  repo: git@github.com:30x/apid-core.git
 - package: github.com/30x/goscaffold
-- package: github.com/mattn/sqlite3
+  repo: git@github.com:30x/goscaffold.git
+- package: github.com/mattn/go-sqlite3
+  repo: git@github.com:mattn/go-sqlite3.git
 - package: github.com/proullon/ramsql/driver
-#- package: gopkg.in/DATA-DOG/go-sqlmock.v1
-testImport:
-- package: github.com/onsi/ginkgo/ginkgo
-- package: github.com/onsi/gomega
+  repo: git@github.com:proullon/ramsql.git

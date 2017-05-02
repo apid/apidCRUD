@@ -17,7 +17,7 @@ func main() {
 	log := apid.Log()
 
 	// call all initialization functions on all registered plugins
-	apid.InitializePlugins()
+	apid.InitializePlugins("1.0")
 
 	// start client API listener
 	api := apid.API()
