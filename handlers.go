@@ -25,11 +25,11 @@ func getDbTablesHandler(harg apiHandlerArg) apiHandlerRet {
 	qstring := "select name from tables;"
 	result, err := runQuery(db, qstring, idlist)
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after runQuery")
 	}
 	ret, err := convTableNames(result)
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after convTableNames")
 	}
 
 	return apiHandlerRet{http.StatusOK, TablesResponse{Names: ret}}
@@ -39,7 +39,7 @@ func getDbTablesHandler(harg apiHandlerArg) apiHandlerRet {
 func createDbRecordsHandler(harg apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(harg, "table_name")
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after fetchParams")
 	}
 
 	body, err := getBodyRecord(harg)
@@ -74,7 +74,7 @@ func getDbRecordsHandler(harg apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(harg,
 		"table_name", "fields", "id_field", "ids", "limit", "offset")
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after fetchParams")
 	}
 
 	return getCommon(params)
@@ -85,7 +85,7 @@ func getDbRecordHandler(harg apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(harg,
 		"table_name", "id", "fields", "id_field")
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after fetchParams")
 	}
 	params["limit"] = strconv.Itoa(1)
 	params["offset"] = strconv.Itoa(0)
@@ -97,7 +97,7 @@ func getDbRecordHandler(harg apiHandlerArg) apiHandlerRet {
 func updateDbRecordsHandler(harg apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(harg, "table_name", "id_field", "ids")
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after fetchParams")
 	}
 	return updateCommon(harg, params)
 }
@@ -106,7 +106,7 @@ func updateDbRecordsHandler(harg apiHandlerArg) apiHandlerRet {
 func updateDbRecordHandler(harg apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(harg, "table_name", "id", "id_field")
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after fetchParams")
 	}
 	return updateCommon(harg, params)
 }
@@ -115,7 +115,7 @@ func updateDbRecordHandler(harg apiHandlerArg) apiHandlerRet {
 func deleteDbRecordsHandler(harg apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(harg, "table_name", "id_field", "ids")
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after fetchParams")
 	}
 
 	return delCommon(params)
@@ -125,7 +125,7 @@ func deleteDbRecordsHandler(harg apiHandlerArg) apiHandlerRet {
 func deleteDbRecordHandler(harg apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(harg, "table_name", "id", "id_field")
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after fetchParams")
 	}
 	return delCommon(params)
 }
@@ -169,7 +169,11 @@ func describeDbFieldHandler(harg apiHandlerArg) apiHandlerRet {
 
 // errorRet() is called by apiHandler routines to pass back the code/data
 // pair appropriate to the given code and error object.
-func errorRet(code int, err error) apiHandlerRet {
+// optionally logs a debug message along with the code and error.
+func errorRet(code int, err error, dmsg string) apiHandlerRet {
+	if dmsg != "" {
+		log.Debugf("errorRet %d [%s], %s", code, err, dmsg)
+	}
 	return apiHandlerRet{code, ErrorResponse{code, err.Error()}}
 }
 
@@ -177,7 +181,7 @@ func errorRet(code int, err error) apiHandlerRet {
 // that is not implemented.
 func notImplemented() apiHandlerRet {
 	return errorRet(http.StatusNotImplemented,
-		fmt.Errorf("API not implemented yet"))
+		fmt.Errorf("API not implemented yet"), "")
 }
 
 // mkSQLRow() returns a list of interface{} of the given length,
@@ -317,7 +321,7 @@ func runInsert(db dbType,
 func delCommon(params map[string]string) apiHandlerRet {
 	nc, err := delRecs(db, params)
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after delRec")
 	}
 
 	return apiHandlerRet{http.StatusOK, NumChangedResponse{nc}}
@@ -513,15 +517,15 @@ func mkSelectString(params map[string]string) (string, []interface{}, error) {
 func getCommon(params map[string]string) apiHandlerRet {
 	qstring, idlist, err := mkSelectString(params)
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after mkSelectString")
 	}
 	result, err := runQuery(db, qstring, idlist)
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after runQuery")
 	}
 
 	if len(result) == 0 {
-		return errorRet(badStat, fmt.Errorf("no matching record"))
+		return errorRet(badStat, fmt.Errorf("no matching record"), "")
 	}
 
 	return apiHandlerRet{http.StatusOK, RecordsResponse{Records:result}}
@@ -531,16 +535,16 @@ func getCommon(params map[string]string) apiHandlerRet {
 func updateCommon(harg apiHandlerArg, params map[string]string) apiHandlerRet {
 	body, err := getBodyRecord(harg)
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after getBodyRecord")
 	}
 	if len(body.Records) < 1 {
 		return errorRet(badStat,
-			fmt.Errorf("update: no data records in body"))
+			fmt.Errorf("update: no data records in body"), "")
 	}
 
 	ra, err := updateRec(db, params, body)
 	if err != nil {
-		return errorRet(badStat, err)
+		return errorRet(badStat, err, "after updateRec")
 	}
 	return apiHandlerRet{http.StatusOK, NumChangedResponse{ra}}
 }

@@ -165,21 +165,23 @@ func Test_nstring(t *testing.T) {
 type errorRet_TC struct {
 	code int
 	msg string
+	dmsg string
 }
 
 var errorRet_Tab = []errorRet_TC {
-	{ 1, "abc" },
-	{ 2, "" },
-	{ 3, "xyz" },
+	{ 1, "abc", "" },
+	{ 2, "", "" },
+	{ 3, "xyz", "" },
+	{ 4, "xyz", "with msg" },
 }
 
-func errorRet_Checker(t *testing.T, i int, code int, msg string) {
+func errorRet_Checker(t *testing.T, i int, tc errorRet_TC) {
 	fname := "errorRet"
-	err := fmt.Errorf("%s", msg)
-	res := errorRet(code, err)
-	if code != res.code {
+	err := fmt.Errorf("%s", tc.msg)
+	res := errorRet(tc.code, err, tc.dmsg)
+	if tc.code != res.code {
 		t.Errorf(`#%d: %s returned (%d,); expected %d`,
-			i, fname, res.code, code)
+			i, fname, res.code, tc.code)
 		return
 	}
 	eresp, ok := res.data.(ErrorResponse)
@@ -187,20 +189,20 @@ func errorRet_Checker(t *testing.T, i int, code int, msg string) {
 		t.Errorf(`#%d: %s ErrorResponse conversion error`, i, fname)
 		return
 	}
-	if code != eresp.Code {
+	if tc.code != eresp.Code {
 		t.Errorf(`#%d: %s ErrorResponse.Code=%d; expected %d`,
-			i, fname, eresp.Code, code)
+			i, fname, eresp.Code, tc.code)
 		return
 	}
-	if msg != eresp.Message {
+	if tc.msg != eresp.Message {
 		t.Errorf(`#%d: %s ErrorResponse.Message="%s"; expected "%s"`,
-			i, fname, eresp.Message, msg)
+			i, fname, eresp.Message, tc.msg)
 	}
 }
 
 func Test_errorRet(t *testing.T) {
 	for i, tc := range errorRet_Tab {
-		errorRet_Checker(t, i, tc.code, tc.msg)
+		errorRet_Checker(t, i, tc)
 	}
 }
 
