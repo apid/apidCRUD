@@ -22,7 +22,7 @@ clobber: clean
 	/bin/rm -rf ./vendor
 
 update:
-	glide update
+	glide --debug update
 
 get:
 	[ -d ./vendor ] \
