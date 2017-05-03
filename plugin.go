@@ -70,6 +70,7 @@ func realInitPlugin(gsi getStringer,
 	initConfig(gsi)
 	log = fmi.ForModule(pluginData.Name)	// NOTE: non-local var
 	registerHandlers(hfi, apiTable)
+	log.Infof("in apidCRUD realInitPlugin")
 
 	var err error
 	db, err = initDB(dbName)		// NOTE: non-local var

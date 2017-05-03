@@ -8,8 +8,6 @@ import (
 	_ "github.com/30x/apidCRUD"
 )
 
-const DEBUG = false
-
 func main() {
 	// initialize apid using default services
 	apid.Initialize(factory.DefaultServicesFactory())
@@ -17,7 +15,7 @@ func main() {
 	log := apid.Log()
 
 	// call all initialization functions on all registered plugins
-	apid.InitializePlugins("1.0")
+	apid.InitializePlugins()
 
 	// start client API listener
 	api := apid.API()
