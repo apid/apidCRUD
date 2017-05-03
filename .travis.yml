@@ -7,7 +7,7 @@ before_install:
 - sudo apt-get install glide -y
 - go get github.com/mattn/goveralls
 install:
-- make update install
+- make install
 script:
 - $HOME/gopath/bin/goveralls -service=travis-ci
 env:
