@@ -702,22 +702,18 @@ func Test_convValues_illegal(t *testing.T) {
 // ----- unit tests for getDbResourcesHandler
 
 type apiCall_TC struct {
+	hf apiHandler
 	verb string
 	descStr string
 	xcode int
 }
 
-var getDbResources_Tab = []apiCall_TC {
-	{http.MethodGet, "/db", http.StatusNotImplemented},
-}
-
 func apiCall_Checker(t *testing.T,
 		testno int,
-		f apiHandler,
-		fname string,
 		tc apiCall_TC) {
+	fname := getFunctionName(tc.hf)
 	arg := mkHandlerArg(tc.verb, tc.descStr)
-	res := f(arg)
+	res := tc.hf(arg)
 	if tc.xcode != res.code {
 		t.Errorf(`#%d: %s(%s,%s) = %s; expected %d`,
 			testno, fname, tc.verb, tc.descStr,
@@ -725,109 +721,92 @@ func apiCall_Checker(t *testing.T,
 	}
 }
 
-func apiCalls_Runner(t *testing.T, f apiHandler, tab []apiCall_TC) {
-	fname := getFunctionName(f)
+func apiCalls_Runner(t *testing.T, tab []apiCall_TC) {
 	for testno, tc := range tab {
-		apiCall_Checker(t, testno, f, fname, tc)
+		apiCall_Checker(t, testno, tc)
 	}
 }
 
-func Test_getDbResourcesHandler(t *testing.T) {
-	apiCalls_Runner(t, getDbResourcesHandler, getDbResources_Tab)
+// ----- unit tests for not-implemented handlers.
+
+var notimpl_Tab = []apiCall_TC {
+	{getDbResourcesHandler,
+		http.MethodGet,
+		"/db",
+		http.StatusNotImplemented},
+	{getDbSchemasHandler,
+		http.MethodGet,
+		"/db/_schema",
+		http.StatusNotImplemented},
+	{createDbTableHandler,
+		http.MethodPost,
+		"/db/_schema",
+		http.StatusNotImplemented},
+	{updateDbTablesHandler,
+		http.MethodPatch,
+		"/db/_schema",
+		http.StatusNotImplemented},
+	{describeDbTableHandler,
+		http.MethodGet,
+		"/db/_schema/tabname",
+		http.StatusNotImplemented},
+	{createDbTablesHandler,
+		http.MethodPost,
+		"/db/_schema/tabname",
+		http.StatusNotImplemented},
+	{deleteDbTableHandler,
+		http.MethodDelete,
+		"/db/_schema/tabname",
+		http.StatusNotImplemented},
+	{describeDbFieldHandler,
+		http.MethodDelete,
+		"/db/_schema/tabname",
+		http.StatusNotImplemented},
 }
 
-// ----- unit tests for getDbSchemasHandler()
-
-var getDbSchemas_Tab = []apiCall_TC {
-	{http.MethodGet, "/db/_schema", http.StatusNotImplemented},
+func Test_notimpl(t *testing.T) {
+	apiCalls_Runner(t, notimpl_Tab)
 }
 
-func Test_getDbSchemasHandler(t *testing.T) {
-	apiCalls_Runner(t, getDbSchemasHandler, getDbSchemas_Tab)
-}
+// ----- unit tests for various implemented handlers.
 
-// ----- unit tests for createDbTableHandler()
-
-var createDbTable_Tab = []apiCall_TC {
-	{http.MethodPost, "/db/_schema", http.StatusNotImplemented},
-}
-
-func Test_getDbTableHandler(t *testing.T) {
-	apiCalls_Runner(t, createDbTableHandler, createDbTable_Tab)
-}
-
-// ----- unit tests for updateDbTablesHandler()
-
-var updateDbTables_Tab = []apiCall_TC {
-	{http.MethodPatch, "/db/_schema", http.StatusNotImplemented},
-}
-
-func Test_updateDbTablesHandler(t *testing.T) {
-	apiCalls_Runner(t, updateDbTablesHandler, updateDbTables_Tab)
-}
-
-// ----- unit tests for describeDbTableHandler()
-
-var describeDbTable_Tab = []apiCall_TC {
-	{http.MethodGet, "/db/_schema/tabname", http.StatusNotImplemented},
-}
-
-func Test_describeDbTableHandler(t *testing.T) {
-	apiCalls_Runner(t, describeDbTableHandler, describeDbTable_Tab)
-}
-
-// ----- unit tests for createDbTablesHandler()
-
-var createDbTables_Tab = []apiCall_TC {
-	{http.MethodPost, "/db/_schema/tabname", http.StatusNotImplemented},
-}
-
-func Test_createDbTablesHandler(t *testing.T) {
-	apiCalls_Runner(t, createDbTablesHandler, createDbTables_Tab)
-}
-
-// ----- unit tests for deleteDbTableHandler()
-
-var deleteDbTable_Tab = []apiCall_TC {
-	{http.MethodDelete, "/db/_schema/tabname", http.StatusNotImplemented},
-}
-
-func Test_deleteDbTableHandler(t *testing.T) {
-	apiCalls_Runner(t, deleteDbTableHandler, deleteDbTable_Tab)
-}
-
-// ----- unit tests for describeDbField()
-
-var describeDbField_Tab = []apiCall_TC {
-	{http.MethodDelete, "/db/_schema/tabname", http.StatusNotImplemented},
-}
-
-func Test_describeDbFieldHandler(t *testing.T) {
-	apiCalls_Runner(t, describeDbFieldHandler, describeDbField_Tab)
-}
-
-// ----- unit tests for getDbRecord()
-
-var getDbRecord_Tab = []apiCall_TC {
-	{http.MethodGet, "/db/_table/tabname|table_name=bundles&id=123|fields=name,uri", http.StatusBadRequest},
-	{http.MethodGet, "/db/_table/tabname|table_name=bundles&id=1|fields=name,uri", http.StatusOK},
-	{http.MethodGet, "/db/_table/tabname|table_name=bundles&id=2|fields=name,uri", http.StatusOK},
-}
-
-// ----- unit tests for createDbRecords() and getDbRecords()
+// note that the success or failure of a given call can be order dependent.
 
 var createDbRecords_Tab = []apiCall_TC {
-	{http.MethodPost, `/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc1","xyz1"]}]}`,
+	{createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc1","xyz1"]}]}`,
 		http.StatusCreated},
-	{http.MethodPost, `/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc2","xyz2"]}]}`,
+	{createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc2","xyz2"]}]}`,
 		http.StatusCreated},
-	{http.MethodPost, `/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc3","xyz3"]}]}`,
+	{createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc3","xyz3"]}]}`,
 		http.StatusCreated},
-	{http.MethodPost, `/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4"]}]}`,
+	{createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4"]}]}`,
 		http.StatusCreated},
+
+	{getDbRecordHandler,
+		http.MethodGet,
+		"/db/_table/tabname|table_name=bundles&id=123|fields=name,uri",
+		http.StatusBadRequest},
+	{getDbRecordHandler,
+		http.MethodGet,
+		"/db/_table/tabname|table_name=bundles&id=1|fields=name,uri",
+		http.StatusOK},
+	{getDbRecordHandler,
+		http.MethodGet,
+		"/db/_table/tabname|table_name=bundles&id=2|fields=name,uri",
+		http.StatusOK},
 }
 
+
+// the handlers must be called in a certain order, in order for the
+// calls to succeed or fail as expected.
 func Test_createDbRecordsHandler(t *testing.T) {
-	apiCalls_Runner(t, createDbRecordsHandler, createDbRecords_Tab)
-	apiCalls_Runner(t, getDbRecordHandler, getDbRecord_Tab)
+	apiCalls_Runner(t, createDbRecords_Tab)
 }
