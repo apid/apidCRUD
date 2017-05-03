@@ -116,7 +116,7 @@ func Test_XYZ(t *testing.T) {
 
 ## Code entry points
 
-note that the code can be invoked in at least 3 ways:
+note that the code in this module can be invoked in at least 3 ways:
 
    * as an apid plugin, called via apid.InitializePlugins() - see init.c, plugin.c
    * standalone test program - see cmd/apidCRUD/main.go, init.c, plugin.c

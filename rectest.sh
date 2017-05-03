@@ -11,8 +11,7 @@ IDS=${1:-1,2,3}
 bad=0
 for i in ${IDS//,/ }; do
 	out=$(./appcurl.sh GET "$API_PATH/$TABLE/$i?fields=$FIELDS&a=b&c=d" \
-		$VERBOSE \
-		-d "body=bodystuff")
+		$VERBOSE)
 	xstat=$?
 	if [[ $xstat -ne 0 ]]; then
 		bad=1

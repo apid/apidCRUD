@@ -6,6 +6,7 @@ import (
 	"strings"
 	"net/http"
 	"database/sql"
+	"reflect"
 )
 
 // mySplit() is like strings.Split() except that
@@ -689,7 +690,7 @@ func Test_convValues(t *testing.T) {
 	}
 }
 
-// test suite for testing error return.
+// test suite for testing error return of convValues().
 func Test_convValues_illegal(t *testing.T) {
 	fname := "convValues"
 	vals := mkIllegalValues()
@@ -699,7 +700,7 @@ func Test_convValues_illegal(t *testing.T) {
 	}
 }
 
-// ----- unit tests for getDbResourcesHandler
+// ----- unit tests for support for testing of api calls
 
 type apiCall_TC struct {
 	hf apiHandler
@@ -710,15 +711,16 @@ type apiCall_TC struct {
 
 func apiCall_Checker(t *testing.T,
 		testno int,
-		tc apiCall_TC) {
-	fname := getFunctionName(tc.hf)
+		tc apiCall_TC) apiHandlerRet {
 	arg := mkHandlerArg(tc.verb, tc.descStr)
-	res := tc.hf(arg)
-	if tc.xcode != res.code {
+	result := tc.hf(arg)
+	if tc.xcode != result.code {
+		fname := getFunctionName(tc.hf)
 		t.Errorf(`#%d: %s(%s,%s) = %s; expected %d`,
 			testno, fname, tc.verb, tc.descStr,
-			res, tc.xcode)
+			result, tc.xcode)
 	}
+	return result
 }
 
 func apiCalls_Runner(t *testing.T, tab []apiCall_TC) {
@@ -809,4 +811,31 @@ var createDbRecords_Tab = []apiCall_TC {
 // calls to succeed or fail as expected.
 func Test_createDbRecordsHandler(t *testing.T) {
 	apiCalls_Runner(t, createDbRecords_Tab)
+}
+
+// ----- unit tests of getDbTablesHandler()
+
+func Test_getDbTablesHandler(t *testing.T) {
+	tc := apiCall_TC{getDbTablesHandler,
+		http.MethodGet,
+		"/db/_tables",
+		http.StatusOK}
+	result := apiCall_Checker(t, 0, tc)
+	if result.code != tc.xcode {
+		// would have already failed.
+		return
+	}
+	fn := "getDbTablesHandler"
+	// if the code was success, data should be of this type.
+	data, ok := result.data.(TablesResponse)
+	if !ok {
+		t.Errorf(`after %s, data of wrong type`, fn)
+		return
+	}
+	tabnames := "bundles,users,nothing"
+	xdata := strings.Split(tabnames, ",")
+	if ! reflect.DeepEqual(xdata, data.Names) {
+		t.Errorf(`after %s, result=%s; expected %s`,
+			fn, data.Names, xdata)
+	}
 }

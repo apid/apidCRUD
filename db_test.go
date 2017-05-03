@@ -21,12 +21,17 @@ func fakeInitDB() (dbType, error) {
 }
 
 var cmds = []string {
+	`drop table if exists tables`,
 	`drop table if exists bundles`,
 	`drop table if exists users`,
+	`create table tables(name text unique not null)`,
 	`create table bundles(id integer not null primary key autoincrement, name text not null, uri text not null)`,
 	`insert into bundles (name, uri) values ("b1", "http://localhost/~dfong/bundles/b1.zip")`,
 	`insert into bundles (name, uri) values ("b2", "http://localhost/~dfong/bundles/b2.zip")`,
 	`insert into bundles (name, uri) values ("b3", "http://localhost/~dfong/bundles/b3.zip")`,
+	`insert into tables (name) values ("bundles")`,
+	`insert into tables (name) values ("users")`,
+	`insert into tables (name) values ("nothing")`,
 }
 
 func createDbData(db dbType) error {
@@ -35,7 +40,7 @@ func createDbData(db dbType) error {
 		_, err := dbh.Exec(cmd)
 		// fmt.Printf("cmd=%s\n", cmd)
 		if err != nil {
-			fmt.Printf(`Exec error [%s]\n`, err)
+			fmt.Printf(`Exec error on "%s": [%s]\n`, cmd, err)
 			return err
 		}
 	}
