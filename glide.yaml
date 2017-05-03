@@ -1,6 +1,6 @@
 package: github.com/30x/apidCRUD
 import:
-- package: github.com/30x/apid-core
+- package: github.com/30x/apid-core      # plugin framework
   repo: git@github.com:30x/apid-core.git
 - package: github.com/30x/goscaffold
   repo: git@github.com:30x/goscaffold.git
