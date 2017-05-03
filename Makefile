@@ -22,7 +22,7 @@ clobber: clean
 	/bin/rm -rf ./vendor
 
 get:
-	if [ ./glide.yaml -nt ./glide.lock ]; then glide update; fi
+	if [ ./glide.yaml -nt ./glide.lock ] || [ ./.travis.yml -nt ./glide.lock ] ; then glide update; fi
 	[ -d ./vendor ] \
 	|| glide install
 
