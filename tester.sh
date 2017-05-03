@@ -29,7 +29,7 @@ fail()
 # ----- start of mainline
 # start clean
 echo -n "# creating empty database - "
-mkdb.sh || exit 1
+./mkdb.sh || exit 1
 echo OK
 
 echo -n "# checking tables (tabtest.sh) - "
@@ -46,7 +46,7 @@ fi
 echo -n "# adding a few records (crtest.sh) - "
 nrecs=7
 out=$(./crtest.sh "$nrecs" 2>/dev/null | jq -S '.Ids[]')
-nc=$(echo "$out" | wc -l)
+nc=$(echo "$out" | grep -c "")
 if [[ "$nc" != "$nrecs" ]]; then
 	fail "crtest.sh expected $nrecs, got $nc"
 else
@@ -62,7 +62,7 @@ else
 fi
 
 echo -n "# reading the records (recstest.sh) - "
-total=$(get_rec_ids | wc -l)
+total=$(get_rec_ids | grep -c "")
 if [[ "$total" != "$nc" ]]; then
 	fail "recstest.sh expected $total, got $nc"
 else

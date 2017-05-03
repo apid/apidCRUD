@@ -2,6 +2,7 @@ package apidCRUD
 
 import (
 	"database/sql"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // initDB opens the named database and returns a handle wrapper.

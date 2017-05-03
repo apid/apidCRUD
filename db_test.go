@@ -3,12 +3,17 @@ package apidCRUD
 import (
 	"fmt"
 	"database/sql"
-	_ "github.com/proullon/ramsql/driver"
+	// _ "github.com/proullon/ramsql/driver"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-func fakeInitDb() (dbType, error) {
-	dbHandle, err := sql.Open("ramsql", "fakedbfortesting")
-	db = dbType{dbHandle}
+const ut_DBTYPE = "sqlite3"
+const ut_DBNAME = "unit-test.db"
+
+func fakeInitDB() (dbType, error) {
+	
+	dbHandle, err := sql.Open(ut_DBTYPE, ut_DBNAME)
+	db = dbType{dbHandle}	// assigns to global
 	if err == nil {
 		err = createDbData(db)
 	}
@@ -16,6 +21,8 @@ func fakeInitDb() (dbType, error) {
 }
 
 var cmds = []string {
+	`drop table if exists bundles`,
+	`drop table if exists users`,
 	`create table bundles(id integer not null primary key autoincrement, name text not null, uri text not null)`,
 	`insert into bundles (name, uri) values ("b1", "http://localhost/~dfong/bundles/b1.zip")`,
 	`insert into bundles (name, uri) values ("b2", "http://localhost/~dfong/bundles/b2.zip")`,

@@ -719,9 +719,9 @@ func apiCall_Checker(t *testing.T,
 	arg := mkHandlerArg(tc.verb, tc.descStr)
 	res := f(arg)
 	if tc.xcode != res.code {
-		t.Errorf(`#%d: %s(%s,%s) = %d; expected %d`,
+		t.Errorf(`#%d: %s(%s,%s) = %s; expected %d`,
 			testno, fname, tc.verb, tc.descStr,
-			res.code, tc.xcode)
+			res, tc.xcode)
 	}
 }
 
@@ -809,25 +809,12 @@ func Test_describeDbFieldHandler(t *testing.T) {
 // ----- unit tests for getDbRecord()
 
 var getDbRecord_Tab = []apiCall_TC {
-	/*
-	{http.MethodGet, "/db/_table/tabname|table_name=bundles&id=123", http.StatusBadRequest},
-	{http.MethodGet, "/db/_table/tabname|table_name=bundles&id=1", http.StatusOK},
-	{http.MethodGet, "/db/_table/tabname|table_name=bundles&id=3", http.StatusOK},
-	 */
+	{http.MethodGet, "/db/_table/tabname|table_name=bundles&id=123|fields=name,uri", http.StatusBadRequest},
+	{http.MethodGet, "/db/_table/tabname|table_name=bundles&id=1|fields=name,uri", http.StatusOK},
+	{http.MethodGet, "/db/_table/tabname|table_name=bundles&id=2|fields=name,uri", http.StatusOK},
 }
 
-/*
-func Test_getDbRecordHandler(t *testing.T) {
-	var err error
-	db, err = fakeInitDb()
-	if err != nil {
-		t.Errorf(`fakeInitDb failed: [%s]`, err)
-	}
-	apiCalls_Runner(t, getDbRecordHandler, getDbRecord_Tab)
-}
- */
-
-// ----- unit tests for createDbRecords()
+// ----- unit tests for createDbRecords() and getDbRecords()
 
 var createDbRecords_Tab = []apiCall_TC {
 	{http.MethodPost, `/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc1","xyz1"]}]}`,
@@ -841,10 +828,6 @@ var createDbRecords_Tab = []apiCall_TC {
 }
 
 func Test_createDbRecordsHandler(t *testing.T) {
-	var err error
-	db, err = fakeInitDb()
-	if err != nil {
-		t.Errorf(`fakeInitDb failed: [%s]`, err)
-	}
 	apiCalls_Runner(t, createDbRecordsHandler, createDbRecords_Tab)
+	apiCalls_Runner(t, getDbRecordHandler, getDbRecord_Tab)
 }

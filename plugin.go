@@ -51,7 +51,7 @@ var apiTable = []apiDesc{
 
 // ----- functions go below this line
 
-// initPlugin() is called by the apid-core startup.
+// initPlugin() is called by the apid InitializePlugins().
 // just calls realInitPlugin() which has been designed to simplify unit testing.
 func initPlugin(services apid.Services) (apid.PluginData, error) {
 	return realInitPlugin(services.Config(), services.Log(), services.API())

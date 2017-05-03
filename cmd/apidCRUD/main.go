@@ -8,21 +8,19 @@ import (
 	_ "github.com/30x/apidCRUD"
 )
 
+// main() here is a stripped-down version of the real apid main.
 func main() {
 	// initialize apid using default services
 	apid.Initialize(factory.DefaultServicesFactory())
 
-	log := apid.Log()
-
 	// call all initialization functions on all registered plugins
-	apid.InitializePlugins()
+	apid.InitializePlugins("xxx")
 
 	// start client API listener
-	api := apid.API()
-	err := api.Listen()
+	err := apid.API().Listen()
 
 	// if we got here, an error occurred
 	config := apid.Config()
 	api_listen := config.GetString("api_listen")
-	log.Fatalf("api.Listen() on %s returned [%s]", api_listen, err)
+	apid.Log().Fatalf("api.Listen() on %s returned [%s]", api_listen, err)
 }

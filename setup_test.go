@@ -18,6 +18,9 @@ func TestMain(m *testing.M) {
 	apid.Initialize(testServices)
 	log = apid.Log()
 
+	fakeInitDB()
+	// db, _ = initDB("test.db");
+
 	// required boilerplate
 	os.Exit(m.Run())
 }

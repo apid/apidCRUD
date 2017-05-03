@@ -196,11 +196,13 @@ func runQuery(db dbType,
 		qstring string,
 		ivals []interface{}) ([]*KVRecord, error) {
 	log.Debugf("query = %s", qstring)
+	log.Debugf("ivals = %s", ivals)
 
 	ret := make([]*KVRecord, 0, 1)
 
 	rows, err := db.handle.Query(qstring, ivals...)
 	if err != nil {
+		log.Debugf("failure after Query")
 		return ret, err
 	}
 
@@ -209,6 +211,7 @@ func runQuery(db dbType,
 
 	cols, err := rows.Columns() // Remember to check err afterwards
 	if err != nil {
+		log.Debugf("failure after Columns")
 		return ret, err
 	}
 	log.Debugf("cols = %s", cols)
@@ -218,11 +221,13 @@ func runQuery(db dbType,
 		vals := mkSQLRow(ncols)
 		err = rows.Scan(vals...)
 		if err != nil {
+			log.Debugf("failure after Scan")
 			return ret, err
 		}
 
 		err = convValues(vals)
 		if err != nil {
+			log.Debugf("failure after convValues")
 			return ret, err
 		}
 		kvrow := KVRecord{Keys: cols, Values: vals}
@@ -233,6 +238,7 @@ func runQuery(db dbType,
 	}
 
 	if rows.Err() != nil {
+		log.Debugf("failure after rows.Err")
 		return ret, fmt.Errorf("rows error at rownum %d", len(ret))
 	}
 
@@ -287,7 +293,7 @@ func runInsert(db dbType,
 
 	// ivalues := strListToInterfaces(values)
 
-	log.Debugf("qstring = %s\n", qstring)
+	log.Debugf("qstring = %s", qstring)
 	result, err := stmt.Exec(values...)
 	if err != nil {
 		return NORET, err
@@ -298,12 +304,12 @@ func runInsert(db dbType,
 	if err != nil {
 		return NORET, err
 	}
-	log.Debugf("lastid = %d\n", lastid)
+	log.Debugf("lastid = %d", lastid)
 	nrecs, err := result.RowsAffected()
 	if err != nil {
 		return NORET, err
 	}
-	log.Debugf("rowsaffected = %d\n", nrecs)
+	log.Debugf("rowsaffected = %d", nrecs)
 	return idType(lastid), nil
 }
 
@@ -332,7 +338,7 @@ func delRecs(db dbType, params map[string]string) (int64, error) {
 	qstring := fmt.Sprintf("DELETE FROM %s %s",		// nolint
 		params["table_name"],
 		idclause)
-	log.Debugf("qstring = %s\n", qstring)
+	log.Debugf("qstring = %s", qstring)
 
 	stmt, err := db.handle.Prepare(qstring)
 	if err != nil {
@@ -350,13 +356,13 @@ func delRecs(db dbType, params map[string]string) (int64, error) {
 	if err != nil {
 		return NORET, err
 	}
-	log.Debugf("lastid = %d\n", lastid)
+	log.Debugf("lastid = %d", lastid)
 
 	ra, err := result.RowsAffected()
 	if err != nil {
 		return NORET, err
 	}
-	log.Debugf("ra = %d\n", ra)
+	log.Debugf("ra = %d", ra)
 
 	if int(ra) != len(idlist) {
 		return NORET, fmt.Errorf("mismatch in number of affected records")
