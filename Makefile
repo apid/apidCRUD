@@ -1,4 +1,4 @@
-.PHONY: default clean clobber build install preinstall test run
+.PHONY: default clean clobber update build install preinstall test run
 .PHONY: killer lint test unit-test cov-view setup
 
 default: install
@@ -21,9 +21,10 @@ clean:
 clobber: clean
 	/bin/rm -rf ./vendor
 
+update:
+	glide update
+
 get:
-	if [ ./glide.yaml -nt ./glide.lock ] || \
-	[ ./.travis.yml -nt ./glide.lock ] ; then glide update; fi
 	[ -d ./vendor ] \
 	|| glide install
 
