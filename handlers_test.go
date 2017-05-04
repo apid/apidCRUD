@@ -807,6 +807,11 @@ var createDbRecords_Tab = []apiCall_TC {
 		`/db/_table/tabname|table_name=bundles&id=2|fields=name,uri`,
 		http.StatusOK},
 
+	{getDbRecordsHandler,
+		http.MethodGet,
+		`/db/_table/tabname|table_name=bundles|ids=1,2&fields=name,uri`,
+		http.StatusOK},
+
 	// delete records #2, #4
 	{deleteDbRecordsHandler,
 		http.MethodDelete,
