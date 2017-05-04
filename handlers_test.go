@@ -838,6 +838,12 @@ var createDbRecords_Tab = []apiCall_TC {
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=1`,
 		http.StatusBadRequest},
+
+	// trigger "missing id" error for updateDbRecordsHandler
+	{updateDbRecordHandler,
+		http.MethodGet,
+		`/db/_table/tabname|table_name=bundles`,
+		http.StatusBadRequest},
 }
 
 
