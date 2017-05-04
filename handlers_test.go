@@ -815,12 +815,24 @@ var createDbRecords_Tab = []apiCall_TC {
 	// fetch record #2, expect failure
 	{getDbRecordHandler,
 		http.MethodGet,
-		"/db/_table/tabname|table_name=bundles|ids=2",
+		"/db/_table/tabname|table_name=bundles&id=2",
 		http.StatusBadRequest},
 	// fetch record #4, expect failure
 	{getDbRecordHandler,
 		http.MethodGet,
-		"/db/_table/tabname|table_name=bundles|ids=4",
+		"/db/_table/tabname|table_name=bundles&id=4",
+		http.StatusBadRequest},
+
+
+	// delete record #1
+	{deleteDbRecordHandler,
+		http.MethodDelete,
+		"/db/_table/tabname|table_name=bundles&id=1",
+		http.StatusOK},
+	// fetch record #1, expecting failure
+	{getDbRecordHandler,
+		http.MethodGet,
+		"/db/_table/tabname|table_name=bundles&id=1",
 		http.StatusBadRequest},
 }
 
