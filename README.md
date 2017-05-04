@@ -31,6 +31,8 @@ make install
 
 for now, this just builds the standalone plugin application.
 
+if go get errors occur during the glide install phase, try doing `make update`.
+
 ## Running apidCRUD
  
 for now, this runs apidCRUD in background, listening on localhost:9000.
