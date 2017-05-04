@@ -1141,41 +1141,58 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 // ----- unit tests for getDbRecordsHandler()
 
 // verify the name of each record - expected to be of form x%d
-func verifyRangeOfNames(t *testing.T, recs []*KVRecord, start int) {
+func verifyRangeOfNames(t *testing.T, names []string, start int) {
 	fn := "getDbRecordsHandler"
-	for i, rec := range recs {
-		convValues(rec.Values)
-		vals := unmaskStrings(rec.Values)
+	for i, name := range names {
 		xname := fmt.Sprintf("x%d", i+start)
-		if xname != vals[0] {
+		if xname != name {
 			t.Errorf(`%s record #%d name="%s"; expected "%s"`,
-				fn, i, vals[0], xname)
+				fn, i, name, xname)
 			return
 		}
 	}
 }
 
-func Test_getDbRecordHandler_offset(t *testing.T) {
+func readNamesWithOffset(t *testing.T,
+		tab string,
+		offset int) []string {
+	ret := []string{}
 	fn := "getDbRecordsHandler"
-
-	// exercise offset and limit
-	tab := "toomany"
-	argDesc := fmt.Sprintf(`/db/_table|table_name=%s|fields=name`, tab)
+	argDesc := fmt.Sprintf(`/db/_table|table_name=%s|fields=name&offset=%d`,
+		tab, offset)
 	harg := mkHandlerArg(http.MethodGet, argDesc)
 	result := getDbRecordsHandler(harg)
 	xcode := http.StatusOK
 	if xcode != result.code {
 		t.Errorf(`%s returned code %d; expected %d`,
 			fn, result.code, xcode)
-		return
+		return ret
 	}
+
 	resp, ok := result.data.(RecordsResponse)
 	if !ok {
 		t.Errorf(`%s returned wrong data type`, fn)
-		return
+		return ret
 	}
-	recs := resp.Records
-	nrecs := len(recs)
+
+	// grab the name field from each record
+	ret = make([]string, len(resp.Records))
+	for i, rec := range resp.Records {
+		_ = convValues(rec.Values)
+		svals := unmaskStrings(rec.Values)
+		ret[i] = svals[0]
+	}
+	return ret
+}
+
+func Test_getDbRecordHandler_offset(t *testing.T) {
+	fn := "getDbRecordsHandler"
+	tab := "toomany"
+
+	names := readNamesWithOffset(t, tab, 0)
+	fmt.Printf("names=%s w/ offset=%d\n", names, 0)
+
+	nrecs := len(names)
 
 	// expect maxRecs results
 	if maxRecs != nrecs {
@@ -1184,32 +1201,10 @@ func Test_getDbRecordHandler_offset(t *testing.T) {
 		return
 	}
 
-	verifyRangeOfNames(t, recs, 1)
+	verifyRangeOfNames(t, names, 1)
 
-	argDesc = fmt.Sprintf(`/db/_table|table_name=%s|fields=name&offset=%d`,
-		tab, maxRecs)
-	harg = mkHandlerArg(http.MethodGet, argDesc)
-	result = getDbRecordsHandler(harg)
-	if xcode != result.code {
-		t.Errorf(`%s returned code %d; expected %d`,
-			fn, result.code, xcode)
-		return
-	}
+	names = readNamesWithOffset(t, tab, maxRecs)
+	fmt.Printf("names=%s w/ offset=%d\n", names, maxRecs)
 
-	resp, ok = result.data.(RecordsResponse)
-	if !ok {
-		t.Errorf(`%s returned wrong data type`, fn)
-		return
-	}
-	recs = resp.Records
-	nrecs = len(recs)
-
-	// expect maxRecs results
-	if maxRecs != nrecs {
-		t.Errorf(`%s yielded %d records; expected %d`,
-			fn, nrecs, maxRecs)
-		return
-	}
-
-	verifyRangeOfNames(t, recs, maxRecs+1)
+	verifyRangeOfNames(t, names, maxRecs+1)
 }
