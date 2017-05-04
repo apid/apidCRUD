@@ -851,12 +851,41 @@ var createDbRecords_Tab = []apiCall_TC {
 		`/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest},
 
-	// trigger missing body error for createsDbRecordHandler
+	// trigger missing body error for createsDbRecordsHandler
 	{createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles|id=1`,
 		http.StatusBadRequest},
-	
+
+	// trigger error for missing table_name in createDbRecordsHandler
+	{createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|id=1`,
+		http.StatusBadRequest},
+
+	// trigger error due to missing table_name, in getDbRecordsHandler
+	{getDbRecordsHandler,
+		http.MethodGet,
+		`/db/_table/tabname|id=1`,
+		http.StatusBadRequest},
+
+	// trigger error due to missing table_name, in getDbRecordHandler
+	{getDbRecordHandler,
+		http.MethodGet,
+		`/db/_table/tabname|id=1`,
+		http.StatusBadRequest},
+
+	// trigger error due to missing table_name, in deleteDbRecordsHandler
+	{deleteDbRecordsHandler,
+		http.MethodDelete,
+		`/db/_table/tabname||ids=1`,
+		http.StatusBadRequest},
+
+	// trigger error due to missing table_name, in deleteDbRecordHandler
+	{deleteDbRecordHandler,
+		http.MethodDelete,
+		`/db/_table/tabname/1234|id=1`,
+		http.StatusBadRequest},
 }
 
 // the handlers must be called in a certain order, in order for the
