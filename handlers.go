@@ -283,8 +283,6 @@ func runInsert(db dbType,
 		tabname string,
 		keys []string,
 		values []interface{}) (idType, error) {
-	NORET := idType(-1)
-
 	nvalues := len(values)
 
 	keystr := strings.Join(keys, ",")
@@ -295,7 +293,7 @@ func runInsert(db dbType,
 
 	stmt, err := db.handle.Prepare(qstring)
 	if err != nil {
-		return NORET, err
+		return dbErrorRet(err, "after Prepare")
 	}
 	defer stmt.Close()	// nolint
 
@@ -304,18 +302,18 @@ func runInsert(db dbType,
 	log.Debugf("qstring = %s", qstring)
 	result, err := stmt.Exec(values...)
 	if err != nil {
-		return NORET, err
+		return dbErrorRet(err, "after Exec")
 	}
 	// fmt.Debugf("result=%s", result)
 
 	lastid, err := result.LastInsertId()
 	if err != nil {
-		return NORET, err
+		return dbErrorRet(err, "after LastInsertId")
 	}
 	log.Debugf("lastid = %d", lastid)
 	nrecs, err := result.RowsAffected()
 	if err != nil {
-		return NORET, err
+		return dbErrorRet(err, "after RowsAffected")
 	}
 	log.Debugf("rowsaffected = %d", nrecs)
 	return idType(lastid), nil
@@ -328,16 +326,22 @@ func delCommon(params map[string]string) apiHandlerRet {
 		return errorRet(badStat, err, "after delRec")
 	}
 
-	return apiHandlerRet{http.StatusOK, NumChangedResponse{nc}}
+	return apiHandlerRet{http.StatusOK, NumChangedResponse{int64(nc)}}
+}
+
+func dbErrorRet(err error, dmsg string) (idType, error) {
+	if dmsg != "" {
+		log.Debugf("dbErrorRet [%s], %s", err, dmsg)
+	}
+	return idType(-1), err
 }
 
 // delRecs() deletes multiple records, using parameters in the params map.
 // it returns the number of records deleted.
-func delRecs(db dbType, params map[string]string) (int64, error) {
-	NORET := int64(-1)
+func delRecs(db dbType, params map[string]string) (idType, error) {
 	idclause, idlist := mkIdClause(params)
 	if idclause == "" {
-		return NORET, fmt.Errorf("deletion must specify id or ids")
+		return dbErrorRet(fmt.Errorf("deletion must specify id or ids"), "")
 	}
 	qstring := fmt.Sprintf("DELETE FROM %s %s",		// nolint
 		params["table_name"],
@@ -346,32 +350,32 @@ func delRecs(db dbType, params map[string]string) (int64, error) {
 
 	stmt, err := db.handle.Prepare(qstring)
 	if err != nil {
-		return NORET, err
+		return dbErrorRet(err, "after Prepare")
 	}
 	defer stmt.Close()	// nolint
 
 	result, err := stmt.Exec(idlist...)
 	if err != nil {
-		return NORET, err
+		return dbErrorRet(err, "after Exec")
 	}
 	// log.Debugf("result=%s", result)
 
 	lastid, err := result.LastInsertId()
 	if err != nil {
-		return NORET, err
+		return dbErrorRet(err, "after LastInsertId")
 	}
 	log.Debugf("lastid = %d", lastid)
 
 	ra, err := result.RowsAffected()
 	if err != nil {
-		return NORET, err
+		return dbErrorRet(err, "after RowsAffected")
 	}
 	log.Debugf("ra = %d", ra)
 
 	if int(ra) != len(idlist) {
-		return NORET, fmt.Errorf("mismatch in number of affected records")
+		return dbErrorRet(fmt.Errorf("mismatch in number of affected records"), "")
 	}
-	return ra, nil
+	return idType(ra), nil
 }
 
 // validateSQLKeys() checks an array of key names,
@@ -456,15 +460,14 @@ func mkIdClauseUpdate(params map[string]string) string {  // nolint
 // it returns the number of records changed.
 func updateRec(db dbType,
 		params map[string]string,
-		body BodyRecord) (int64, error) {
-	NORET := int64(-1)
+		body BodyRecord) (idType, error) {
 	dbrec := body.Records[0]
 	keylist := dbrec.Keys
 	keystr := strings.Join(keylist, ",")
 	placestr := nstring("?", len(keylist))
 	idclause := mkIdClauseUpdate(params)
 	if idclause == "" {
-		return NORET, fmt.Errorf("update must specify id or ids")
+		return dbErrorRet(fmt.Errorf("update must specify id or ids"), "")
 	}
 
 	qstring := fmt.Sprintf("UPDATE %s SET (%s) = (%s) %s",	// nolint
@@ -476,19 +479,19 @@ func updateRec(db dbType,
 	log.Debugf("qstring = %s", qstring)
 	stmt, err := db.handle.Prepare(qstring)
 	if err != nil {
-		return NORET, err
+		return dbErrorRet(err, "after Prepare")
 	}
 	defer stmt.Close()	// nolint
 	// ivals := strListToInterfaces(dbrec.Values)
 	result, err := stmt.Exec(dbrec.Values...)
 	if err != nil {
-		return NORET, err
+		return dbErrorRet(err, "after Exec")
 	}
 	ra, err := result.RowsAffected()
 	if err != nil {
-		return NORET, err
+		return dbErrorRet(err, "after RowsAffected")
 	}
-	return ra, nil
+	return idType(ra), nil
 }
 
 // mkSelectString() returns the WHERE part of a selection query.
@@ -523,7 +526,7 @@ func getCommon(params map[string]string) apiHandlerRet {
 	return apiHandlerRet{http.StatusOK, RecordsResponse{Records:result}}
 }
 
-// updateCommon is common code for update APIs.
+// updateCommon() is common code for update APIs.
 func updateCommon(harg apiHandlerArg, params map[string]string) apiHandlerRet {
 	body, err := getBodyRecord(harg)
 	if err != nil {
@@ -538,7 +541,7 @@ func updateCommon(harg apiHandlerArg, params map[string]string) apiHandlerRet {
 	if err != nil {
 		return errorRet(badStat, err, "after updateRec")
 	}
-	return apiHandlerRet{http.StatusOK, NumChangedResponse{ra}}
+	return apiHandlerRet{http.StatusOK, NumChangedResponse{int64(ra)}}
 }
 
 // convTableNames() converts the return format from runQuery()

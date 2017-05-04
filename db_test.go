@@ -40,6 +40,30 @@ var cmds = []string {
 	`create table xxx(id integer not null primary key autoincrement, name text not null, uri text not null)`,
 	`insert into xxx (name, uri) values ("x1", "url1")`,
 	`insert into xxx (name, uri) values ("x2", "url2")`,
+	`insert into xxx (name, uri) values ("x3", "url3")`,
+	`insert into xxx (name, uri) values ("x4", "url4")`,
+	`insert into xxx (name, uri) values ("x5", "url5")`,
+	`insert into xxx (name, uri) values ("x6", "url6")`,
+
+	// create table for testing behavior around maxRecs
+	`drop table if exists toomany`,
+	`create table toomany(id integer not null primary key autoincrement, name text not null, uri text not null)`,
+	`insert into toomany (name, uri) values ("x1", "url1")`,
+	`insert into toomany (name, uri) values ("x2", "url2")`,
+	`insert into toomany (name, uri) values ("x3", "url3")`,
+	`insert into toomany (name, uri) values ("x4", "url4")`,
+	`insert into toomany (name, uri) values ("x5", "url5")`,
+	`insert into toomany (name, uri) values ("x6", "url6")`,
+	`insert into toomany (name, uri) values ("x7", "url7")`,
+	`insert into toomany (name, uri) values ("x8", "url8")`,
+	`insert into toomany (name, uri) values ("x9", "url9")`,
+	`insert into toomany (name, uri) values ("x10", "url10")`,
+	`insert into toomany (name, uri) values ("x11", "url11")`,
+	`insert into toomany (name, uri) values ("x12", "url12")`,
+	`insert into toomany (name, uri) values ("x13", "url13")`,
+	`insert into toomany (name, uri) values ("x14", "url14")`,
+	`insert into toomany (name, uri) values ("x15", "url15")`,
+	`insert into toomany (name, uri) values ("x16", "url16")`,
 }
 
 func createDbData(db dbType) error {

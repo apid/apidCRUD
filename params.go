@@ -17,14 +17,14 @@ const (
 	// idTypeRadix is the base to use when converting an id string to int.
 	idTypeRadix = 10
 
-	// maxRecs is the max number of results allowed in a bulk request.
-	maxRecs = 1000
-
 	// types of parameters we recognize in an http request.
 	paramQuery = 0		// comes from query portion of the URL.
 	paramPathOnly = 1	// comes from the path portion of the URL.
 	paramPathOrQuery = 2	// may come from path or query.
 )
+
+// maxRecs is the max number of results allowed in a bulk request.
+var maxRecs = 1000
 
 // the type of parameter validator function
 type paramValidator func (value string) (string, error)
@@ -179,8 +179,10 @@ func validate_limit(s string) (string, error) {
 	if err != nil {
 		return s, err
 	}
-	if n <= 0 || n > maxRecs {
-		n = maxRecs
+
+	imax := int64(maxRecs)
+	if n <= 0 || n > imax {
+		n = imax
 	}
 	return idTypeToA(n), nil
 }

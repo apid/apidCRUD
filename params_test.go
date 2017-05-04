@@ -155,22 +155,22 @@ func Test_validate_id(t *testing.T) {
 
 // ----- unit tests for validate_limit
 
-var strMaxRecs = strconv.Itoa(maxRecs)
-
-var validate_limit_Tab = []validator_TC {
-	{ "", strMaxRecs, true },
-	{ " ", "", false },
-	{ " 1", "", false },
-	{ "1 ", "", false },
-	{ "1", "1", true },
-	{ "-1", strMaxRecs, true },
-	{ "100000", strMaxRecs, true },
-	{ "1000000", strMaxRecs, true },
-	{ "1000000000", strMaxRecs, true },
-	{ "1000000000000", strMaxRecs, true },
-}
-
 func Test_validate_limit(t *testing.T) {
+	var strMaxRecs = strconv.Itoa(maxRecs)	// maxRecs converted to a string
+
+	var validate_limit_Tab = []validator_TC {
+		{ "", strMaxRecs, true },
+		{ " ", "", false },
+		{ " 1", "", false },
+		{ "1 ", "", false },
+		{ "1", "1", true },
+		{ "-1", strMaxRecs, true },
+		{ "100000", strMaxRecs, true },
+		{ "1000000", strMaxRecs, true },
+		{ "1000000000", strMaxRecs, true },
+		{ "1000000000000", strMaxRecs, true },
+	}
+
 	run_validator(t, validate_limit, validate_limit_Tab)
 }
 

@@ -690,19 +690,19 @@ type apiCall_TC struct {
 	title string
 	hf apiHandler
 	verb string
-	descStr string
+	argDesc string
 	xcode int
 }
 
 func apiCall_Checker(t *testing.T,
 		testno int,
 		tc apiCall_TC) apiHandlerRet {
-	arg := mkHandlerArg(tc.verb, tc.descStr)
+	arg := mkHandlerArg(tc.verb, tc.argDesc)
 	result := tc.hf(arg)
 	if tc.xcode != result.code {
 		fname := getFunctionName(tc.hf)
 		t.Errorf(`#%d [%s]: %s(%s,%s) = (%d,%s); expected %d`,
-			testno, tc.title, fname, tc.verb, tc.descStr,
+			testno, tc.title, fname, tc.verb, tc.argDesc,
 			result.code, result.data, tc.xcode)
 	}
 	return result
@@ -997,14 +997,14 @@ func Test_updateDbRecordHandler(t *testing.T) {
 	recno := "2"
 	newurl := "host9:xyz"
 
-	descStr := fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s|fields=name|{"records":[{"keys":["name", "uri"], "values":["name9", "%s"]}]}`,
+	argDesc := fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s|fields=name|{"records":[{"keys":["name", "uri"], "values":["name9", "%s"]}]}`,
 		tabname, recno, newurl)
 
 	// do an update record
 	tc := apiCall_TC{"update record in xxx",
 		updateDbRecordHandler,
 		http.MethodPatch,
-		descStr,
+		argDesc,
 		http.StatusOK}
 
 	result := apiCall_Checker(t, 0, tc)
@@ -1037,17 +1037,20 @@ func Test_updateDbRecordHandler(t *testing.T) {
 	}
 }
 
+func interfaceToStr() {
+}
+
 // return the values of the given row in the given table.
 func retrieveValues(t *testing.T,
 		tabname string,
 		recno string) ([]string, error) {
 	fn := "getDbRecordHandler"
-	descStr := fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s`,
+	argDesc := fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s`,
 		tabname, recno)
 	tc := apiCall_TC{"get record in retrieveValues",
 		getDbRecordHandler,
 		http.MethodGet,
-		descStr,
+		argDesc,
 		http.StatusOK}
 	result := apiCall_Checker(t, 1, tc)
 	if tc.xcode != result.code {
@@ -1067,17 +1070,7 @@ func retrieveValues(t *testing.T,
 	}
 	ivals := recs[0].Values
 	_ = convValues(ivals)
-	ret := make([]string, len(ivals))
-	for i, x := range ivals {
-		s, ok := x.(string)
-		if !ok {
-			return nil,
-				fmt.Errorf(`after %s, value conversion error`,
-				fn)
-		}
-		ret[i] = s
-	}
-	return ret, nil
+	return unmaskStrings(ivals), nil
 }
 
 // ----- unit tests for updateDbRecordsHandler()
@@ -1089,14 +1082,14 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 	newname := "name7"
 	newurl := "host7:abc"
 
-	descStr := fmt.Sprintf(`/db/_table/tabname|table_name=%s|ids=%s&fields=name|{"records":[{"keys":["name", "uri"], "values":["%s", "%s"]}]}`,
+	argDesc := fmt.Sprintf(`/db/_table/tabname|table_name=%s|ids=%s&fields=name|{"records":[{"keys":["name", "uri"], "values":["%s", "%s"]}]}`,
 		tabname, recno, newname, newurl)
 
 	// do an update record
 	tc := apiCall_TC{"update record",
 		updateDbRecordsHandler,
 		http.MethodPatch,
-		descStr,
+		argDesc,
 		http.StatusOK}
 
 	result := apiCall_Checker(t, 0, tc)
@@ -1117,7 +1110,7 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 		return
 	}
 
-	descStr = fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s`,
+	argDesc = fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s`,
 		tabname, recno)
 
 	// read the record back, and check the data
@@ -1125,7 +1118,7 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 	tc = apiCall_TC{"get record",
 		getDbRecordHandler,
 		http.MethodGet,
-		descStr,
+		argDesc,
 		http.StatusOK}
 	result = apiCall_Checker(t, 1, tc)
 	if tc.xcode != result.code {
@@ -1143,4 +1136,80 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 		t.Errorf(`after %s, url="%s"; expected "%s"`,
 			fn, vals[2], newurl)
 	}
+}
+
+// ----- unit tests for getDbRecordsHandler()
+
+// verify the name of each record - expected to be of form x%d
+func verifyRangeOfNames(t *testing.T, recs []*KVRecord, start int) {
+	fn := "getDbRecordsHandler"
+	for i, rec := range recs {
+		convValues(rec.Values)
+		vals := unmaskStrings(rec.Values)
+		xname := fmt.Sprintf("x%d", i+start)
+		if xname != vals[0] {
+			t.Errorf(`%s record #%d name="%s"; expected "%s"`,
+				fn, i, vals[0], xname)
+			return
+		}
+	}
+}
+
+func Test_getDbRecordHandler_offset(t *testing.T) {
+	fn := "getDbRecordsHandler"
+
+	// exercise offset and limit
+	tab := "toomany"
+	argDesc := fmt.Sprintf(`/db/_table|table_name=%s|fields=name`, tab)
+	harg := mkHandlerArg(http.MethodGet, argDesc)
+	result := getDbRecordsHandler(harg)
+	xcode := http.StatusOK
+	if xcode != result.code {
+		t.Errorf(`%s returned code %d; expected %d`,
+			fn, result.code, xcode)
+		return
+	}
+	resp, ok := result.data.(RecordsResponse)
+	if !ok {
+		t.Errorf(`%s returned wrong data type`, fn)
+		return
+	}
+	recs := resp.Records
+	nrecs := len(recs)
+
+	// expect maxRecs results
+	if maxRecs != nrecs {
+		t.Errorf(`%s yielded %d records; expected %d`,
+			fn, nrecs, maxRecs)
+		return
+	}
+
+	verifyRangeOfNames(t, recs, 1)
+
+	argDesc = fmt.Sprintf(`/db/_table|table_name=%s|fields=name&offset=%d`,
+		tab, maxRecs)
+	harg = mkHandlerArg(http.MethodGet, argDesc)
+	result = getDbRecordsHandler(harg)
+	if xcode != result.code {
+		t.Errorf(`%s returned code %d; expected %d`,
+			fn, result.code, xcode)
+		return
+	}
+
+	resp, ok = result.data.(RecordsResponse)
+	if !ok {
+		t.Errorf(`%s returned wrong data type`, fn)
+		return
+	}
+	recs = resp.Records
+	nrecs = len(recs)
+
+	// expect maxRecs results
+	if maxRecs != nrecs {
+		t.Errorf(`%s yielded %d records; expected %d`,
+			fn, nrecs, maxRecs)
+		return
+	}
+
+	verifyRangeOfNames(t, recs, maxRecs+1)
 }

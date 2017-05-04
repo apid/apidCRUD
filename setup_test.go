@@ -18,6 +18,9 @@ func TestMain(m *testing.M) {
 	apid.Initialize(testServices)
 	log = apid.Log()
 
+	// for testing purposes, set global maxRecs to some smallish value
+	maxRecs = 7
+
 	var err error
 	db, err = fakeInitDB()
 	if err != nil {
