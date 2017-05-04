@@ -10,6 +10,9 @@ import (
 const ut_DBTYPE = "sqlite3"
 const ut_DBNAME = "unit-test.db"
 
+// fakeInitDB initializes the fake DB used for testing.
+// note that tests using this DB are not true unit tests,
+// since they are implicitly filesystem dependent.
 func fakeInitDB() (dbType, error) {
 	
 	dbHandle, err := sql.Open(ut_DBTYPE, ut_DBNAME)

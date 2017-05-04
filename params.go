@@ -21,9 +21,9 @@ const (
 	maxRecs = 1000
 
 	// types of parameters we recognize in an http request.
-	paramOther = 0
-	paramPathOnly = 1
-	paramPathOrQuery = 2
+	paramQuery = 0		// comes from query portion of the URL.
+	paramPathOnly = 1	// comes from the path portion of the URL.
+	paramPathOrQuery = 2	// may come from path or query.
 )
 
 // the type of parameter validator function
@@ -40,6 +40,8 @@ var validators = map[string]paramValidator {
 	"offset": validate_offset,
 }
 
+// paramType tells which parameters come from where.
+// by default, parameters not listed here are paramQuery.
 var paramType = map[string]int {
 	"table_name": paramPathOnly,
 	"id": paramPathOrQuery,

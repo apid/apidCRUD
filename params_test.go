@@ -12,6 +12,7 @@ import (
 
 // ----- misc support routines for testing
 
+// parsedUrl represents the information from a "url description".
 type parsedUrl struct {
 	path string
 	pathParams map[string]string
@@ -19,6 +20,11 @@ type parsedUrl struct {
 	body string
 }
 
+// parseUrlDesc() breaks down a "url description" string into its
+// component parts.  the parts are separated by "|" chars.
+//	PATH | PATH_PARAMS | QUERY_PARMS | BODY
+// all parts are optional.
+// PATH_PARAMS and QUERY_PARAMS are of the form VAR=VALUE&VAR=VALUE&...
 func parseUrlDesc(urlStr string) *parsedUrl {
 	pathParams := make(map[string]string)
 	w := strings.SplitN(urlStr, "|", 4)

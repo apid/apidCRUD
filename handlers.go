@@ -435,7 +435,6 @@ func mkIdClause(params map[string]string) (string, []interface{}) { // nolint
 // mkIdClauseUpdate() is like mkIdClause(), but for UPDATE operations.
 // the difference is, for now, that the id values are formatted directly
 // into the WHERE string, rather than being subbed in by Exec.
-// don't allow the case where neither id nor ids is specified.
 func mkIdClauseUpdate(params map[string]string) string {  // nolint
 	id_field := params["id_field"]
 	id, ok := params["id"]
