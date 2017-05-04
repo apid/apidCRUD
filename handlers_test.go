@@ -845,6 +845,12 @@ var createDbRecords_Tab = []apiCall_TC {
 		`/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest},
 
+	// trigger missing table_name error for updateDbRecordsHandler
+	{updateDbRecordsHandler,
+		http.MethodPatch,
+		`/db/_table/tabname|id=1`,
+		http.StatusBadRequest},
+
 	// trigger "missing id" error for updateDbRecordHandler
 	{updateDbRecordHandler,
 		http.MethodPatch,
@@ -891,6 +897,12 @@ var createDbRecords_Tab = []apiCall_TC {
 	{deleteDbRecordHandler,
 		http.MethodDelete,
 		`/db/_table/tabname/1234|id=1`,
+		http.StatusBadRequest},
+
+	// trigger error due to nonexistent record, in deleteDbRecordHandler
+	{deleteDbRecordHandler,
+		http.MethodDelete,
+		`/db/_table/tabname/1234|id=1001`,
 		http.StatusBadRequest},
 
 	// trigger mismatched data error in createDbRecordsHandler
