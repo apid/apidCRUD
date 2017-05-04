@@ -840,6 +840,12 @@ var createDbRecords_Tab = []apiCall_TC {
 		http.StatusBadRequest},
 
 	// trigger "missing id" error for updateDbRecordsHandler
+	{updateDbRecordsHandler,
+		http.MethodPatch,
+		`/db/_table/tabname|table_name=bundles`,
+		http.StatusBadRequest},
+
+	// trigger "missing id" error for updateDbRecordHandler
 	{updateDbRecordHandler,
 		http.MethodPatch,
 		`/db/_table/tabname|table_name=bundles`,
@@ -886,6 +892,14 @@ var createDbRecords_Tab = []apiCall_TC {
 		http.MethodDelete,
 		`/db/_table/tabname/1234|id=1`,
 		http.StatusBadRequest},
+
+	// trigger mismatched data error in createDbRecordsHandler
+	{createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=xxx||{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4","superfluous"]}]}`,
+		http.StatusBadRequest},
+
+
 }
 
 // the handlers must be called in a certain order, in order for the
