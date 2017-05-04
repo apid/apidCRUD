@@ -19,20 +19,7 @@ func getDbResourcesHandler(harg apiHandlerArg) apiHandlerRet {
 
 // getDbTablesHandler handles GET requests on /db/_table
 func getDbTablesHandler(harg apiHandlerArg) apiHandlerRet {
-	// the "tables" table is our convention, not maintained by sqlite.
-
-	idlist := []interface{}{}
-	qstring := "select name from tables;"
-	result, err := runQuery(db, qstring, idlist)
-	if err != nil {
-		return errorRet(badStat, err, "after runQuery")
-	}
-	ret, err := convTableNames(result)
-	if err != nil {
-		return errorRet(badStat, err, "after convTableNames")
-	}
-
-	return apiHandlerRet{http.StatusOK, TablesResponse{Names: ret}}
+	return tablesQuery(harg, "tables", "name")
 }
 
 // createDbRecordsHandler() handles POST requests on /db/_table/{table_name} .
@@ -166,6 +153,27 @@ func describeDbFieldHandler(harg apiHandlerArg) apiHandlerRet {
 }
 
 // ----- misc support functions
+
+// tablesQuery is the guts of getDbTablesHandler().
+// it's easier to test with an argument.
+func tablesQuery(harg apiHandlerArg,
+		tabname string,
+		fieldname string) apiHandlerRet {
+	// the "tables" table is our convention, not maintained by sqlite.
+
+	idlist := []interface{}{}
+	qstring := fmt.Sprintf("select %s from %s;", fieldname, tabname)
+	result, err := runQuery(db, qstring, idlist)
+	if err != nil {
+		return errorRet(badStat, err, "after runQuery")
+	}
+	ret, err := convTableNames(result)
+	if err != nil {
+		return errorRet(badStat, err, "after convTableNames")
+	}
+
+	return apiHandlerRet{http.StatusOK, TablesResponse{Names: ret}}
+}
 
 // errorRet() is called by apiHandler routines to pass back the code/data
 // pair appropriate to the given code and error object.

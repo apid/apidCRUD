@@ -1096,3 +1096,14 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 			fn, vals[2], newurl)
 	}
 }
+
+func Test_tablesQuery(t *testing.T) {
+	fn := "tablesQuery"
+	harg := mkHandlerArg(http.MethodGet, `/db/_tables`)
+	result := tablesQuery(harg, "nonexistent", "name")
+	xcode := http.StatusBadRequest  // expect error
+	if xcode != result.code {
+		t.Errorf(`after %s, code=%d; expected %d`,
+			fn, result.code, xcode)
+	}
+}
