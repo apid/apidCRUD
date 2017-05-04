@@ -335,10 +335,6 @@ func delRecs(db dbType, params map[string]string) (int64, error) {
 	if err != nil {
 		return NORET, err
 	}
-	if idclause == "" {
-		return NORET,
-			fmt.Errorf("id or ids must be specified")
-	}
 	qstring := fmt.Sprintf("DELETE FROM %s %s",		// nolint
 		params["table_name"],
 		idclause)
@@ -466,10 +462,6 @@ func updateRec(db dbType,
 	idclause, err := mkIdClauseUpdate(params)
 	if err != nil {
 		return NORET, err
-	}
-	if idclause == "" {
-		return NORET,
-			fmt.Errorf("id or ids must be specified")
 	}
 
 	qstring := fmt.Sprintf("UPDATE %s SET (%s) = (%s) %s",	// nolint

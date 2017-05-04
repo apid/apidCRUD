@@ -841,11 +841,23 @@ var createDbRecords_Tab = []apiCall_TC {
 
 	// trigger "missing id" error for updateDbRecordsHandler
 	{updateDbRecordHandler,
-		http.MethodGet,
+		http.MethodPatch,
 		`/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest},
-}
 
+	// trigger missing id error for createDbRecordHandler
+	{createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=bundles`,
+		http.StatusBadRequest},
+
+	// trigger missing body error for createsDbRecordHandler
+	{createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=bundles|id=1`,
+		http.StatusBadRequest},
+	
+}
 
 // the handlers must be called in a certain order, in order for the
 // calls to succeed or fail as expected.
