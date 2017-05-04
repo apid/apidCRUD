@@ -291,7 +291,7 @@ func Test_isValidIdent(t *testing.T) {
 
 // ----- unit tests for getParam()
 
-func mkHandlerArg(verb string, descStr string) apiHandlerArg {
+func parseHandlerArg(verb string, descStr string) apiHandlerArg {
 	desc := parseUrlDesc(descStr)
 	path := desc.path + "?" + desc.queryStr
 	req, _ := http.NewRequest(verb, path, strings.NewReader(desc.body))
@@ -301,14 +301,14 @@ func mkHandlerArg(verb string, descStr string) apiHandlerArg {
 func getPathParam_Checker(t *testing.T,
 		paramName string, val string) (string, error) {
 	descStr := fmt.Sprintf("/apid/db|%s=%s", paramName, val)
-	harg := mkHandlerArg(http.MethodGet, descStr)
+	harg := parseHandlerArg(http.MethodGet, descStr)
 	return harg.getParam(paramName)
 }
 
 func getQueryParam_Checker(t *testing.T,
 		paramName string, val string) (string, error) {
 	descStr := fmt.Sprintf("/apid/db||%s=%s", paramName, val)
-	harg := mkHandlerArg(http.MethodGet, descStr)
+	harg := parseHandlerArg(http.MethodGet, descStr)
 	return harg.getParam(paramName)
 }
 
@@ -402,7 +402,7 @@ func fetchParamsHelper(verb string,
 
 	// pathMap := strToMap(pathStr)
 
-	harg := mkHandlerArg(verb, descStr)
+	harg := parseHandlerArg(verb, descStr)
 
 	namesList := mySplit(nameStr, ",")
 	vmap, err := fetchParams(harg, namesList...)

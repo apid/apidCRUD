@@ -17,6 +17,7 @@ func TestMain(m *testing.M) {
 	// do this in case functions under test need to log something
 	apid.Initialize(testServices)
 	log = apid.Log()
+	log.Debugf("in TestMain")
 
 	// for testing purposes, set global maxRecs to some smallish value
 	maxRecs = 7
@@ -26,8 +27,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err.Error())
 	}
-
-	// db, _ = initDB("test.db");
 
 	// required boilerplate
 	os.Exit(m.Run())

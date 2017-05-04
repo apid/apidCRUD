@@ -495,7 +495,7 @@ func updateRec(db dbType,
 }
 
 // mkSelectString() returns the WHERE part of a selection query.
-func mkSelectString(params map[string]string) (string, []interface{}, error) {
+func mkSelectString(params map[string]string) (string, []interface{}) {
 	idclause, idlist := mkIdClause(params)
 
 	qstring := fmt.Sprintf("SELECT %s FROM %s %s LIMIT %s OFFSET %s", // nolint
@@ -505,15 +505,12 @@ func mkSelectString(params map[string]string) (string, []interface{}, error) {
 		params["limit"],
 		params["offset"])
 
-	return qstring, idlist, nil
+	return qstring, idlist
 }
 
 // getCommon() is common code for selection APIs.
 func getCommon(params map[string]string) apiHandlerRet {
-	qstring, idlist, err := mkSelectString(params)
-	if err != nil {
-		return errorRet(badStat, err, "after mkSelectString")
-	}
+	qstring, idlist := mkSelectString(params)
 	result, err := runQuery(db, qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err, "after runQuery")

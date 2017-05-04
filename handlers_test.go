@@ -389,16 +389,7 @@ func mkSelectString_Checker(t *testing.T, i int, tc mkSelectString_TC) {
 	fname := "mkSelectString"
 	params := fakeParams(tc.paramstr)
 	// fmt.Printf("in %s_Checker, params=%s\n", fname, params)
-	res, idlist, err := mkSelectString(params)
-	if tc.xsucc != (err == nil) {
-		msg := errRep(err)
-		t.Errorf(`#%d: %s returned status [%s]; expected [%t]`,
-			i, fname, msg, tc.xsucc)
-		return
-	}
-	if err != nil {
-		return
-	}
+	res, idlist := mkSelectString(params)
 	if tc.xres != res {
 		t.Errorf(`#%d: %s returned "%s"; expected "%s"`,
 			i, fname, res, tc.xres)
@@ -697,8 +688,7 @@ type apiCall_TC struct {
 func apiCall_Checker(t *testing.T,
 		testno int,
 		tc apiCall_TC) apiHandlerRet {
-	arg := mkHandlerArg(tc.verb, tc.argDesc)
-	result := tc.hf(arg)
+	result := callApiHandler(tc.hf, tc.verb, tc.argDesc)
 	if tc.xcode != result.code {
 		fname := getFunctionName(tc.hf)
 		t.Errorf(`#%d [%s]: %s(%s,%s) = (%d,%s); expected %d`,
@@ -712,6 +702,10 @@ func apiCalls_Runner(t *testing.T, tab []apiCall_TC) {
 	for testno, tc := range tab {
 		apiCall_Checker(t, testno, tc)
 	}
+}
+
+func callApiHandler(hf apiHandler, verb string, desc string) apiHandlerRet {
+	return hf(parseHandlerArg(verb, desc))
 }
 
 // ----- unit tests for not-implemented handlers.
@@ -829,6 +823,12 @@ var createDbRecords_Tab = []apiCall_TC {
 		`/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest},
 
+	{"delete record bad table_name",
+		deleteDbRecordHandler,
+		http.MethodDelete,
+		`/db/_table/tabname|table_name=bogus`,
+		http.StatusBadRequest},
+
 	{"get record 2 expecting failure",
 		getDbRecordHandler,
 		http.MethodGet,
@@ -869,6 +869,12 @@ var createDbRecords_Tab = []apiCall_TC {
 		updateDbRecordsHandler,
 		http.MethodPatch,
 		`/db/_table/tabname|id=1`,
+		http.StatusBadRequest},
+
+	{"update records bogus table_name",
+		updateDbRecordsHandler,
+		http.MethodPatch,
+		`/db/_table/tabname|table_name=bogus`,
 		http.StatusBadRequest},
 
 	{"update records bogus field name",
@@ -980,7 +986,7 @@ func Test_getDbTablesHandler(t *testing.T) {
 
 func Test_tablesQuery(t *testing.T) {
 	fn := "tablesQuery"
-	harg := mkHandlerArg(http.MethodGet, `/db/_tables`)
+	harg := parseHandlerArg(http.MethodGet, `/db/_tables`)
 	result := tablesQuery(harg, "nonexistent", "name")
 	xcode := http.StatusBadRequest  // expect error
 	if xcode != result.code {
@@ -1160,8 +1166,7 @@ func readNamesWithOffset(t *testing.T,
 	fn := "getDbRecordsHandler"
 	argDesc := fmt.Sprintf(`/db/_table|table_name=%s|fields=name&offset=%d`,
 		tab, offset)
-	harg := mkHandlerArg(http.MethodGet, argDesc)
-	result := getDbRecordsHandler(harg)
+	result := callApiHandler(getDbRecordsHandler, http.MethodGet, argDesc)
 	xcode := http.StatusOK
 	if xcode != result.code {
 		t.Errorf(`%s returned code %d; expected %d`,
@@ -1190,21 +1195,16 @@ func Test_getDbRecordHandler_offset(t *testing.T) {
 	tab := "toomany"
 
 	names := readNamesWithOffset(t, tab, 0)
-	fmt.Printf("names=%s w/ offset=%d\n", names, 0)
-
-	nrecs := len(names)
+	verifyRangeOfNames(t, names, 1)
 
 	// expect maxRecs results
+	nrecs := len(names)
 	if maxRecs != nrecs {
 		t.Errorf(`%s yielded %d records; expected %d`,
 			fn, nrecs, maxRecs)
 		return
 	}
 
-	verifyRangeOfNames(t, names, 1)
-
 	names = readNamesWithOffset(t, tab, maxRecs)
-	fmt.Printf("names=%s w/ offset=%d\n", names, maxRecs)
-
 	verifyRangeOfNames(t, names, maxRecs+1)
 }

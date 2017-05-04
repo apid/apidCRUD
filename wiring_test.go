@@ -111,7 +111,7 @@ func callApiMethod_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_
 		t.Errorf(`#%d: %s bad path "%s"`, i, fn, tc.descStr)
 		return
 	}
-	res := callApiMethod(vmap, tc.verb, mkHandlerArg(tc.verb, tc.descStr))
+	res := callApiMethod(vmap, tc.verb, parseHandlerArg(tc.verb, tc.descStr))
 	if tc.xcode != res.code {
 		t.Errorf(`#%d: %s("%s","%s")=%d; expected %d`,
 			i, fn, tc.verb, tc.descStr, res.code, tc.xcode)
