@@ -705,6 +705,7 @@ func Test_convValues_illegal(t *testing.T) {
 // ----- unit tests for support for testing of api calls
 
 type apiCall_TC struct {
+	title string
 	hf apiHandler
 	verb string
 	descStr string
@@ -718,8 +719,8 @@ func apiCall_Checker(t *testing.T,
 	result := tc.hf(arg)
 	if tc.xcode != result.code {
 		fname := getFunctionName(tc.hf)
-		t.Errorf(`#%d: %s(%s,%s) = (%d,%s); expected %d`,
-			testno, fname, tc.verb, tc.descStr,
+		t.Errorf(`#%d [%s]: %s(%s,%s) = (%d,%s); expected %d`,
+			testno, tc.title, fname, tc.verb, tc.descStr,
 			result.code, result.data, tc.xcode)
 	}
 	return result
@@ -734,35 +735,43 @@ func apiCalls_Runner(t *testing.T, tab []apiCall_TC) {
 // ----- unit tests for not-implemented handlers.
 
 var notimpl_Tab = []apiCall_TC {
-	{getDbResourcesHandler,
+	{"API not implemented",
+		getDbResourcesHandler,
 		http.MethodGet,
 		"/db",
 		http.StatusNotImplemented},
-	{getDbSchemasHandler,
+	{"API not implemented",
+		getDbSchemasHandler,
 		http.MethodGet,
 		"/db/_schema",
 		http.StatusNotImplemented},
-	{createDbTableHandler,
+	{"API not implemented",
+		createDbTableHandler,
 		http.MethodPost,
 		"/db/_schema",
 		http.StatusNotImplemented},
-	{updateDbTablesHandler,
+	{"API not implemented",
+		updateDbTablesHandler,
 		http.MethodPatch,
 		"/db/_schema",
 		http.StatusNotImplemented},
-	{describeDbTableHandler,
+	{"API not implemented",
+		describeDbTableHandler,
 		http.MethodGet,
 		"/db/_schema/tabname",
 		http.StatusNotImplemented},
-	{createDbTablesHandler,
+	{"API not implemented",
+		createDbTablesHandler,
 		http.MethodPost,
 		"/db/_schema/tabname",
 		http.StatusNotImplemented},
-	{deleteDbTableHandler,
+	{"API not implemented",
+		deleteDbTableHandler,
 		http.MethodDelete,
 		"/db/_schema/tabname",
 		http.StatusNotImplemented},
-	{describeDbFieldHandler,
+	{"API not implemented",
+		describeDbFieldHandler,
 		http.MethodDelete,
 		"/db/_schema/tabname",
 		http.StatusNotImplemented},
@@ -777,141 +786,156 @@ func Test_notimpl(t *testing.T) {
 // note that the success or failure of a given call can be order dependent.
 
 var createDbRecords_Tab = []apiCall_TC {
-	{createDbRecordsHandler,
+	{"create record 1",
+		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc1","xyz1"]}]}`,
 		http.StatusCreated},
-	{createDbRecordsHandler,
+	{"create record 2",
+		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc2","xyz2"]}]}`,
 		http.StatusCreated},
-	{createDbRecordsHandler,
+	{"create record 3",
+		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc3","xyz3"]}]}`,
 		http.StatusCreated},
-	{createDbRecordsHandler,
+	{"create record 4",
+		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4"]}]}`,
 		http.StatusCreated},
 
-	{getDbRecordHandler,
+	{"get record 123",
+		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=123|fields=name,uri`,
 		http.StatusBadRequest},
-	{getDbRecordHandler,
+	{"get record 1",
+		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=1|fields=name,uri`,
 		http.StatusOK},
-	{getDbRecordHandler,
+	{"get record 2",
+		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=2|fields=name,uri`,
 		http.StatusOK},
 
-	{getDbRecordsHandler,
+	{"get records 1,2",
+		getDbRecordsHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles|ids=1,2&fields=name,uri`,
 		http.StatusOK},
 
-	// delete records #2, #4
-	{deleteDbRecordsHandler,
+	{"delete recrods 2,4",
+		deleteDbRecordsHandler,
 		http.MethodDelete,
 		`/db/_table/tabname|table_name=bundles|ids=2,4`,
 		http.StatusOK},
-	// fetch record #2, expect failure
-	{getDbRecordHandler,
+
+	{"get record 2 expecting failure",
+		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=2`,
 		http.StatusBadRequest},
-	// fetch record #4, expect failure
-	{getDbRecordHandler,
+
+	{"get record 4 expecting failure",
+		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=4`,
 		http.StatusBadRequest},
 
-	// delete record #1 individually
-	{deleteDbRecordHandler,
+	{"delete record 1",
+		deleteDbRecordHandler,
 		http.MethodDelete,
 		`/db/_table/tabname|table_name=bundles&id=1`,
 		http.StatusOK},
-	// fetch record #1, expecting failure
-	{getDbRecordHandler,
+
+	{"delete record 1 expecting failure",
+		deleteDbRecordHandler,
+		http.MethodDelete,
+		`/db/_table/tabname|table_name=bundles&id=1`,
+		http.StatusBadRequest},
+
+	{"get record 1 expecting failure",
+		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=1`,
 		http.StatusBadRequest},
 
-	// trigger "missing id" error for updateDbRecordsHandler
-	{updateDbRecordsHandler,
+	{"update records missing id",
+		updateDbRecordsHandler,
 		http.MethodPatch,
 		`/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest},
 
-	// trigger missing table_name error for updateDbRecordsHandler
-	{updateDbRecordsHandler,
+	{"update records missing table_name",
+		updateDbRecordsHandler,
 		http.MethodPatch,
 		`/db/_table/tabname|id=1`,
 		http.StatusBadRequest},
 
-	// trigger "missing id" error for updateDbRecordHandler
-	{updateDbRecordHandler,
+	{"update record missing id",
+		updateDbRecordHandler,
 		http.MethodPatch,
 		`/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest},
 
-	// trigger missing id error for createDbRecordHandler
-	{createDbRecordsHandler,
+	{"create record missing id",
+		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest},
 
-	// trigger missing body error for createsDbRecordsHandler
-	{createDbRecordsHandler,
+	{"create recors missing body",
+		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles|id=1`,
 		http.StatusBadRequest},
 
-	// trigger error for missing table_name in createDbRecordsHandler
-	{createDbRecordsHandler,
+	{"create records missing table_name",
+		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|id=1`,
 		http.StatusBadRequest},
 
-	// trigger error due to missing table_name, in getDbRecordsHandler
-	{getDbRecordsHandler,
+	{"get records missing table_name",
+		getDbRecordsHandler,
 		http.MethodGet,
 		`/db/_table/tabname|id=1`,
 		http.StatusBadRequest},
 
-	// trigger error due to missing table_name, in getDbRecordHandler
-	{getDbRecordHandler,
+	{"get record missing table_name",
+		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|id=1`,
 		http.StatusBadRequest},
 
-	// trigger error due to missing table_name, in deleteDbRecordsHandler
-	{deleteDbRecordsHandler,
+	{"delete records missing table_name",
+		deleteDbRecordsHandler,
 		http.MethodDelete,
 		`/db/_table/tabname||ids=1`,
 		http.StatusBadRequest},
 
-	// trigger error due to missing table_name, in deleteDbRecordHandler
-	{deleteDbRecordHandler,
+	{"delete record missing table name",
+		deleteDbRecordHandler,
 		http.MethodDelete,
 		`/db/_table/tabname/1234|id=1`,
 		http.StatusBadRequest},
 
-	// trigger error due to nonexistent record, in deleteDbRecordHandler
-	{deleteDbRecordHandler,
+	{"delete record nonexistent record",
+		deleteDbRecordHandler,
 		http.MethodDelete,
 		`/db/_table/tabname/1234|id=1001`,
 		http.StatusBadRequest},
 
-	// trigger mismatched data error in createDbRecordsHandler
-	{createDbRecordsHandler,
+	{"create records with excess values",
+		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=xxx||{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4","superfluous"]}]}`,
 		http.StatusBadRequest},
-
-
 }
 
 // the handlers must be called in a certain order, in order for the
@@ -923,7 +947,8 @@ func Test_createDbRecordsHandler(t *testing.T) {
 // ----- unit tests of getDbTablesHandler()
 
 func Test_getDbTablesHandler(t *testing.T) {
-	tc := apiCall_TC{getDbTablesHandler,
+	tc := apiCall_TC{"get tablenames",
+		getDbTablesHandler,
 		http.MethodGet,
 		"/db/_tables",
 		http.StatusOK}
@@ -947,6 +972,17 @@ func Test_getDbTablesHandler(t *testing.T) {
 	}
 }
 
+func Test_tablesQuery(t *testing.T) {
+	fn := "tablesQuery"
+	harg := mkHandlerArg(http.MethodGet, `/db/_tables`)
+	result := tablesQuery(harg, "nonexistent", "name")
+	xcode := http.StatusBadRequest  // expect error
+	if xcode != result.code {
+		t.Errorf(`after %s, code=%d; expected %d`,
+			fn, result.code, xcode)
+	}
+}
+
 // ----- unit tests of updateDbRecordHandler()
 
 func Test_updateDbRecordHandler(t *testing.T) {
@@ -959,7 +995,8 @@ func Test_updateDbRecordHandler(t *testing.T) {
 		tabname, recno, newurl)
 
 	// do an update record
-	tc := apiCall_TC{updateDbRecordHandler,
+	tc := apiCall_TC{"update record in xxx",
+		updateDbRecordHandler,
 		http.MethodPatch,
 		descStr,
 		http.StatusOK}
@@ -1001,7 +1038,8 @@ func retrieveValues(t *testing.T,
 	fn := "getDbRecordHandler"
 	descStr := fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s`,
 		tabname, recno)
-	tc := apiCall_TC{getDbRecordHandler,
+	tc := apiCall_TC{"get record in retrieveValues",
+		getDbRecordHandler,
 		http.MethodGet,
 		descStr,
 		http.StatusOK}
@@ -1036,6 +1074,8 @@ func retrieveValues(t *testing.T,
 	return ret, nil
 }
 
+// ----- unit tests for updateDbRecordsHandler()
+
 func Test_updateDbRecordsHandler(t *testing.T) {
 
 	tabname := "xxx"
@@ -1047,7 +1087,8 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 		tabname, recno, newname, newurl)
 
 	// do an update record
-	tc := apiCall_TC{updateDbRecordsHandler,
+	tc := apiCall_TC{"update record",
+		updateDbRecordsHandler,
 		http.MethodPatch,
 		descStr,
 		http.StatusOK}
@@ -1075,7 +1116,8 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 
 	// read the record back, and check the data
 	fn = "getDbRecordHandler"
-	tc = apiCall_TC{getDbRecordHandler,
+	tc = apiCall_TC{"get record",
+		getDbRecordHandler,
 		http.MethodGet,
 		descStr,
 		http.StatusOK}
@@ -1094,16 +1136,5 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 	if newurl != vals[2] {
 		t.Errorf(`after %s, url="%s"; expected "%s"`,
 			fn, vals[2], newurl)
-	}
-}
-
-func Test_tablesQuery(t *testing.T) {
-	fn := "tablesQuery"
-	harg := mkHandlerArg(http.MethodGet, `/db/_tables`)
-	result := tablesQuery(harg, "nonexistent", "name")
-	xcode := http.StatusBadRequest  // expect error
-	if xcode != result.code {
-		t.Errorf(`after %s, code=%d; expected %d`,
-			fn, result.code, xcode)
 	}
 }

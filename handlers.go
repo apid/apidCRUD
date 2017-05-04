@@ -285,16 +285,12 @@ func runInsert(db dbType,
 		values []interface{}) (idType, error) {
 	NORET := idType(-1)
 
-	nkeys := len(keys)
 	nvalues := len(values)
-	if nkeys != nvalues {
-		return NORET, fmt.Errorf("number of keys must equal number of values")
-	}
 
 	keystr := strings.Join(keys, ",")
 	placestr := nstring("?", nvalues)
 
-	qstring := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",	// nolint
+	qstring := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",  // nolint
 		tabname, keystr, placestr)
 
 	stmt, err := db.handle.Prepare(qstring)
