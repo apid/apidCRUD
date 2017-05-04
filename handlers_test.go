@@ -806,6 +806,22 @@ var createDbRecords_Tab = []apiCall_TC {
 		http.MethodGet,
 		"/db/_table/tabname|table_name=bundles&id=2|fields=name,uri",
 		http.StatusOK},
+
+	// delete records #2, #4
+	{deleteDbRecordsHandler,
+		http.MethodDelete,
+		"/db/_table/tabname|table_name=bundles|ids=2,4",
+		http.StatusOK},
+	// fetch record #2, expect failure
+	{getDbRecordHandler,
+		http.MethodGet,
+		"/db/_table/tabname|table_name=bundles|ids=2",
+		http.StatusBadRequest},
+	// fetch record #4, expect failure
+	{getDbRecordHandler,
+		http.MethodGet,
+		"/db/_table/tabname|table_name=bundles|ids=4",
+		http.StatusBadRequest},
 }
 
 
@@ -841,3 +857,32 @@ func Test_getDbTablesHandler(t *testing.T) {
 			fn, data.Names, xdata)
 	}
 }
+
+/*
+// ----- unit tests of updateDbRecordsHandler()
+
+func Test_updateDbRecordsHandler(t *testing.T) {
+	tc := apiCall_TC{updateDbRecordsHandler,
+		http.MethodPatch,
+		"/db/_tables|table_name=bundles&id=3",
+		http.StatusOK}
+	result := apiCall_Checker(t, 0, tc)
+	if result.code != tc.xcode {
+		// would have already failed.
+		return
+	}
+	fn := "getDbTablesHandler"
+	// if the code was success, data should be of this type.
+	data, ok := result.data.(TablesResponse)
+	if !ok {
+		t.Errorf(`after %s, data of wrong type`, fn)
+		return
+	}
+	tabnames := "bundles,users,nothing"
+	xdata := strings.Split(tabnames, ",")
+	if ! reflect.DeepEqual(xdata, data.Names) {
+		t.Errorf(`after %s, result=%s; expected %s`,
+			fn, data.Names, xdata)
+	}
+}
+ */
