@@ -718,9 +718,9 @@ func apiCall_Checker(t *testing.T,
 	result := tc.hf(arg)
 	if tc.xcode != result.code {
 		fname := getFunctionName(tc.hf)
-		t.Errorf(`#%d: %s(%s,%s) = %s; expected %d`,
+		t.Errorf(`#%d: %s(%s,%s) = (%d,%s); expected %d`,
 			testno, fname, tc.verb, tc.descStr,
-			result, tc.xcode)
+			result.code, result.data, tc.xcode)
 	}
 	return result
 }
@@ -946,10 +946,10 @@ func retrieveValues(t *testing.T,
 	recs := rdata.Records
 	nr := len(recs)
 	if nr != 1 {
-		return nil, fmt.Errorf(`after %s, nr=%d; expected 1`, fn, nr, 1)
+		return nil, fmt.Errorf(`after %s, nr=%d; expected %d`, fn, nr, 1)
 	}
 	ivals := recs[0].Values
-	convValues(ivals)
+	_ = convValues(ivals)
 	ret := make([]string, len(ivals))
 	for i, x := range ivals {
 		s, ok := x.(string)

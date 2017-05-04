@@ -18,7 +18,12 @@ func TestMain(m *testing.M) {
 	apid.Initialize(testServices)
 	log = apid.Log()
 
-	fakeInitDB()
+	var err error
+	db, err = fakeInitDB()
+	if err != nil {
+		panic(err.Error())
+	}
+
 	// db, _ = initDB("test.db");
 
 	// required boilerplate
