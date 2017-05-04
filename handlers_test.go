@@ -826,7 +826,7 @@ var createDbRecords_Tab = []apiCall_TC {
 	{"delete record bad table_name",
 		deleteDbRecordHandler,
 		http.MethodDelete,
-		`/db/_table/tabname|table_name=bogus`,
+		`/db/_table/tabname|table_name=bogus|id=1`,
 		http.StatusBadRequest},
 
 	{"get record 2 expecting failure",
@@ -874,13 +874,13 @@ var createDbRecords_Tab = []apiCall_TC {
 	{"update records bogus table_name",
 		updateDbRecordsHandler,
 		http.MethodPatch,
-		`/db/_table/tabname|table_name=bogus`,
+		`/db/_table/tabname|table_name=bogus&id=1||{"records":[{"keys":["name", "uri"], "values":["name9", "uri9"]}]}`,
 		http.StatusBadRequest},
 
 	{"update records bogus field name",
 		updateDbRecordsHandler,
 		http.MethodPatch,
-		`/db/_table/tabname|table_name=xxx&id=1||{"records":[{"keys":["bogus", "uri"], "values":["name9", "%s"]}]}`,
+		`/db/_table/tabname|table_name=xxx&id=1||{"records":[{"keys":["bogus", "uri"], "values":["name9", "uri9"]}]}`,
 		http.StatusBadRequest},
 
 	{"update record missing id",
