@@ -811,11 +811,23 @@ var createDbRecords_Tab = []apiCall_TC {
 		`/db/_table/tabname|table_name=bundles|ids=1,2&fields=name,uri`,
 		http.StatusOK},
 
-	{"delete recrods 2,4",
+	{"delete records 2,4",
 		deleteDbRecordsHandler,
 		http.MethodDelete,
 		`/db/_table/tabname|table_name=bundles|ids=2,4`,
 		http.StatusOK},
+
+	{"delete records no id or ids",
+		deleteDbRecordsHandler,
+		http.MethodDelete,
+		`/db/_table/tabname|table_name=bundles`,
+		http.StatusBadRequest},
+
+	{"delete record no id or ids",
+		deleteDbRecordHandler,
+		http.MethodDelete,
+		`/db/_table/tabname|table_name=bundles`,
+		http.StatusBadRequest},
 
 	{"get record 2 expecting failure",
 		getDbRecordHandler,
@@ -859,6 +871,12 @@ var createDbRecords_Tab = []apiCall_TC {
 		`/db/_table/tabname|id=1`,
 		http.StatusBadRequest},
 
+	{"update records bogus field name",
+		updateDbRecordsHandler,
+		http.MethodPatch,
+		`/db/_table/tabname|table_name=xxx&id=1||{"records":[{"keys":["bogus", "uri"], "values":["name9", "%s"]}]}`,
+		http.StatusBadRequest},
+
 	{"update record missing id",
 		updateDbRecordHandler,
 		http.MethodPatch,
@@ -881,6 +899,12 @@ var createDbRecords_Tab = []apiCall_TC {
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|id=1`,
+		http.StatusBadRequest},
+
+	{"create records bogus field",
+		createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","bogus"],"Values":["abc3","xyz3"]}]}`,
 		http.StatusBadRequest},
 
 	{"get records missing table_name",
