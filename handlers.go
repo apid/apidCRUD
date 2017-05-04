@@ -335,9 +335,9 @@ func delCommon(params map[string]string) apiHandlerRet {
 // it returns the number of records deleted.
 func delRecs(db dbType, params map[string]string) (int64, error) {
 	NORET := int64(-1)
-	idclause, idlist, err := mkIdClause(params)
-	if err != nil {
-		return NORET, err
+	idclause, idlist := mkIdClause(params)
+	if idclause == "" {
+		return NORET, fmt.Errorf("deletion must specify id or ids")
 	}
 	qstring := fmt.Sprintf("DELETE FROM %s %s",		// nolint
 		params["table_name"],
@@ -407,7 +407,7 @@ func getBodyRecord(harg apiHandlerArg) (BodyRecord, error) {
 // the params examined include id_field, id, and/or ids.
 // if id is specified, that is used; otherwise ids.
 // if neither id nor ids is specified, the WHERE clause is empty.
-func mkIdClause(params map[string]string) (string, []interface{}, error) { // nolint
+func mkIdClause(params map[string]string) (string, []interface{}) { // nolint
 	id_field := params["id_field"]
 	id, ok := params["id"]
 	if ok {
@@ -415,7 +415,7 @@ func mkIdClause(params map[string]string) (string, []interface{}, error) { // no
 		placestr := "?"
 		idclause := fmt.Sprintf("WHERE %s = %s",	// nolint
 				id_field, placestr)
-		return idclause, idlist, nil
+		return idclause, idlist
 	}
 
 	ids, ok := params["ids"]
@@ -424,32 +424,32 @@ func mkIdClause(params map[string]string) (string, []interface{}, error) { // no
 		idlist := idTypesToInterface(idstrings)
 		placestr := nstring("?", len(idlist))
 		idclause := fmt.Sprintf("WHERE %s in (%s)", id_field, placestr) // nolint
-		return idclause, idlist, nil
+		return idclause, idlist
 	}
 
 	// no id and no ids implies everything matches.
 	// if this is bad, caller should check.
-	return "", []interface{}{}, nil
+	return "", []interface{}{}
 }
 
 // mkIdClauseUpdate() is like mkIdClause(), but for UPDATE operations.
 // the difference is, for now, that the id values are formatted directly
 // into the WHERE string, rather than being subbed in by Exec.
 // don't allow the case where neither id nor ids is specified.
-func mkIdClauseUpdate(params map[string]string) (string, error) {  // nolint
+func mkIdClauseUpdate(params map[string]string) string {  // nolint
 	id_field := params["id_field"]
 	id, ok := params["id"]
 	if ok {
-		return fmt.Sprintf("WHERE %s = %s", id_field, id), nil // nolint
+		return fmt.Sprintf("WHERE %s = %s", id_field, id) // nolint
 	}
 	ids, ok := params["ids"]
 	if ok && ids != "" {
-		return fmt.Sprintf("WHERE %s in (%s)", id_field, ids), nil // nolint
+		return fmt.Sprintf("WHERE %s in (%s)", id_field, ids) // nolint
 	}
 
 	// no id and no ids implies everything matches.
 	// if this is bad, caller should check.
-	return "", nil
+	return ""
 }
 
 // updateRec() updates certain fields of a given record or records,
@@ -463,9 +463,9 @@ func updateRec(db dbType,
 	keylist := dbrec.Keys
 	keystr := strings.Join(keylist, ",")
 	placestr := nstring("?", len(keylist))
-	idclause, err := mkIdClauseUpdate(params)
-	if err != nil {
-		return NORET, err
+	idclause := mkIdClauseUpdate(params)
+	if idclause == "" {
+		return NORET, fmt.Errorf("update must specify id or ids")
 	}
 
 	qstring := fmt.Sprintf("UPDATE %s SET (%s) = (%s) %s",	// nolint
@@ -494,10 +494,7 @@ func updateRec(db dbType,
 
 // mkSelectString() returns the WHERE part of a selection query.
 func mkSelectString(params map[string]string) (string, []interface{}, error) {
-	idclause, idlist, err := mkIdClause(params)
-	if err != nil {
-		return idclause, idlist, err
-	}
+	idclause, idlist := mkIdClause(params)
 
 	qstring := fmt.Sprintf("SELECT %s FROM %s %s LIMIT %s OFFSET %s", // nolint
 		params["fields"],

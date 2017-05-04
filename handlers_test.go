@@ -281,16 +281,7 @@ func idListToA(idlist []interface{}) (string, error) {
 func mkIdClause_Checker(t *testing.T, i int, tc idclause_TC) {
 	fname := "mkIdClause"
 	params := fakeParams(tc.paramstr)
-	res, idlist, err := mkIdClause(params)
-	if tc.xsucc != (err == nil) {
-		msg := errRep(err)
-		t.Errorf(`#%d: %s([%s]) returned status=[%s]; expected [%t]`,
-			i, fname, tc.paramstr, msg, tc.xsucc)
-		return
-	}
-	if err != nil {
-		return
-	}
+	res, idlist := mkIdClause(params)
 	if tc.xres != res {
 		t.Errorf(`#%d: %s([%s]) returned "%s"; expected "%s"`,
 			i, fname, tc.paramstr, res, tc.xres)
@@ -324,16 +315,7 @@ var mkIdClauseUpdate_Tab = []idclause_TC {
 func mkIdClauseUpdate_Checker(t *testing.T, i int, tc idclause_TC) {
 	fname := "mkIdClauseUpdate"
 	params := fakeParams(tc.paramstr)
-	res, err := mkIdClauseUpdate(params)
-	if tc.xsucc != (err == nil) {
-		msg := errRep(err)
-		t.Errorf(`#%d: %s([%s]) returned status=[%s]; expected [%t]`,
-			i, fname, tc.paramstr, msg, tc.xsucc)
-		return
-	}
-	if err != nil {
-		return
-	}
+	res := mkIdClauseUpdate(params)
 	if tc.xres != res {
 		t.Errorf(`#%d: %s([%s]) returned "%s"; expected "%s"`,
 			i, fname, tc.paramstr, res, tc.xres)
