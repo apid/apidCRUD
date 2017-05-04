@@ -59,7 +59,7 @@ cov-view:
 func-test:
 	./func-test.sh
 
-lint:
+lint: setup
 	gometalinter.v1 --sort=path -e "don't use underscores" \
 	| tee $(LOG_DIR)/$@.out
 
