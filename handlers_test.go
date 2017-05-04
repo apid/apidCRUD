@@ -796,47 +796,42 @@ var createDbRecords_Tab = []apiCall_TC {
 
 	{getDbRecordHandler,
 		http.MethodGet,
-		"/db/_table/tabname|table_name=bundles&id=123|fields=name,uri",
+		`/db/_table/tabname|table_name=bundles&id=123|fields=name,uri`,
 		http.StatusBadRequest},
 	{getDbRecordHandler,
 		http.MethodGet,
-		"/db/_table/tabname|table_name=bundles&id=1|fields=name,uri",
+		`/db/_table/tabname|table_name=bundles&id=1|fields=name,uri`,
 		http.StatusOK},
 	{getDbRecordHandler,
 		http.MethodGet,
-		"/db/_table/tabname|table_name=bundles&id=2|fields=name,uri",
-		http.StatusOK},
-
-	{updateDbRecordHandler,
-		http.MethodPatch,
-		`/db/_table/tabname|table_name=bundles&id=2|fields=name|{"records":[{"keys":["name", "uri"], "values":["name9", "host9:xyz"]}]}`,
+		`/db/_table/tabname|table_name=bundles&id=2|fields=name,uri`,
 		http.StatusOK},
 
 	// delete records #2, #4
 	{deleteDbRecordsHandler,
 		http.MethodDelete,
-		"/db/_table/tabname|table_name=bundles|ids=2,4",
+		`/db/_table/tabname|table_name=bundles|ids=2,4`,
 		http.StatusOK},
 	// fetch record #2, expect failure
 	{getDbRecordHandler,
 		http.MethodGet,
-		"/db/_table/tabname|table_name=bundles&id=2",
+		`/db/_table/tabname|table_name=bundles&id=2`,
 		http.StatusBadRequest},
 	// fetch record #4, expect failure
 	{getDbRecordHandler,
 		http.MethodGet,
-		"/db/_table/tabname|table_name=bundles&id=4",
+		`/db/_table/tabname|table_name=bundles&id=4`,
 		http.StatusBadRequest},
 
 	// delete record #1 individually
 	{deleteDbRecordHandler,
 		http.MethodDelete,
-		"/db/_table/tabname|table_name=bundles&id=1",
+		`/db/_table/tabname|table_name=bundles&id=1`,
 		http.StatusOK},
 	// fetch record #1, expecting failure
 	{getDbRecordHandler,
 		http.MethodGet,
-		"/db/_table/tabname|table_name=bundles&id=1",
+		`/db/_table/tabname|table_name=bundles&id=1`,
 		http.StatusBadRequest},
 }
 
@@ -874,31 +869,78 @@ func Test_getDbTablesHandler(t *testing.T) {
 	}
 }
 
-/*
 // ----- unit tests of updateDbRecordsHandler()
 
 func Test_updateDbRecordsHandler(t *testing.T) {
-	tc := apiCall_TC{updateDbRecordsHandler,
+
+	tabname := "xxx"
+	recno := "2"
+	newurl := "host9:xyz"
+
+	descStr := fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s|fields=name|{"records":[{"keys":["name", "uri"], "values":["name9", "%s"]}]}`,
+		tabname, recno, newurl)
+
+	// do an update record
+	tc := apiCall_TC{updateDbRecordHandler,
 		http.MethodPatch,
-		"/db/_tables|table_name=bundles&id=3",
+		descStr,
 		http.StatusOK}
+
 	result := apiCall_Checker(t, 0, tc)
 	if result.code != tc.xcode {
 		// would have already failed.
 		return
 	}
+
 	fn := "getDbTablesHandler"
 	// if the code was success, data should be of this type.
-	data, ok := result.data.(TablesResponse)
+	data, ok := result.data.(NumChangedResponse)
 	if !ok {
 		t.Errorf(`after %s, data of wrong type`, fn)
 		return
 	}
-	tabnames := "bundles,users,nothing"
-	xdata := strings.Split(tabnames, ",")
-	if ! reflect.DeepEqual(xdata, data.Names) {
-		t.Errorf(`after %s, result=%s; expected %s`,
-			fn, data.Names, xdata)
+	if 1 != data.NumChanged {
+		t.Errorf(`after %s, NumChanged=%d`, fn, data.NumChanged)
+		return
+	}
+
+	descStr = fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s`,
+		tabname, recno)
+
+	// read the record back, and check the data
+	fn = "getDbRecordHandler"
+	tc = apiCall_TC{getDbRecordHandler,
+		http.MethodGet,
+		`/db/_table/tabname|table_name=xxx&id=2`,
+		http.StatusOK}
+	result = apiCall_Checker(t, 1, tc)
+	if tc.xcode != result.code {
+		// would have already failed.
+		return
+	}
+
+	// fetch the changed record
+	rdata, ok := result.data.(RecordsResponse)
+	if !ok {
+		t.Errorf(`after %s, data of wrong type`, fn)
+		return
+	}
+
+	// compare the url vs expected
+	recs := rdata.Records
+	nr := len(recs)
+	if nr != 1 {
+		t.Errorf(`after %s, nr=%d; expected 1`, fn, nr, 1)
+		return
+	}
+	vals := recs[0].Values
+	url, ok := vals[2].(string)
+	if !ok {
+		t.Errorf(`after %s, Values of wrong type`, fn)
+		return
+	}
+	if newurl != url {
+		t.Errorf(`after %s, url="%s"; expected "%s"`,
+			fn, url, newurl)
 	}
 }
- */

@@ -26,7 +26,7 @@ type KVRecord struct {
 
 // RecordsResponse is the type for multiple get*Record* APIs.
 type RecordsResponse struct {
-	Records interface{}
+	Records []*KVRecord
 }
 
 // IdsResponse is the type returned by createDbRecords .

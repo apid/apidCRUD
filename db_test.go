@@ -32,6 +32,11 @@ var cmds = []string {
 	`insert into tables (name) values ("bundles")`,
 	`insert into tables (name) values ("users")`,
 	`insert into tables (name) values ("nothing")`,
+	// xxx is an extra scratch table
+	`drop table if exists xxx`,
+	`create table xxx(id integer not null primary key autoincrement, name text not null, uri text not null)`,
+	`insert into xxx (name, uri) values ("x1", "url1")`,
+	`insert into xxx (name, uri) values ("x2", "url2")`,
 }
 
 func createDbData(db dbType) error {
