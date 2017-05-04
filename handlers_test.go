@@ -874,9 +874,9 @@ func Test_getDbTablesHandler(t *testing.T) {
 	}
 }
 
-// ----- unit tests of updateDbRecordsHandler()
+// ----- unit tests of updateDbRecordHandler()
 
-func Test_updateDbRecordsHandler(t *testing.T) {
+func Test_updateDbRecordHandler(t *testing.T) {
 
 	tabname := "xxx"
 	recno := "2"
@@ -909,6 +909,94 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 		return
 	}
 
+	vals, err := retrieveValues(t, tabname, recno)
+	if err != nil {
+		t.Errorf(`%s`, err.Error())
+		return
+	}
+
+	if newurl != vals[2] {
+		t.Errorf(`after %s, url="%s"; expected "%s"`,
+			fn, vals[2], newurl)
+	}
+}
+
+// return the values of the given row in the given table.
+func retrieveValues(t *testing.T,
+		tabname string,
+		recno string) ([]string, error) {
+	fn := "getDbRecordHandler"
+	descStr := fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s`,
+		tabname, recno)
+	tc := apiCall_TC{getDbRecordHandler,
+		http.MethodGet,
+		descStr,
+		http.StatusOK}
+	result := apiCall_Checker(t, 1, tc)
+	if tc.xcode != result.code {
+		return nil, fmt.Errorf(`%s api call failed`, fn)
+	}
+
+	// fetch the changed record
+	rdata, ok := result.data.(RecordsResponse)
+	if !ok {
+		return nil, fmt.Errorf(`after %s, data of wrong type`, fn)
+	}
+
+	recs := rdata.Records
+	nr := len(recs)
+	if nr != 1 {
+		return nil, fmt.Errorf(`after %s, nr=%d; expected 1`, fn, nr, 1)
+	}
+	ivals := recs[0].Values
+	convValues(ivals)
+	ret := make([]string, len(ivals))
+	for i, x := range ivals {
+		s, ok := x.(string)
+		if !ok {
+			return nil,
+				fmt.Errorf(`after %s, value conversion error`,
+				fn)
+		}
+		ret[i] = s
+	}
+	return ret, nil
+}
+
+func Test_updateDbRecordsHandler(t *testing.T) {
+
+	tabname := "xxx"
+	recno := "1"
+	newname := "name7"
+	newurl := "host7:abc"
+
+	descStr := fmt.Sprintf(`/db/_table/tabname|table_name=%s|ids=%s&fields=name|{"records":[{"keys":["name", "uri"], "values":["%s", "%s"]}]}`,
+		tabname, recno, newname, newurl)
+
+	// do an update record
+	tc := apiCall_TC{updateDbRecordsHandler,
+		http.MethodPatch,
+		descStr,
+		http.StatusOK}
+
+	result := apiCall_Checker(t, 0, tc)
+	if result.code != tc.xcode {
+		// would have already failed.
+		return
+	}
+
+	fn := "getDbTablesHandler"
+	// if the code was success, data should be of this type.
+	data, ok := result.data.(NumChangedResponse)
+	if !ok {
+		t.Errorf(`after %s, data of wrong type`, fn)
+		return
+	}
+	if 1 != data.NumChanged {
+		t.Errorf(`after %s, NumChanged=%d`, fn, data.NumChanged)
+		return
+	}
+
 	descStr = fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s`,
 		tabname, recno)
 
@@ -916,7 +1004,7 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 	fn = "getDbRecordHandler"
 	tc = apiCall_TC{getDbRecordHandler,
 		http.MethodGet,
-		`/db/_table/tabname|table_name=xxx&id=2`,
+		descStr,
 		http.StatusOK}
 	result = apiCall_Checker(t, 1, tc)
 	if tc.xcode != result.code {
@@ -924,28 +1012,14 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 		return
 	}
 
-	// fetch the changed record
-	rdata, ok := result.data.(RecordsResponse)
-	if !ok {
-		t.Errorf(`after %s, data of wrong type`, fn)
+	vals, err := retrieveValues(t, tabname, recno)
+	if err != nil {
+		t.Errorf(`%s`, err.Error())
 		return
 	}
 
-	// compare the url vs expected
-	recs := rdata.Records
-	nr := len(recs)
-	if nr != 1 {
-		t.Errorf(`after %s, nr=%d; expected 1`, fn, nr, 1)
-		return
-	}
-	vals := recs[0].Values
-	url, ok := vals[2].(string)
-	if !ok {
-		t.Errorf(`after %s, Values of wrong type`, fn)
-		return
-	}
-	if newurl != url {
+	if newurl != vals[2] {
 		t.Errorf(`after %s, url="%s"; expected "%s"`,
-			fn, url, newurl)
+			fn, vals[2], newurl)
 	}
 }

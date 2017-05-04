@@ -20,7 +20,6 @@ func main() {
 	err := apid.API().Listen()
 
 	// if we got here, an error occurred
-	config := apid.Config()
-	api_listen := config.GetString("api_listen")
+	api_listen := apid.Config().GetString("api_listen")
 	apid.Log().Fatalf("api.Listen() on %s returned [%s]", api_listen, err)
 }
