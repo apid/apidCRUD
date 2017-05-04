@@ -807,6 +807,11 @@ var createDbRecords_Tab = []apiCall_TC {
 		"/db/_table/tabname|table_name=bundles&id=2|fields=name,uri",
 		http.StatusOK},
 
+	{updateDbRecordHandler,
+		http.MethodPatch,
+		`/db/_table/tabname|table_name=bundles&id=2|fields=name|{"records":[{"keys":["name", "uri"], "values":["name9", "host9:xyz"]}]}`,
+		http.StatusOK},
+
 	// delete records #2, #4
 	{deleteDbRecordsHandler,
 		http.MethodDelete,
@@ -823,8 +828,7 @@ var createDbRecords_Tab = []apiCall_TC {
 		"/db/_table/tabname|table_name=bundles&id=4",
 		http.StatusBadRequest},
 
-
-	// delete record #1
+	// delete record #1 individually
 	{deleteDbRecordHandler,
 		http.MethodDelete,
 		"/db/_table/tabname|table_name=bundles&id=1",
