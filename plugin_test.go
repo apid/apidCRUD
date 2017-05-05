@@ -32,32 +32,34 @@ func (gs mockGetStringer) GetString(name string) string {
 
 var fakeConfData = map[string]string{"there": "yes"}
 
-func confGet_Checker(t *testing.T, i int, gs getStringer, tc *confGet_TC) {
-	fn := "confGet"
+func confGet_Checker(cx *testContext, gs getStringer, tc *confGet_TC) {
 	res := confGet(gs, tc.name, tc.defval)
 	if tc.xval != res {
-		t.Errorf(`#%d: %s("%s","%s")="%s"; expected "%s"`,
-			i, fn, tc.name, tc.defval, res, tc.xval)
+		cx.Errorf(`("%s","%s")="%s"; expected "%s"`,
+			tc.name, tc.defval, res, tc.xval)
 	}
 }
 
 func Test_confGet(t *testing.T) {
+	cx := newTestContext(t, "confGet_Tab", "confGet")
 	gs := mockGetStringer{fakeConfData}
-	for i, tc := range confGet_Tab {
-		confGet_Checker(t, i, gs, &tc)
+	for _, tc := range confGet_Tab {
+		confGet_Checker(cx, gs, &tc)
+		cx.bump()
 	}
 }
 
 // ----- unit tests for initDB()
 
 func Test_initDB(t *testing.T) {
+	cx := newTestContext(t, "initDB", "initDB")
 	x, err := initDB(dbName)
 	if err != nil {
-		t.Errorf(`initDB() error %s`, err)
+		cx.Errorf(`error %s`, err.Error())
 		return
 	}
 	if x.handle == nil {
-		t.Errorf(`initDB() returned nil handle`)
+		cx.Errorf(`returned nil handle`)
 	}
 }
 
@@ -87,15 +89,13 @@ func (service mockApiService) HandleFunc(path string,
 	return nil
 }
 
-func registerHandler_Checker(t *testing.T,
-		testno int,
+func registerHandler_Checker(cx *testContext,
 		service *mockApiService,
 		tc callApiMethod_TC) {
-	fn := "registerHandlers"
 	path := basePath + tc.descStr
 	fp := service.hfmap[path]
 	if fp == nil {
-		t.Errorf("%s handler for %s is nil", fn, path)
+		cx.Errorf("handler for %s is nil", path)
 		return
 	}
 
@@ -107,8 +107,8 @@ func registerHandler_Checker(t *testing.T,
 
 	// check the recorded response
 	if tc.xcode != w.Code {
-		t.Errorf(`#%d: %s returned code=%d; expected %d`,
-			testno, fn, w.Code, tc.xcode)
+		cx.Errorf(`returned code=%d; expected %d`,
+			w.Code, tc.xcode)
 		return
 	}
 }
@@ -117,9 +117,11 @@ func Test_registerHandlers(t *testing.T) {
 	service := newMockApiService()
 	registerHandlers(service, fakeApiTable)
 
+	cx := newTestContext(t, "callApiMethod_Tab", "registerHandler")
 	// check that the expected paths were in fact registered.
-	for testno, desc := range callApiMethod_Tab {
-		registerHandler_Checker(t, testno, service, desc)
+	for _, desc := range callApiMethod_Tab {
+		registerHandler_Checker(cx, service, desc)
+		cx.bump()
 	}
 }
 
@@ -135,12 +137,12 @@ func (fmi mockForModuler) ForModule(name string) apid.LogService {
 }
 
 func Test_realInitPlugin(t *testing.T) {
-	fn := "realInitPlugin"
+	cx := newTestContext(t, "realInitPlugin")
 	gsi := mockGetStringer{}
 	fmi := mockForModuler{}
 	hfi := newMockApiService()
 	_, err := realInitPlugin(gsi, fmi, *hfi)
 	if err != nil {
-		t.Errorf(`%s returned error [%s]`, fn, err)
+		cx.Errorf(`returned error [%s]`, err)
 	}
 }

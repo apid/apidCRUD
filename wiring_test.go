@@ -59,31 +59,31 @@ func countPaths(tab []apiDesc) int {
 // ----- unit tests for InitWiring, newApiWiring, GetMaps
 
 func Test_newApiWiring(t *testing.T) {
-	fn := "newApiWiring"
+	cx := newTestContext(t, "newApiWiring")
 	ws := newApiWiring("", []apiDesc{})
 	if ws == nil {
-		t.Errorf("%s failed", fn)
+		cx.Errorf("failed")
 		return
 	}
 }
 
 func Test_GetMaps(t *testing.T) {
-	fn := "GetMaps"
+	cx := newTestContext(t, "GetMaps")
 	ws := newApiWiring("", []apiDesc{})
 	maps := ws.GetMaps();
 	if len(maps) != 0 {
-		t.Errorf("%s unexpectedly nonempty", fn)
+		cx.Errorf("unexpectedly nonempty")
 	}
 }
 
 func Test_addApi(t *testing.T) {
-	fn := "addApi"
+	cx := newTestContext(t, "addApi")
 	ws := newApiWiring("", fakeApiTable)
 	maps := ws.GetMaps()
 	N := countPaths(fakeApiTable)
 	wslen := len(maps)
 	if N != wslen {
-		t.Errorf("%s maps length=%d; expected %d", fn, wslen, N)
+		cx.Errorf("maps length=%d; expected %d", wslen, N)
 	}
 }
 
@@ -104,35 +104,34 @@ var callApiMethod_Tab = []callApiMethod_TC {
 	{ "/xyz", http.MethodDelete, http.StatusInternalServerError },
 }
 
-func callApiMethod_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {
-	fn := "callApiMethod"
+func callApiMethod_Checker(cx *testContext, ws *apiWiring, tc callApiMethod_TC) {
 	vmap, ok := ws.pathsMap[tc.descStr]
 	if !ok {
-		t.Errorf(`#%d: %s bad path "%s"`, i, fn, tc.descStr)
+		cx.Errorf(`bad path "%s"`, tc.descStr)
 		return
 	}
 	res := callApiMethod(vmap, tc.verb, parseHandlerArg(tc.verb, tc.descStr))
 	if tc.xcode != res.code {
-		t.Errorf(`#%d: %s("%s","%s")=%d; expected %d`,
-			i, fn, tc.verb, tc.descStr, res.code, tc.xcode)
+		cx.Errorf(`("%s","%s")=%d; expected %d`,
+			tc.verb, tc.descStr, res.code, tc.xcode)
 	}
 }
 
 func Test_callApiMethod(t *testing.T) {
+	cx := newTestContext(t, "callApiMethod_Tab", "callApiMethod")
 	ws := newApiWiring("", fakeApiTable)
-	for i, tc := range callApiMethod_Tab {
-		callApiMethod_Checker(t, i, ws, tc)
+	for _, tc := range callApiMethod_Tab {
+		callApiMethod_Checker(cx, ws, tc)
+		cx.bump()
 	}
 }
 
 // ----- unit tests for pathDispatch()
 
-func pathDispatch_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_TC) {
-	fn := "pathDispatch"
-
+func pathDispatch_Checker(cx *testContext, ws *apiWiring, tc callApiMethod_TC) {
 	vmap, ok := ws.pathsMap[tc.descStr]
 	if !ok {
-		t.Errorf(`#%d: %s bad path "%s"`, i, fn, tc.descStr)
+		cx.Errorf(`bad path "%s"`, tc.descStr)
 		return
 	}
 
@@ -143,15 +142,17 @@ func pathDispatch_Checker(t *testing.T, i int, ws *apiWiring, tc callApiMethod_T
 	pathDispatch(vmap, w, mkApiHandlerArg(req, nil))
 	code := w.Code
 	if tc.xcode != code {
-		t.Errorf(`#%d: %s("%s","%s") code=%d; expected %d`,
-			i, fn, tc.verb, tc.descStr, code, tc.xcode)
+		cx.Errorf(`("%s","%s") code=%d; expected %d`,
+			tc.verb, tc.descStr, code, tc.xcode)
 	}
 }
 
 func Test_pathDispatch(t *testing.T) {
+	cx := newTestContext(t, "pathDispatch_Tab", "pathDispatch")
 	ws := newApiWiring("", fakeApiTable)
-	for i, tc := range callApiMethod_Tab {
-		pathDispatch_Checker(t, i, ws, tc)
+	for _, tc := range callApiMethod_Tab {
+		pathDispatch_Checker(cx, ws, tc)
+		cx.bump()
 	}
 }
 
@@ -183,27 +184,28 @@ var convData_Tab = []convData_TC {
 	{badconv, []byte(""), false},
 }
 
-func convData_Checker(t *testing.T, i int, tc convData_TC) {
-	fn := "convData"
+func convData_Checker(cx *testContext, tc convData_TC) {
 	res, err := convData(tc.idata)
 	if tc.xsucc != (err == nil) {
 		msg := errRep(err)
-		t.Errorf(`#%d: %s returned status=[%s]; expected %t`,
-			i, fn, msg, tc.xsucc)
+		cx.Errorf(`returned status=[%s]; expected %t`,
+			msg, tc.xsucc)
 	}
 	if err != nil {
 		// if the actual call failed, nothing more can be checked.
 		return
 	}
 	if ! reflect.DeepEqual(tc.xbytes, res) {
-		t.Errorf(`#%d: %s returned data=[%s]; expected [%s]`,
-			i, fn, res, tc.xbytes)
+		cx.Errorf(`returned data=[%s]; expected [%s]`,
+			res, tc.xbytes)
 	}
 }
 
 func Test_convData(t *testing.T) {
-	for i, tc := range convData_Tab {
-		convData_Checker(t, i, tc)
+	cx := newTestContext(t, "convData_Tab", "convData")
+	for _, tc := range convData_Tab {
+		convData_Checker(cx, tc)
+		cx.bump()
 	}
 }
 
@@ -219,32 +221,33 @@ var writeErrorResponse_Tab = []writeErrorResponse_TC {
 	{ "abcd", http.StatusInternalServerError },
 }
 
-func writeErrorResponse_Checker(t *testing.T, i int, tc writeErrorResponse_TC) {
-	fn := "writeErrorResponse"
+func writeErrorResponse_Checker(cx *testContext, tc writeErrorResponse_TC) {
 	w := httptest.NewRecorder()
 	err := fmt.Errorf("%s", tc.msg)
 	writeErrorResponse(w, err)
 	if tc.xcode != w.Code {
-		t.Errorf(`#%d: %s wrote code=%d; expected %d`,
-			i, fn, w.Code, tc.xcode)
+		cx.Errorf(`wrote code=%d; expected %d`,
+			w.Code, tc.xcode)
 		return
 	}
 	body := w.Body.Bytes()
 	erec := &ErrorResponse{}
 	_ = json.Unmarshal(body, erec)
 	if tc.xcode != erec.Code {
-		t.Errorf(`#%d: %s ErrorResponse code=%d; expected %d`,
-			i, fn, erec.Code, tc.xcode)
+		cx.Errorf(`ErrorResponse code=%d; expected %d`,
+			erec.Code, tc.xcode)
 		return
 	}
 	if tc.msg != erec.Message {
-		t.Errorf(`#%d: %s ErrorResponse msg="%s"; expected "%s"`,
-			i, fn, erec.Message, tc.msg)
+		cx.Errorf(`ErrorResponse msg="%s"; expected "%s"`,
+			erec.Message, tc.msg)
 	}
 }
 
 func Test_writeErrorResponse(t *testing.T) {
-	for i, tc := range writeErrorResponse_Tab {
-		writeErrorResponse_Checker(t, i, tc)
+	cx := newTestContext(t, "writeErrorResponse_Tab", "writeErrorResponse")
+	for _, tc := range writeErrorResponse_Tab {
+		writeErrorResponse_Checker(cx, tc)
+		cx.bump()
 	}
 }

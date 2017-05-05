@@ -1,6 +1,5 @@
-reconcile error messages
+double-check Test_* functions
 implement xml option?
-further flatten responses
 write SDK functions
 
 createDbRecordsHandler
