@@ -83,7 +83,7 @@ this project follows the somewhat standard go testing pattern.
 
 Template:
 ```
-// template for unit tests of a function XYZ.
+// ----- unit tests for XYZ().
 
 // inputs and outputs for one XYZ testcase.
 type XYZ_TC struct {
@@ -99,19 +99,21 @@ var XYZ_Tab = XYZ_TC {
 }
 
 // run one testcase for function XYZ.
-func XYZ_Checker(t *testing.T, testno int, tc XYZ_TC) {
+func XYZ_Checker(cx *testContext, tc XYZ_TC) {
 	// CUSTOMIZE
 	result := XYZ(tc.args)
 	if tc.result !- result {
-		t.Errorf(`#%d: XYZ("%s")="%s"; expected "%s"`,
-			testno, tc.args, result, tc.result)
+		cx.Errorf(`("%s")="%s"; expected "%s"`,
+			tc.args, result, tc.result)
 	}
 }
 
 // the XYZ test suite.  run all XYZ testcases.
 func Test_XYZ(t *testing.T) {
-	for testno, tc := range XYZ_Tab {
-		XYZ_Checker(t, testno, tc)
+	cx := newTestContext(t, "XYZ_Tab", "XYZ")
+	for _, tc := range XYZ_Tab {
+		XYZ_Checker(cx, tc)
+		cx.bump()
 	}
 }
 ```

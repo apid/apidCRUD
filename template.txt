@@ -28,9 +28,9 @@ func XYZ_Checker(cx *testContext, tc XYZ_TC) {
 
 // the XYZ test suite.  run all XYZ testcases.
 func Test_XYZ(t *testing.T) {
-	cx := &testContext{t, "XYZ_Tab", "XYZ", 0}
-	for testno, tc := range XYZ_Tab {
-		cx.testno = testno
-		XYZ_Checker(cx, testno, tc)
+	cx := newTestContext(t, "XYZ_Tab", "XYZ")
+	for _, tc := range XYZ_Tab {
+		XYZ_Checker(cx, tc)
+		cx.bump()
 	}
 }
