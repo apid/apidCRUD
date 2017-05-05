@@ -472,8 +472,10 @@ func updateRec(db dbType,
 		return dbErrorRet(err, "after Prepare")
 	}
 	defer stmt.Close()	// nolint
-	// ivals := strListToInterfaces(dbrec.Values)
 	result, err := stmt.Exec(dbrec.Values...)
+	if err != nil {
+		return dbErrorRet(err, "after Exec")
+	}
 	exres := getExecResult(result)
 	return exres.rowsAffected, nil
 }

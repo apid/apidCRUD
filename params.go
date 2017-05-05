@@ -63,7 +63,7 @@ func (harg *apiHandlerArg) getParam(name string) (string, error) {
 		if !ok {
 			val = harg.formValue(name)
 		}
-	default:
+	case paramQuery:
 		val = harg.formValue(name)
 	}
 	vfunc, ok := validators[name]
