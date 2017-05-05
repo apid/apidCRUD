@@ -8,6 +8,7 @@ export COV_DIR := cov
 export COV_FILE := $(COV_DIR)/covdata.out
 export COV_HTML := $(COV_DIR)/$(MYAPP)-coverage.html
 export LOG_DIR := logs
+export UNIT_TEST_DB := unit-test.db
 VENDOR_DIR := github.com/30x/$(MYAPP)/vendor
 SQLITE_PKG := github.com/mattn/go-sqlite3
 
@@ -17,6 +18,7 @@ clean:
 	mkdir -p $(LOG_DIR)
 	/bin/rm -rf $(COV_DIR)
 	mkdir -p $(COV_DIR)
+	/bin/rm -f $(UNIT_TEST_DB)
 
 clobber: clean
 	/bin/rm -rf ./vendor

@@ -104,7 +104,6 @@ func deleteDbRecordsHandler(harg apiHandlerArg) apiHandlerRet {
 	if err != nil {
 		return errorRet(badStat, err, "after fetchParams")
 	}
-
 	return delCommon(params)
 }
 
@@ -277,6 +276,23 @@ func nstring(s string, n int) string {
 	return strings.Join(ret, ",")
 }
 
+// sqlExecResult represents the info of Result returned from sql.Exec().
+type sqlExecResult struct {
+	lastInsertId idType
+	rowsAffected idType
+}
+
+func getExecResult(res sql.Result) sqlExecResult {
+	// fmt.Debugf("result=%s", res)
+	lastid, _ := res.LastInsertId()
+	log.Debugf("lastid = %d", lastid)
+
+	nrecs, _ := res.RowsAffected()
+	log.Debugf("rowsaffected = %d", nrecs)
+
+	return sqlExecResult{idType(lastid), idType(nrecs)}
+}
+
 // runInsert() inserts a record whose data is specified by the
 // given keys and values.  it returns the id of the inserted record.
 func runInsert(db dbType,
@@ -297,26 +313,13 @@ func runInsert(db dbType,
 	}
 	defer stmt.Close()	// nolint
 
-	// ivalues := strListToInterfaces(values)
-
 	log.Debugf("qstring = %s", qstring)
 	result, err := stmt.Exec(values...)
 	if err != nil {
 		return dbErrorRet(err, "after Exec")
 	}
-	// fmt.Debugf("result=%s", result)
-
-	lastid, err := result.LastInsertId()
-	if err != nil {
-		return dbErrorRet(err, "after LastInsertId")
-	}
-	log.Debugf("lastid = %d", lastid)
-	nrecs, err := result.RowsAffected()
-	if err != nil {
-		return dbErrorRet(err, "after RowsAffected")
-	}
-	log.Debugf("rowsaffected = %d", nrecs)
-	return idType(lastid), nil
+	exres := getExecResult(result)
+	return exres.lastInsertId, nil
 }
 
 // delCommon() is the common part of record deletion APIs.
@@ -358,24 +361,11 @@ func delRecs(db dbType, params map[string]string) (idType, error) {
 	if err != nil {
 		return dbErrorRet(err, "after Exec")
 	}
-	// log.Debugf("result=%s", result)
-
-	lastid, err := result.LastInsertId()
-	if err != nil {
-		return dbErrorRet(err, "after LastInsertId")
+	exres := getExecResult(result)
+	if int(exres.rowsAffected) != len(idlist) {
+		return dbErrorRet(fmt.Errorf("mismatch in rows affected"), "")
 	}
-	log.Debugf("lastid = %d", lastid)
-
-	ra, err := result.RowsAffected()
-	if err != nil {
-		return dbErrorRet(err, "after RowsAffected")
-	}
-	log.Debugf("ra = %d", ra)
-
-	if int(ra) != len(idlist) {
-		return dbErrorRet(fmt.Errorf("mismatch in number of affected records"), "")
-	}
-	return idType(ra), nil
+	return exres.rowsAffected, nil
 }
 
 // validateSQLKeys() checks an array of key names,
@@ -484,14 +474,8 @@ func updateRec(db dbType,
 	defer stmt.Close()	// nolint
 	// ivals := strListToInterfaces(dbrec.Values)
 	result, err := stmt.Exec(dbrec.Values...)
-	if err != nil {
-		return dbErrorRet(err, "after Exec")
-	}
-	ra, err := result.RowsAffected()
-	if err != nil {
-		return dbErrorRet(err, "after RowsAffected")
-	}
-	return idType(ra), nil
+	exres := getExecResult(result)
+	return exres.rowsAffected, nil
 }
 
 // mkSelectString() returns the WHERE part of a selection query.

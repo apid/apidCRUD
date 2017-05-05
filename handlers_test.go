@@ -686,21 +686,23 @@ type apiCall_TC struct {
 }
 
 func apiCall_Checker(t *testing.T,
+		suiteName string,
 		testno int,
 		tc apiCall_TC) apiHandlerRet {
+	log.Debugf("----- %s #%d:", suiteName, testno)
 	result := callApiHandler(tc.hf, tc.verb, tc.argDesc)
 	if tc.xcode != result.code {
 		fname := getFunctionName(tc.hf)
-		t.Errorf(`#%d [%s]: %s(%s,%s) = (%d,%s); expected %d`,
-			testno, tc.title, fname, tc.verb, tc.argDesc,
+		t.Errorf(`%s #%d [%s]: %s(%s,%s) = (%d,%s); expected %d`,
+			suiteName, testno, tc.title, fname, tc.verb, tc.argDesc,
 			result.code, result.data, tc.xcode)
 	}
 	return result
 }
 
-func apiCalls_Runner(t *testing.T, tab []apiCall_TC) {
+func apiCalls_Runner(t *testing.T, suiteName string, tab []apiCall_TC) {
 	for testno, tc := range tab {
-		apiCall_Checker(t, testno, tc)
+		apiCall_Checker(t, suiteName, testno, tc)
 	}
 }
 
@@ -754,7 +756,7 @@ var notimpl_Tab = []apiCall_TC {
 }
 
 func Test_notimpl(t *testing.T) {
-	apiCalls_Runner(t, notimpl_Tab)
+	apiCalls_Runner(t, "notimpl_Tab", notimpl_Tab)
 }
 
 // ----- unit tests for various implemented handlers.
@@ -959,18 +961,19 @@ var createDbRecords_Tab = []apiCall_TC {
 // the handlers must be called in a certain order, in order for the
 // calls to succeed or fail as expected.
 func Test_createDbRecordsHandler(t *testing.T) {
-	apiCalls_Runner(t, createDbRecords_Tab)
+	apiCalls_Runner(t, "createDbRecords_Tab", createDbRecords_Tab)
 }
 
 // ----- unit tests of getDbTablesHandler()
 
 func Test_getDbTablesHandler(t *testing.T) {
+	suiteName := "getDbTablesHandler"
 	tc := apiCall_TC{"get tablenames",
 		getDbTablesHandler,
 		http.MethodGet,
 		"/db/_tables",
 		http.StatusOK}
-	result := apiCall_Checker(t, 0, tc)
+	result := apiCall_Checker(t, suiteName, 0, tc)
 	if result.code != tc.xcode {
 		// would have already failed.
 		return
@@ -1005,6 +1008,7 @@ func Test_tablesQuery(t *testing.T) {
 
 func Test_updateDbRecordHandler(t *testing.T) {
 
+	suiteName := "updateDbRecordHandler"
 	tabname := "xxx"
 	recno := "2"
 	newurl := "host9:xyz"
@@ -1019,7 +1023,7 @@ func Test_updateDbRecordHandler(t *testing.T) {
 		argDesc,
 		http.StatusOK}
 
-	result := apiCall_Checker(t, 0, tc)
+	result := apiCall_Checker(t, suiteName, 0, tc)
 	if result.code != tc.xcode {
 		// would have already failed.
 		return
@@ -1037,7 +1041,7 @@ func Test_updateDbRecordHandler(t *testing.T) {
 		return
 	}
 
-	vals, err := retrieveValues(t, tabname, recno)
+	vals, err := retrieveValues(t, suiteName, tabname, recno)
 	if err != nil {
 		t.Errorf(`%s`, err.Error())
 		return
@@ -1049,11 +1053,9 @@ func Test_updateDbRecordHandler(t *testing.T) {
 	}
 }
 
-func interfaceToStr() {
-}
-
 // return the values of the given row in the given table.
 func retrieveValues(t *testing.T,
+		suiteName string,
 		tabname string,
 		recno string) ([]string, error) {
 	fn := "getDbRecordHandler"
@@ -1064,9 +1066,9 @@ func retrieveValues(t *testing.T,
 		http.MethodGet,
 		argDesc,
 		http.StatusOK}
-	result := apiCall_Checker(t, 1, tc)
+	result := apiCall_Checker(t, suiteName, 1, tc)
 	if tc.xcode != result.code {
-		return nil, fmt.Errorf(`%s api call failed`, fn)
+		return nil, fmt.Errorf(`%s: %s api call failed`, suiteName, fn)
 	}
 
 	// fetch the changed record
@@ -1089,6 +1091,7 @@ func retrieveValues(t *testing.T,
 
 func Test_updateDbRecordsHandler(t *testing.T) {
 
+	suiteName := "updateDbRecordsHandler"
 	tabname := "xxx"
 	recno := "1"
 	newname := "name7"
@@ -1104,7 +1107,7 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 		argDesc,
 		http.StatusOK}
 
-	result := apiCall_Checker(t, 0, tc)
+	result := apiCall_Checker(t, suiteName, 0, tc)
 	if result.code != tc.xcode {
 		// would have already failed.
 		return
@@ -1132,13 +1135,13 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 		http.MethodGet,
 		argDesc,
 		http.StatusOK}
-	result = apiCall_Checker(t, 1, tc)
+	result = apiCall_Checker(t, suiteName, 1, tc)
 	if tc.xcode != result.code {
 		// would have already failed.
 		return
 	}
 
-	vals, err := retrieveValues(t, tabname, recno)
+	vals, err := retrieveValues(t, suiteName, tabname, recno)
 	if err != nil {
 		t.Errorf(`%s`, err.Error())
 		return
