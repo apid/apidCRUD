@@ -1,5 +1,11 @@
 package apidCRUD
 
+// this module defines the data structures and functions
+// that translate from apid's model of a handler function
+// (where a single function deals with all verbs on a given path),
+// with a higher-level concept of an api handler (where one
+// function deals with a single verb on a given path).
+
 import (
 	"fmt"
 	"net/http"
@@ -21,7 +27,7 @@ type apiHandlerArg struct {
 }
 
 // apiHandler is the type an API handler function.
-type apiHandler func(apiHandlerArg) apiHandlerRet
+type apiHandler func(*apiHandlerArg) apiHandlerRet
 
 // type verbMap maps each wired verb for a given path, to its handler function.
 type verbMap struct {
@@ -73,7 +79,7 @@ func (apiws *apiWiring) GetMaps() map[string]verbMap {
 
 // callApiMethod() calls the handler that was configured for
 // the given verbMap and verb.
-func callApiMethod(vmap verbMap, verb string, harg apiHandlerArg) apiHandlerRet {
+func callApiMethod(vmap verbMap, verb string, harg *apiHandlerArg) apiHandlerRet {
 	verbFunc, ok := vmap.methods[verb]
 	if !ok {
 		return apiHandlerRet{http.StatusMethodNotAllowed,
@@ -86,7 +92,7 @@ func callApiMethod(vmap verbMap, verb string, harg apiHandlerArg) apiHandlerRet 
 // pathDispatch() is the general handler for all our APIs.
 // it is called indirectly thru a closure function that
 // supplies the vmap argument.
-func pathDispatch(vmap verbMap, w http.ResponseWriter, harg apiHandlerArg) {
+func pathDispatch(vmap verbMap, w http.ResponseWriter, harg *apiHandlerArg) {
 	log.Debugf("in pathDispatch: method=%s path=%s",
 		harg.req.Method, harg.req.URL.Path)
 	defer func() {
@@ -154,7 +160,7 @@ func (harg *apiHandlerArg) bodyClose() error {
 }
 
 func mkApiHandlerArg(req *http.Request,
-		pathParams map[string]string) apiHandlerArg {
+		pathParams map[string]string) *apiHandlerArg {
 	err := req.ParseForm()
-	return apiHandlerArg{req, pathParams, err}
+	return &apiHandlerArg{req, pathParams, err}
 }

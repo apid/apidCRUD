@@ -78,7 +78,7 @@ func (harg *apiHandlerArg) getParam(name string) (string, error) {
 // each parameter must have a validator function.
 // the call returns an error if a validator function fails on any parameter.
 // the parameter values are returned as a map of string.
-func fetchParams(harg apiHandlerArg, names ...string) (map[string]string, error) {
+func fetchParams(harg *apiHandlerArg, names ...string) (map[string]string, error) {
 	ret := map[string]string{}
 
 	// fetch and validate each named param, storing values in ret[]

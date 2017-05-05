@@ -20,22 +20,22 @@ const (
 // ----- unit tests for initWiring()
 
 // a dummy handler, returns abcGetRet.
-func abcGetHandler(harg apiHandlerArg) apiHandlerRet {
+func abcGetHandler(harg *apiHandlerArg) apiHandlerRet {
 	return apiHandlerRet{abcGetRet, ""}
 }
 
 // a dummy handler, returns abcPostRet.
-func abcPostHandler(harg apiHandlerArg) apiHandlerRet {
+func abcPostHandler(harg *apiHandlerArg) apiHandlerRet {
 	return apiHandlerRet{abcPostRet, ""}
 }
 
 // a dummy handler, returns xyzPutRet.
-func xyzPutHandler(harg apiHandlerArg) apiHandlerRet {
+func xyzPutHandler(harg *apiHandlerArg) apiHandlerRet {
 	return apiHandlerRet{xyzPutRet, ""}
 }
 
 // a dummy handler, returns a value that causes convData() to fail
-func badHandler(harg apiHandlerArg) apiHandlerRet {
+func badHandler(harg *apiHandlerArg) apiHandlerRet {
 	return apiHandlerRet{http.StatusInternalServerError, badconv}
 }
 

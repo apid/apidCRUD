@@ -341,7 +341,7 @@ func Test_isValidIdent(t *testing.T) {
 
 // ----- unit tests for getParam()
 
-func parseHandlerArg(verb string, descStr string) apiHandlerArg {
+func parseHandlerArg(verb string, descStr string) *apiHandlerArg {
 	desc := parseUrlDesc(descStr)
 	path := desc.path + "?" + desc.queryStr
 	req, _ := http.NewRequest(verb, path, strings.NewReader(desc.body))
