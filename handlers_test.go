@@ -883,6 +883,12 @@ var createDbRecords_Tab = []apiCall_TC {
 		`/db/_table/tabname|table_name=xxx&id=1||{"records":[{"keys":["bogus", "uri"], "values":["name9", "uri9"]}]}`,
 		http.StatusBadRequest},
 
+	{"update records no body records",
+		updateDbRecordsHandler,
+		http.MethodPatch,
+		`/db/_table/tabname|table_name=xxx&id=1||{"records":[]}`,
+		http.StatusBadRequest},
+
 	{"update record missing id",
 		updateDbRecordHandler,
 		http.MethodPatch,
@@ -895,7 +901,7 @@ var createDbRecords_Tab = []apiCall_TC {
 		`/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest},
 
-	{"create recors missing body",
+	{"create records missing body",
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles|id=1`,
