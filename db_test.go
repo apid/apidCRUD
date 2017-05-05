@@ -24,6 +24,7 @@ func fakeInitDB() (dbType, error) {
 }
 
 var cmds = []string {
+	// ordinary tables
 	`drop table if exists tables`,
 	`drop table if exists bundles`,
 	`drop table if exists users`,
@@ -35,6 +36,7 @@ var cmds = []string {
 	`insert into tables (name) values ("bundles")`,
 	`insert into tables (name) values ("users")`,
 	`insert into tables (name) values ("nothing")`,
+
 	// xxx is an extra scratch table
 	`drop table if exists xxx`,
 	`create table xxx(id integer not null primary key autoincrement, name text not null, uri text not null)`,

@@ -1009,6 +1009,8 @@ func Test_getDbTablesHandler(t *testing.T) {
 }
 
 func Test_tablesQuery(t *testing.T) {
+
+	// try tables query with nonexistent table
 	cx := newTestContext(t, "tablesQuery")
 	harg := parseHandlerArg(http.MethodGet, `/db/_tables`)
 	result := tablesQuery(harg, "nonexistent", "name")
@@ -1017,6 +1019,16 @@ func Test_tablesQuery(t *testing.T) {
 		cx.Errorf(`code=%d; expected %d`,
 			result.code, xcode)
 	}
+
+	// try tables query with nonexistent table
+	cx.bump()
+	harg = parseHandlerArg(http.MethodGet, `/db/_tables`)
+	result = tablesQuery(harg, "tables", "bogus")
+	if xcode != result.code {
+		cx.Errorf(`code=%d; expected %d`,
+			result.code, xcode)
+	}
+	log.Debugf("result.data=%s", result.data)
 }
 
 // ----- unit tests of updateDbRecordHandler()
