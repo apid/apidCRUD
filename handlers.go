@@ -201,6 +201,15 @@ func mkSQLRow(N int) []interface{} {
 	return ret
 }
 
+func queryErrorRet(ret []*KVRecord,
+		err error,
+		dmsg string) ([]*KVRecord, error) {
+	if dmsg != "" {
+		log.Debugf("queryErrorRet [%s], %s", err, dmsg)
+	}
+	return ret, err
+}
+
 // runQuery() does a select query using the given query string.
 // the return value is a list of the retrieved records.
 func runQuery(db dbType,
@@ -213,8 +222,7 @@ func runQuery(db dbType,
 
 	rows, err := db.handle.Query(qstring, ivals...)
 	if err != nil {
-		log.Debugf("failure after Query")
-		return ret, err
+		return queryErrorRet(ret, err, "failure after Query")
 	}
 
 	// ensure rows gets closed at end
@@ -222,8 +230,7 @@ func runQuery(db dbType,
 
 	cols, err := rows.Columns() // Remember to check err afterwards
 	if err != nil {
-		log.Debugf("failure after Columns")
-		return ret, err
+		return queryErrorRet(ret, err, "failure after Columns")
 	}
 	log.Debugf("cols = %s", cols)
 	ncols := len(cols)
@@ -232,14 +239,12 @@ func runQuery(db dbType,
 		vals := mkSQLRow(ncols)
 		err = rows.Scan(vals...)
 		if err != nil {
-			log.Debugf("failure after Scan")
-			return ret, err
+			return queryErrorRet(ret, err, "failure after Scan")
 		}
 
 		err = convValues(vals)
 		if err != nil {
-			log.Debugf("failure after convValues")
-			return ret, err
+			return queryErrorRet(ret, err, "failure after convValues")
 		}
 		kvrow := KVRecord{Keys: cols, Values: vals}
 		ret = append(ret, &kvrow)
@@ -248,9 +253,9 @@ func runQuery(db dbType,
 		}
 	}
 
-	if rows.Err() != nil {
-		log.Debugf("failure after rows.Err")
-		return ret, fmt.Errorf("rows error at rownum %d", len(ret))
+	err = rows.Err()
+	if err != nil {
+		return queryErrorRet(ret, err, "failure after rows.Err")
 	}
 
 	return ret, nil
