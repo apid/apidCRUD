@@ -1,7 +1,6 @@
 package apidCRUD
 
 // this module does global setup for unit tests.
-// it also contains some generic test support code.
 
 import (
 	"testing"

@@ -6,7 +6,6 @@ import (
 	"strings"
 	"net/http"
 	"database/sql"
-	"reflect"
 )
 
 // mySplit() is like strings.Split() except that
@@ -22,14 +21,10 @@ func mySplit(str string, sep string) []string {
 
 func mkSQLRow_Checker(cx *testContext, N int) {
 	res := mkSQLRow(N)
-	if len(res) != N {
-		cx.Errorf("(%d) failed", N)
-		return
-	}
+	cx.assertEqualInt(N, len(res), "number of rows")
 	for _, v := range res {
 		_, ok := v.(*sql.RawBytes)
-		if !ok {
-			cx.Errorf("(%d) sql conversion error", N)
+		if !cx.assertTrue(ok, "sql conversion error") {
 			return
 		}
 	}
@@ -48,15 +43,9 @@ func Test_mkSQLRow(t *testing.T) {
 
 func Test_notImplemented(t *testing.T) {
 	cx := newTestContext(t, "notImplemented")
-	xcode := http.StatusNotImplemented
 	res := notImplemented()
-	if res.code != xcode {
-		cx.Errorf("returned code %d; expected %d",
-			res.code, xcode)
-	}
-	if res.data == nil {
-		cx.Errorf("returned nil error; expected non-nil")
-	}
+	cx.assertEqualInt(http.StatusNotImplemented, res.code, "returned code")
+	cx.assertTrue(res.data != nil, "returned data should not be nil")
 }
 
 // ----- unit tests for validateSQLValues()
@@ -80,9 +69,7 @@ func genListInterface(form string, N int) []interface{} {
 func sqlValues_Checker(cx *testContext, form string, N int) {
 	values := genListInterface(form, N)
 	err := validateSQLValues(values)
-	if err != nil {
-		cx.Errorf("(...) failed on length=%d", N)
-	}
+	cx.assertErrorNil(err, "validateSqlValues...")
 }
 
 func Test_validateSQLValues(t *testing.T) {
@@ -102,29 +89,22 @@ func Test_validateSQLValues(t *testing.T) {
 func sqlKeys_Checker(cx *testContext, form string, N int, xsucc bool) {
 	values := genList(form, N)
 	err := validateSQLKeys(values)
-	if xsucc != (err == nil) {
-		msg := "true"
-		if err != nil {
-			msg = err.Error()
-		}
-		cx.Errorf(`("%s"...)=%s; expected %t`,
-			form, msg, xsucc)
-	}
+	cx.assertEqualBool(xsucc, err==nil, "success of call")
 }
 
 func Test_validateSQLKeys(t *testing.T) {
-	cx := newTestContext(t, "validateSQLKeys")
+	cx := newTestContext(t, "validateSQLKeys positive test")
 	M := 3
 	for j := 0; j < M; j++ {
 		sqlKeys_Checker(cx, "K%d", j, true)
 		cx.bump()
 	}
 
-	// numeric key not OK
+	cx = newTestContext(t, "validateSQLKeys numeric key")
 	sqlKeys_Checker(cx, "%d", 1, false)
 	cx.bump()
 
-	// empty key not OK
+	cx = newTestContext(t, "validateSQLKeys empty key")
 	sqlKeys_Checker(cx, "", 1, false)
 }
 
@@ -137,21 +117,13 @@ func nstring_Checker(cx *testContext, s string, n int) {
 		// this must be handled as a special case
 		// because strings.Split() returns a list of length 1
 		// on empty string.
-		if res != "" {
-			cx.Errorf(`("%s",%d)="%s"; expected ""`,
-				s, n, res)
-		}
+		cx.assertEqualStr("", res, "empty input string")
 		return
-	} else if n != len(rlist) {
-		cx.Errorf(`("%s",%d)="%s" failed split test`,
-			s, n, res)
+	} else if ! cx.assertEqualInt(n, len(rlist), "split length") {
 		return
 	}
 	for _, v := range rlist {
-		if v != s {
-			cx.Errorf(`("%s",%d) bad item "%s"`,
-				s, n, v)
-		}
+		cx.assertEqualStr(s, v, "item")
 	}
 }
 
@@ -184,25 +156,13 @@ var errorRet_Tab = []errorRet_TC {
 func errorRet_Checker(cx *testContext, tc errorRet_TC) {
 	err := fmt.Errorf("%s", tc.msg)
 	res := errorRet(tc.code, err, tc.dmsg)
-	if tc.code != res.code {
-		cx.Errorf(`returned (%d,); expected %d`,
-			res.code, tc.code)
-		return
-	}
+	cx.assertEqualInt(tc.code, res.code, "returned code")
 	eresp, ok := res.data.(ErrorResponse)
-	if !ok {
-		cx.Errorf(`ErrorResponse conversion error`)
+	if !cx.assertTrue(ok, "ErrorResponse conversion error") {
 		return
 	}
-	if tc.code != eresp.Code {
-		cx.Errorf(`ErrorResponse.Code=%d; expected %d`,
-			eresp.Code, tc.code)
-		return
-	}
-	if tc.msg != eresp.Message {
-		cx.Errorf(`ErrorResponse.Message="%s"; expected "%s"`,
-			eresp.Message, tc.msg)
-	}
+	cx.assertEqualInt(tc.code, eresp.Code, "ErrorResponse.Code")
+	cx.assertEqualStr(tc.msg, eresp.Message, "ErrorResponse.Message")
 }
 
 func Test_errorRet(t *testing.T) {
@@ -288,19 +248,11 @@ func idListToA(idlist []interface{}) (string, error) {
 func mkIdClause_Checker(cx *testContext, tc idclause_TC) {
 	params := fakeParams(tc.paramstr)
 	res, idlist := mkIdClause(params)
-	if tc.xres != res {
-		cx.Errorf(`([%s]) returned "%s"; expected "%s"`,
-			tc.paramstr, res, tc.xres)
-	}
+	cx.assertEqualStr(tc.xres, res, "mkIdClause query string")
 
 	resids, err := idListToA(idlist)
-	if err != nil {
-		cx.Errorf(`idListToA error "%s"`, err)
-	}
-	if tc.xids != resids {
-		cx.Errorf(`([%s]) idlist=[%s]; expected [%s]`,
-			tc.paramstr, resids, tc.xids)
-	}
+	cx.assertErrorNil(err, "idListToA")
+	cx.assertEqualStr(tc.xids, resids, "mkIdClause idlist")
 }
 
 func Test_mkIdClause(t *testing.T) {
@@ -323,10 +275,7 @@ var mkIdClauseUpdate_Tab = []idclause_TC {
 func mkIdClauseUpdate_Checker(cx *testContext, tc idclause_TC) {
 	params := fakeParams(tc.paramstr)
 	res := mkIdClauseUpdate(params)
-	if tc.xres != res {
-		cx.Errorf(`([%s]) returned "%s"; expected "%s"`,
-			tc.paramstr, res, tc.xres)
-	}
+	cx.assertEqualStr(tc.xres, res, "result")
 }
 
 func Test_mkIdClauseUpdate(t *testing.T) {
@@ -351,21 +300,13 @@ var idTypesToInterface_Tab = []string {
 }
 
 func idTypesToInterface_Checker(cx *testContext, tc string) {
-	alist := strings.Split(tc, ",")
-	if tc == "" {
-		alist = []string{}
-	}
+	alist := mySplit(tc, ",")
 	res := idTypesToInterface(alist)
 	str, err := idListToA(res)
-	if err != nil {
-		cx.Errorf(`idListToA error "%s"`, err)
+	if ! cx.assertErrorNil(err, "idListToA") {
 		return
 	}
-	if str != tc {
-		cx.Errorf(`("%s") = "%s"; expected "%s"`,
-			tc, str, tc)
-		return
-	}
+	cx.assertEqualStr(tc, str, "result")
 }
 
 func Test_idTypesToInterface(t *testing.T) {
@@ -399,20 +340,14 @@ var mkSelectString_Tab = []mkSelectString_TC {
 func mkSelectString_Checker(cx *testContext, tc mkSelectString_TC) {
 	params := fakeParams(tc.paramstr)
 	res, idlist := mkSelectString(params)
-	if tc.xres != res {
-		cx.Errorf(`returned "%s"; expected "%s"`,
-			res, tc.xres)
+	if ! cx.assertEqualStr(tc.xres, res, "result") {
 		return
 	}
 	ids, err := idListToA(idlist)
-	if err != nil {
-		cx.Errorf(`idListToA error "%s"`, err)
+	if ! cx.assertErrorNil(err, "idListToA") {
 		return
 	}
-	if tc.xids != ids {
-		cx.Errorf(`returned ids "%s"; expected "%s"`,
-			ids, tc.xids)
-	}
+	cx.assertEqualStr(tc.xids, ids, "idlist")
 }
 
 func Test_mkSelectString(t *testing.T) {
@@ -473,30 +408,20 @@ func getBodyRecord_Checker(cx *testContext, tc getBodyRecord_TC) {
 	nkeys := len(tckeys)
 
 	body, err := getBodyRecord(mkApiHandlerArg(req, nil))
-	if err != nil {
-		cx.Errorf("([%s]) failed, error=%s",
-			tc.data, err)
+	if !cx.assertErrorNil(err, "returned err") {
 		return
 	}
+
 	records := body.Records
 	nrecs := len(records)
 
-	if nkeys != nrecs {
-		cx.Errorf(`returned Records length=%d; expected %d`,
-			nrecs, nkeys)
-	}
+	cx.assertEqualInt(nkeys, nrecs, "nkeys")
 	for j := 0; j < nrecs; j++ {
 		rec := records[j]
 		keystr := strings.Join(rec.Keys, ",")
-		if tckeys[j] != keystr {
-			cx.Errorf(`Record[%d] keys=%s; expected %s`,
-				j, keystr, tckeys[j])
-		}
+		cx.assertEqualStr(tckeys[j], keystr, "item keys")
 		valstr := strings.Join(unmaskStrings(rec.Values), ",")
-		if tcvalues[j] != valstr {
-			cx.Errorf(`Record[%d] values=%s; expected %s`,
-				j, valstr, tcvalues[j])
-		}
+		cx.assertEqualStr(tcvalues[j], valstr, "item vals")
 	}
 }
 
@@ -539,15 +464,11 @@ func convTableNames_Checker(cx *testContext, tc convTableNames_TC) {
 	obj := mimicTableNamesQuery(names)
 	// fmt.Printf("obj=%s\n", obj)
 	res, err := convTableNames(obj)
-	if err != nil {
-		cx.Errorf(`([%s]) returned error`, tc.names)
+	if !cx.assertErrorNil(err, "return") {
 		return
 	}
 	resJoin := strings.Join(res, ",")
-	if tc.names != resJoin {
-		cx.Errorf(`([%s]) = "%s"; expected "%s"`,
-			tc.names, resJoin, tc.names)
-	}
+	cx.assertEqualStr(tc.names, resJoin, "names")
 }
 
 func Test_convTableNames(t *testing.T) {
@@ -568,9 +489,7 @@ func Test_convTableNames_bad(t *testing.T) {
 	vals[0] = Test_convTableNames_bad  // junk that can't be converted
 
 	_, err := convTableNames(obj)
-	if err == nil {
-		cx.Errorf("call succeeded; expected error")
-	}
+	cx.assertTrue(err != nil, "should have failed")
 }
 
 // ----- unit tests for validateRecords()
@@ -608,10 +527,7 @@ var validateRecords_Tab = []validateRecords_TC {
 func validateRecords_Checker(cx *testContext, tc validateRecords_TC) {
 	records := mkRecords(tc.desc)
 	res := validateRecords(records)
-	if tc.xsucc != (res == nil) {
-		cx.Errorf(`([%s]) = [%s]; expected %t`,
-			tc.desc, errRep(nil), tc.xsucc)
-	}
+	cx.assertEqualBool(tc.xsucc, res == nil, "result")
 }
 
 func Test_validateRecords(t *testing.T) {
@@ -660,16 +576,10 @@ func mkIllegalValues() []interface{} {
 func convValues_Checker(cx *testContext, tc convValues_TC) {
 	argInter := strToSQLValues(tc.arg)
 	err := convValues(argInter)
-	if err != nil {
-		cx.Errorf(`([%s]) failed [%s]`,
-			tc.arg, err)
-	}
+	cx.assertErrorNil(err, "return")
 	argStrings := unmaskStrings(argInter)
 	resultStr := strings.Join(argStrings, ",")
-	if tc.arg != resultStr {
-		cx.Errorf(`("%s")="%s"; expected "%s"`,
-			tc.arg, resultStr, tc.arg)
-	}
+	cx.assertEqualStr(tc.arg, resultStr, "conversion")
 }
 
 // main test suite for convValues().
@@ -686,9 +596,7 @@ func Test_convValues_illegal(t *testing.T) {
 	cx := newTestContext(t, "convValues")
 	vals := mkIllegalValues()
 	err := convValues(vals)
-	if err == nil {
-		cx.Errorf(`on illegal value failed to return error`)
-	}
+	cx.assertTrue(err != nil, "expected error")
 }
 
 // ----- unit tests for support for testing of api calls
@@ -704,12 +612,7 @@ type apiCall_TC struct {
 func apiCall_Checker(cx *testContext, tc apiCall_TC) apiHandlerRet {
 	log.Debugf("----- %s #%d: [%s]", cx.suiteName, cx.testno, tc.title)
 	result := callApiHandler(tc.hf, tc.verb, tc.argDesc)
-	if tc.xcode != result.code {
-		cx.setFuncName(getFunctionName(tc.hf))
-		cx.Errorf(`[%s]: %s(%s,%s) = (%d,%s); expected %d`,
-			tc.title, cx.funcName, tc.verb, tc.argDesc,
-			result.code, result.data, tc.xcode)
-	}
+	cx.assertEqualInt(tc.xcode, result.code, tc.title)
 	return result
 }
 
@@ -996,16 +899,10 @@ func Test_getDbTablesHandler(t *testing.T) {
 	}
 	// if the code was success, data should be of this type.
 	data, ok := result.data.(TablesResponse)
-	if !ok {
-		cx.Errorf(`data of wrong type`)
-		return
-	}
+	cx.assertTrue(ok, "TablesResponse data type")
 	tabnames := "bundles,users,nothing"
 	xdata := strings.Split(tabnames, ",")
-	if ! reflect.DeepEqual(xdata, data.Names) {
-		cx.Errorf(`result=%s; expected %s`,
-			data.Names, xdata)
-	}
+	cx.assertEqualObj(xdata, data.Names, "retrieved names")
 }
 
 func Test_tablesQuery(t *testing.T) {
@@ -1015,19 +912,13 @@ func Test_tablesQuery(t *testing.T) {
 	harg := parseHandlerArg(http.MethodGet, `/db/_tables`)
 	result := tablesQuery(harg, "nonexistent", "name")
 	xcode := http.StatusBadRequest  // expect error
-	if xcode != result.code {
-		cx.Errorf(`code=%d; expected %d`,
-			result.code, xcode)
-	}
+	cx.assertEqualInt(xcode, result.code, "returned code from tablesQuery")
 
 	// try tables query with nonexistent table
 	cx.bump()
 	harg = parseHandlerArg(http.MethodGet, `/db/_tables`)
 	result = tablesQuery(harg, "tables", "bogus")
-	if xcode != result.code {
-		cx.Errorf(`code=%d; expected %d`,
-			result.code, xcode)
-	}
+	cx.assertEqualInt(xcode, result.code, "returned code from tablesQuery")
 	log.Debugf("result.data=%s", result.data)
 }
 
@@ -1061,31 +952,26 @@ func Test_updateDbRecordHandler(t *testing.T) {
 
 	// if the code was success, data should be of this type.
 	data, ok := result.data.(NumChangedResponse)
-	if !ok {
-		cx.Errorf(`data of wrong type`)
+	if !cx.assertTrue(ok, "data of wrong type") {
 		return
 	}
-	if 1 != data.NumChanged {
-		cx.Errorf(`NumChanged=%d`, data.NumChanged)
-		return
-	}
-
-	vals, err := retrieveValues(cx, tabName, recno)
-	if err != nil {
-		cx.Errorf(`%s`, err.Error())
+	if !cx.assertEqualInt(1, int(data.NumChanged),
+			"number of changed records") {
 		return
 	}
 
-	if newurl != vals[2] {
-		cx.Errorf(`url="%s"; expected "%s"`,
-			vals[2], newurl)
+	vals, ok := retrieveValues(cx, tabName, recno)
+	if !cx.assertTrue(ok, "return from retrieveValues") {
+		return
 	}
+
+	cx.assertEqualStr(newurl, vals[2], "retrieved url")
 }
 
 // return the values of the given row in the given table.
 func retrieveValues(cx *testContext,
 		tabName string,
-		recno string) ([]string, error) {
+		recno string) ([]string, bool) {
 	argDesc := fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s`,
 		tabName, recno)
 	tc := apiCall_TC{"get record in retrieveValues",
@@ -1094,24 +980,25 @@ func retrieveValues(cx *testContext,
 		argDesc,
 		http.StatusOK}
 	result := apiCall_Checker(cx, tc)
-	if tc.xcode != result.code {
-		return nil, fmt.Errorf(`%s: %s api call failed`, cx.suiteName, cx.funcName)
+	if !cx.assertEqualInt(tc.xcode, result.code,
+		"return code from getDbRecordHandler") {
+		return nil, false
 	}
 
 	// fetch the changed record
 	rdata, ok := result.data.(RecordsResponse)
-	if !ok {
-		return nil, fmt.Errorf(`after %s, data of wrong type`, cx.funcName)
+	if !cx.assertTrue(ok, "data should be of type RecordsResponse") {
+		return nil, false
 	}
 
 	recs := rdata.Records
 	nr := len(recs)
-	if nr != 1 {
-		return nil, fmt.Errorf(`after %s, nr=%d; expected %d`, cx.funcName, nr, 1)
+	if !cx.assertEqualInt(1, nr, "number of records") {
+		return nil, false
 	}
 	ivals := recs[0].Values
 	_ = convValues(ivals)
-	return unmaskStrings(ivals), nil
+	return unmaskStrings(ivals), true
 }
 
 // ----- unit tests for updateDbRecordsHandler()
@@ -1144,12 +1031,11 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 	cx = newTestContext(t, suiteName)
 	// if the code was success, data should be of this type.
 	data, ok := result.data.(NumChangedResponse)
-	if !ok {
-		cx.Errorf(`data of wrong type`)
+	if !cx.assertTrue(ok, "data should be of type NumChanedResponse") {
 		return
 	}
-	if 1 != data.NumChanged {
-		cx.Errorf(`NumChanged=%d`, data.NumChanged)
+	if ! cx.assertEqualInt(1, int(data.NumChanged),
+			"number changed") {
 		return
 	}
 
@@ -1169,30 +1055,22 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 		return
 	}
 
-	vals, err := retrieveValues(cx, tabName, recno)
-	if err != nil {
-		cx.Errorf(`%s`, err.Error())
+	vals, ok := retrieveValues(cx, tabName, recno)
+	if !ok {
 		return
 	}
 
-	if newurl != vals[2] {
-		cx.Errorf(`url="%s"; expected "%s"`,
-			vals[2], newurl)
-	}
+	cx.assertEqualStr(newurl, vals[2], "retrieved url field")
 }
 
 // ----- unit tests for getDbRecordsHandler()
 
-// verify the name of each record - expected to be of form x%d
-func verifyRangeOfNames(cx *testContext, names []string, start int) {
-	for i, name := range names {
-		xname := fmt.Sprintf("x%d", i+start)
-		if xname != name {
-			cx.Errorf(`record #%d name="%s"; expected "%s"`,
-				i, name, xname)
-			return
-		}
+func nameRange(start int, n int) []string {
+	nameList := make([]string, n)
+	for i := 0; i < n; i++ {
+		nameList[i] = fmt.Sprintf("x%d", i+start)
 	}
+	return nameList
 }
 
 func readNamesWithOffset(cx *testContext,
@@ -1202,16 +1080,13 @@ func readNamesWithOffset(cx *testContext,
 	argDesc := fmt.Sprintf(`/db/_table|table_name=%s|fields=name&offset=%d`,
 		tab, offset)
 	result := callApiHandler(getDbRecordsHandler, http.MethodGet, argDesc)
-	xcode := http.StatusOK
-	if xcode != result.code {
-		cx.Errorf(`returned code %d; expected %d`,
-			result.code, xcode)
+	if ! cx.assertEqualInt(http.StatusOK, result.code,
+		"return code from getDbRecordsHandler") {
 		return ret
 	}
 
 	resp, ok := result.data.(RecordsResponse)
-	if !ok {
-		cx.Errorf(`returned wrong data type`)
+	if ! cx.assertTrue(ok, "data of type RecordsResponse") {
 		return ret
 	}
 
@@ -1230,16 +1105,15 @@ func Test_getDbRecordHandler_offset(t *testing.T) {
 	tab := "toomany"
 
 	names := readNamesWithOffset(cx, tab, 0)
-	verifyRangeOfNames(cx, names, 1)
+	cx.assertEqualObj(nameRange(1, len(names)), names,
+		"names from #1 batch")
 
 	// expect maxRecs results
 	nrecs := len(names)
-	if maxRecs != nrecs {
-		cx.Errorf(`yielded %d records; expected %d`,
-			nrecs, maxRecs)
-		return
-	}
+	cx.assertEqualInt(maxRecs, nrecs,
+		"number of records")
 
 	names = readNamesWithOffset(cx, tab, maxRecs)
-	verifyRangeOfNames(cx, names, maxRecs+1)
+	cx.assertEqualObj(nameRange(maxRecs+1, len(names)), names,
+		"names from #2 batch")
 }

@@ -34,10 +34,7 @@ var fakeConfData = map[string]string{"there": "yes"}
 
 func confGet_Checker(cx *testContext, gs getStringer, tc *confGet_TC) {
 	res := confGet(gs, tc.name, tc.defval)
-	if tc.xval != res {
-		cx.Errorf(`("%s","%s")="%s"; expected "%s"`,
-			tc.name, tc.defval, res, tc.xval)
-	}
+	cx.assertEqualStr(tc.xval, res, "result")
 }
 
 func Test_confGet(t *testing.T) {
@@ -54,13 +51,10 @@ func Test_confGet(t *testing.T) {
 func Test_initDB(t *testing.T) {
 	cx := newTestContext(t, "initDB", "initDB")
 	x, err := initDB(dbName)
-	if err != nil {
-		cx.Errorf(`error %s`, err.Error())
+	if !cx.assertErrorNil(err, "error ret") {
 		return
 	}
-	if x.handle == nil {
-		cx.Errorf(`returned nil handle`)
-	}
+	cx.assertTrue(x.handle != nil, "handle should not be nil")
 }
 
 // ----- unit tests for initConfig()
@@ -94,8 +88,7 @@ func registerHandler_Checker(cx *testContext,
 		tc callApiMethod_TC) {
 	path := basePath + tc.descStr
 	fp := service.hfmap[path]
-	if fp == nil {
-		cx.Errorf("handler for %s is nil", path)
+	if !cx.assertTrue(fp != nil, "handler should not be nil") {
 		return
 	}
 
@@ -106,11 +99,7 @@ func registerHandler_Checker(cx *testContext,
 	fp(w, r)
 
 	// check the recorded response
-	if tc.xcode != w.Code {
-		cx.Errorf(`returned code=%d; expected %d`,
-			w.Code, tc.xcode)
-		return
-	}
+	cx.assertEqualInt(tc.xcode, w.Code, "w.Code")
 }
 
 func Test_registerHandlers(t *testing.T) {
@@ -142,7 +131,5 @@ func Test_realInitPlugin(t *testing.T) {
 	fmi := mockForModuler{}
 	hfi := newMockApiService()
 	_, err := realInitPlugin(gsi, fmi, *hfi)
-	if err != nil {
-		cx.Errorf(`returned error [%s]`, err)
-	}
+	cx.assertErrorNil(err, "returned error")
 }

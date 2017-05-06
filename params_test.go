@@ -5,55 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"strconv"
-	"reflect"
-	"runtime"
 	"net/http"
 )
-
-// ----- misc support routines for testing
-
-// context for printing test failure messages.
-type testContext struct {
-	t *testing.T
-	suiteName string
-	funcName string
-	testno int
-}
-
-// this Errorf() is like the testing package's Errorf(), but
-// prefixes the message with info identifying the test.
-func (cx *testContext) Errorf(form string, args ...interface{}) {
-	var prefix string
-	if cx.funcName == "" {
-		prefix = fmt.Sprintf("%s #%d: ",
-			cx.suiteName, cx.testno)
-	} else {
-		prefix = fmt.Sprintf("%s #%d: %s ",
-			cx.suiteName, cx.testno, cx.funcName)
-	}
-	cx.t.Errorf(prefix + form, args...)
-}
-
-// advance the test counter
-func (cx *testContext) bump() {
-	cx.testno++
-}
-
-func (cx *testContext) setFuncName(name string) {
-	cx.funcName = name
-}
-
-// newTestContext() creates a new test context.
-// the optional final argument is the funcName for the context.
-func newTestContext(t *testing.T,
-		suiteName string,
-		opt ...string) *testContext {
-	funcName := suiteName
-	if len(opt) > 0 {
-		funcName = opt[0]
-	}
-	return &testContext{t, suiteName, funcName, 0}
-}
 
 // parsedUrl represents the information from a "url description".
 type parsedUrl struct {
@@ -111,17 +64,8 @@ func validator_Checker(cx *testContext,
 		vf validatorFunc,
 		tc validator_TC) {
 	res, err := vf(tc.arg)
-	if !((tc.xsucc && err == nil && tc.xres == res) ||
-	   (!tc.xsucc && err != nil)) {
-		cx.Errorf(`("%s")=("%s",%s); expected ("%s",%t)`,
-			tc.arg, res, errRep(err),
-			tc.xres, tc.xsucc)
-	}
-}
-
-// return the name of the given function
-func getFunctionName(f interface{}) string {
-	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+	ok := err == nil && tc.xres == res
+	cx.assertEqualBool(tc.xsucc, ok, "result")
 }
 
 // ----- unit tests for validate_id_field
@@ -296,9 +240,7 @@ func Test_notIdentChar(t *testing.T) {
 	cx := newTestContext(t, "notIdentChar_Tab", "notIdentChar")
 	for _, tc := range notIdentChar_Tab {
 		res := notIdentChar(tc.c)
-		if res != tc.res {
-			cx.Errorf(`('%c')=%t; expected %t`, tc.c, res, tc.res)
-		}
+		cx.assertEqualBool(tc.res, res, string(tc.c))
 		cx.bump()
 	}
 }
@@ -332,9 +274,7 @@ func Test_isValidIdent(t *testing.T) {
 	cx := newTestContext(t, "isValidIdent_Tab", "isValidIdent")
 	for _, tc := range isValidIdent_Tab {
 		res := isValidIdent(tc.s)
-		if res != tc.res {
-			cx.Errorf(`("%s")=%t; expected %t`, tc.s, res, tc.res)
-		}
+		cx.assertEqualBool(tc.res, res, tc.s)
 		cx.bump()
 	}
 }
@@ -491,11 +431,7 @@ func fetchParams_Checker(cx *testContext, tc fetchParams_TC) {
 	_, err := fetchParamsHelper(tc.verb,
 			tc.desc,
 			tc.nameStr)
-	if tc.xsucc != (err == nil) {
-		msg := errRep(err)
-		cx.Errorf(`("%s","%s")=[%s]; expected %t`,
-			tc.verb, tc.desc, msg, tc.xsucc)
-	}
+	cx.assertEqualBool(tc.xsucc, err == nil, tc.desc)
 }
 
 func Test_fetchParams(t *testing.T) {
@@ -529,10 +465,7 @@ var aToIdType_Tab = []aToIdType_TC {
 // handle one testcase.
 func aToIdType_Checker(cx *testContext, tc aToIdType_TC) {
 	res := idType(aToIdType(tc.arg))
-	if tc.xval != res {
-		cx.Errorf(`("%s")=%d; expected %d`,
-			tc.arg, res, tc.xval)
-	}
+	cx.assertEqualObj(tc.xval, res, "result")
 }
 
 func Test_aToIdType(t *testing.T) {
@@ -561,10 +494,7 @@ var idTypeToA_Tab = []idTypeToA_TC {
 // handle one testcase
 func idTypeToA_Checker(cx *testContext, tc idTypeToA_TC) {
 	res := idTypeToA(int64(tc.arg))
-	if tc.xval != res {
-		cx.Errorf(`(%d)="%s"; expected "%s"`,
-			tc.arg, res, tc.xval)
-	}
+	cx.assertEqualStr(tc.xval, res, "result")
 }
 
 func Test_idTypeToA(t *testing.T) {

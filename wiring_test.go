@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"reflect"
 	"fmt"
 	"encoding/json"
 )
@@ -61,19 +60,14 @@ func countPaths(tab []apiDesc) int {
 func Test_newApiWiring(t *testing.T) {
 	cx := newTestContext(t, "newApiWiring")
 	ws := newApiWiring("", []apiDesc{})
-	if ws == nil {
-		cx.Errorf("failed")
-		return
-	}
+	cx.assertTrue(ws != nil, "result")
 }
 
 func Test_GetMaps(t *testing.T) {
 	cx := newTestContext(t, "GetMaps")
 	ws := newApiWiring("", []apiDesc{})
 	maps := ws.GetMaps();
-	if len(maps) != 0 {
-		cx.Errorf("unexpectedly nonempty")
-	}
+	cx.assertEqualInt(0, len(maps), "maps length")
 }
 
 func Test_addApi(t *testing.T) {
@@ -82,9 +76,7 @@ func Test_addApi(t *testing.T) {
 	maps := ws.GetMaps()
 	N := countPaths(fakeApiTable)
 	wslen := len(maps)
-	if N != wslen {
-		cx.Errorf("maps length=%d; expected %d", wslen, N)
-	}
+	cx.assertEqualInt(N, wslen, "maps length")
 }
 
 // ----- unit tests for callApiMethod()
@@ -106,15 +98,11 @@ var callApiMethod_Tab = []callApiMethod_TC {
 
 func callApiMethod_Checker(cx *testContext, ws *apiWiring, tc callApiMethod_TC) {
 	vmap, ok := ws.pathsMap[tc.descStr]
-	if !ok {
-		cx.Errorf(`bad path "%s"`, tc.descStr)
+	if !cx.assertTrue(ok, "path s/b wired") {
 		return
 	}
 	res := callApiMethod(vmap, tc.verb, parseHandlerArg(tc.verb, tc.descStr))
-	if tc.xcode != res.code {
-		cx.Errorf(`("%s","%s")=%d; expected %d`,
-			tc.verb, tc.descStr, res.code, tc.xcode)
-	}
+	cx.assertEqualInt(tc.xcode, res.code, "result code")
 }
 
 func Test_callApiMethod(t *testing.T) {
@@ -130,8 +118,7 @@ func Test_callApiMethod(t *testing.T) {
 
 func pathDispatch_Checker(cx *testContext, ws *apiWiring, tc callApiMethod_TC) {
 	vmap, ok := ws.pathsMap[tc.descStr]
-	if !ok {
-		cx.Errorf(`bad path "%s"`, tc.descStr)
+	if !cx.assertTrue(ok, "path s/b mapped") {
 		return
 	}
 
@@ -141,10 +128,7 @@ func pathDispatch_Checker(cx *testContext, ws *apiWiring, tc callApiMethod_TC) {
 
 	pathDispatch(vmap, w, mkApiHandlerArg(req, nil))
 	code := w.Code
-	if tc.xcode != code {
-		cx.Errorf(`("%s","%s") code=%d; expected %d`,
-			tc.verb, tc.descStr, code, tc.xcode)
-	}
+	cx.assertEqualInt(tc.xcode, code, "returned code")
 }
 
 func Test_pathDispatch(t *testing.T) {
@@ -186,19 +170,11 @@ var convData_Tab = []convData_TC {
 
 func convData_Checker(cx *testContext, tc convData_TC) {
 	res, err := convData(tc.idata)
-	if tc.xsucc != (err == nil) {
-		msg := errRep(err)
-		cx.Errorf(`returned status=[%s]; expected %t`,
-			msg, tc.xsucc)
-	}
+	cx.assertEqualBool(tc.xsucc, err == nil, "error ret")
 	if err != nil {
-		// if the actual call failed, nothing more can be checked.
 		return
 	}
-	if ! reflect.DeepEqual(tc.xbytes, res) {
-		cx.Errorf(`returned data=[%s]; expected [%s]`,
-			res, tc.xbytes)
-	}
+	cx.assertEqualObj(tc.xbytes, res, "result")
 }
 
 func Test_convData(t *testing.T) {
@@ -225,23 +201,18 @@ func writeErrorResponse_Checker(cx *testContext, tc writeErrorResponse_TC) {
 	w := httptest.NewRecorder()
 	err := fmt.Errorf("%s", tc.msg)
 	writeErrorResponse(w, err)
-	if tc.xcode != w.Code {
-		cx.Errorf(`wrote code=%d; expected %d`,
-			w.Code, tc.xcode)
+	if ! cx.assertEqualInt(tc.xcode,
+			w.Code,
+			"return from writeErrorResponse") {
 		return
 	}
 	body := w.Body.Bytes()
 	erec := &ErrorResponse{}
 	_ = json.Unmarshal(body, erec)
-	if tc.xcode != erec.Code {
-		cx.Errorf(`ErrorResponse code=%d; expected %d`,
-			erec.Code, tc.xcode)
+	if ! cx.assertEqualInt(tc.xcode, erec.Code, "ErrorResponse code") {
 		return
 	}
-	if tc.msg != erec.Message {
-		cx.Errorf(`ErrorResponse msg="%s"; expected "%s"`,
-			erec.Message, tc.msg)
-	}
+	cx.assertEqualStr(tc.msg, erec.Message, "ErrorResponse msg")
 }
 
 func Test_writeErrorResponse(t *testing.T) {

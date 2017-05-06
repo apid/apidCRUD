@@ -62,7 +62,9 @@ func-test:
 	./func-test.sh
 
 lint: setup
-	gometalinter.v1 --sort=path -e "don't use underscores" \
+	gometalinter.v1 --sort=path \
+		-e "don't use underscores" \
+		-e "should be" \
 	| tee $(LOG_DIR)/$@.out
 
 # not yet implemented
