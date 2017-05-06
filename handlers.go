@@ -312,19 +312,8 @@ func runInsert(db dbType,
 	qstring := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",  // nolint
 		tabname, keystr, placestr)
 
-	stmt, err := db.handle.Prepare(qstring)
-	if err != nil {
-		return dbErrorRet(err, "after Prepare")
-	}
-	defer stmt.Close()	// nolint
-
-	log.Debugf("qstring = %s", qstring)
-	result, err := stmt.Exec(values...)
-	if err != nil {
-		return dbErrorRet(err, "after Exec")
-	}
-	exres := getExecResult(result)
-	return exres.lastInsertId, nil
+	exres, err := runExec(db, qstring, values)
+	return exres.lastInsertId, err
 }
 
 // delCommon() is the common part of record deletion APIs.
@@ -356,21 +345,11 @@ func delRecs(db dbType, params map[string]string) (idType, error) {
 		idclause)
 	log.Debugf("qstring = %s", qstring)
 
-	stmt, err := db.handle.Prepare(qstring)
-	if err != nil {
-		return dbErrorRet(err, "after Prepare")
-	}
-	defer stmt.Close()	// nolint
-
-	result, err := stmt.Exec(idlist...)
-	if err != nil {
-		return dbErrorRet(err, "after Exec")
-	}
-	exres := getExecResult(result)
+	exres, err := runExec(db, qstring, idlist)
 	if int(exres.rowsAffected) != len(idlist) {
 		return dbErrorRet(fmt.Errorf("mismatch in rows affected"), "")
 	}
-	return exres.rowsAffected, nil
+	return exres.rowsAffected, err
 }
 
 // validateSQLKeys() checks an array of key names,
@@ -471,18 +450,26 @@ func updateRec(db dbType,
 			placestr,
 			idclause)
 
-	log.Debugf("qstring = %s", qstring)
-	stmt, err := db.handle.Prepare(qstring)
+	exres, err := runExec(db, qstring, dbrec.Values)
+	return exres.rowsAffected, err
+}
+
+// runExec() is common code for database APIs that do
+// Prepare followed by Exec followed by getting the exec results.
+func runExec(db dbType,
+		query string,
+		values []interface{}) (sqlExecResult, error) {
+	log.Debugf("query = %s", query)
+	stmt, err := db.handle.Prepare(query)
 	if err != nil {
-		return dbErrorRet(err, "after Prepare")
+		return sqlExecResult{}, err
 	}
 	defer stmt.Close()	// nolint
-	result, err := stmt.Exec(dbrec.Values...)
+	result, err := stmt.Exec(values...)
 	if err != nil {
-		return dbErrorRet(err, "after Exec")
+		return sqlExecResult{}, err
 	}
-	exres := getExecResult(result)
-	return exres.rowsAffected, nil
+	return getExecResult(result), nil
 }
 
 // mkSelectString() returns the WHERE part of a selection query.
