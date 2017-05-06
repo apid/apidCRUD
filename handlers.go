@@ -326,10 +326,7 @@ func delCommon(params map[string]string) apiHandlerRet {
 	return apiHandlerRet{http.StatusOK, NumChangedResponse{int64(nc)}}
 }
 
-func dbErrorRet(err error, dmsg string) (idType, error) {
-	if dmsg != "" {
-		log.Debugf("dbErrorRet [%s], %s", err, dmsg)
-	}
+func dbErrorRet(err error) (idType, error) {
 	return idType(-1), err
 }
 
@@ -338,7 +335,7 @@ func dbErrorRet(err error, dmsg string) (idType, error) {
 func delRecs(db dbType, params map[string]string) (idType, error) {
 	idclause, idlist := mkIdClause(params)
 	if idclause == "" {
-		return dbErrorRet(fmt.Errorf("deletion must specify id or ids"), "")
+		return dbErrorRet(fmt.Errorf("deletion must specify id or ids"))
 	}
 	qstring := fmt.Sprintf("DELETE FROM %s %s",		// nolint
 		params["table_name"],
@@ -347,7 +344,7 @@ func delRecs(db dbType, params map[string]string) (idType, error) {
 
 	exres, err := runExec(db, qstring, idlist)
 	if int(exres.rowsAffected) != len(idlist) {
-		return dbErrorRet(fmt.Errorf("mismatch in rows affected"), "")
+		return dbErrorRet(fmt.Errorf("mismatch in rows affected"))
 	}
 	return exres.rowsAffected, err
 }
@@ -441,7 +438,7 @@ func updateRec(db dbType,
 	placestr := nstring("?", len(keylist))
 	idclause := mkIdClauseUpdate(params)
 	if idclause == "" {
-		return dbErrorRet(fmt.Errorf("update must specify id or ids"), "")
+		return dbErrorRet(fmt.Errorf("update must specify id or ids"))
 	}
 
 	qstring := fmt.Sprintf("UPDATE %s SET (%s) = (%s) %s",	// nolint
