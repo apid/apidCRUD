@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"github.com/30x/apid-core"
-	)
+)
 
 // ----- unit tests for confGet()
 
@@ -34,7 +34,7 @@ var fakeConfData = map[string]string{"there": "yes"}
 
 func confGet_Checker(cx *testContext, gs getStringer, tc *confGet_TC) {
 	res := confGet(gs, tc.name, tc.defval)
-	cx.assertEqualStr(tc.xval, res, "result")
+	cx.assertEqual(tc.xval, res, "result")
 }
 
 func Test_confGet(t *testing.T) {
@@ -99,7 +99,7 @@ func registerHandler_Checker(cx *testContext,
 	fp(w, r)
 
 	// check the recorded response
-	cx.assertEqualInt(tc.xcode, w.Code, "w.Code")
+	cx.assertEqual(tc.xcode, w.Code, "w.Code")
 }
 
 func Test_registerHandlers(t *testing.T) {

@@ -63,9 +63,9 @@ func run_validator(cx *testContext, vf validatorFunc, tab []validator_TC) {
 func validator_Checker(cx *testContext,
 		vf validatorFunc,
 		tc validator_TC) {
-	res, err := vf(tc.arg)
-	ok := err == nil && tc.xres == res
-	cx.assertEqualBool(tc.xsucc, ok, "result")
+	result, err := vf(tc.arg)
+	ok := (err == nil && tc.xres == result)
+	cx.assertEqual(tc.xsucc, ok, "result")
 }
 
 // ----- unit tests for validate_id_field
@@ -236,11 +236,16 @@ var notIdentChar_Tab = []notIdentChar_TC {
 	{'/', true},
 }
 
+func notIdentChar_Checker(cx *testContext, tc notIdentChar_TC) {
+	result := notIdentChar(tc.c)
+	cx.assertEqual(tc.res, result,
+		fmt.Sprintf("<%q>", tc.c))
+}
+
 func Test_notIdentChar(t *testing.T) {
 	cx := newTestContext(t, "notIdentChar_Tab", "notIdentChar")
 	for _, tc := range notIdentChar_Tab {
-		res := notIdentChar(tc.c)
-		cx.assertEqualBool(tc.res, res, string(tc.c))
+		notIdentChar_Checker(cx, tc)
 		cx.bump()
 	}
 }
@@ -254,7 +259,7 @@ var validate_nofield_Tab = []validator_TC {
 // ----- unit tests for isValidIdent()
 
 type isValidIdent_TC struct {
-	s string
+	arg string
 	res bool
 }
 
@@ -270,11 +275,16 @@ var isValidIdent_Tab = []isValidIdent_TC {
 	{"", false},
 }
 
+func isValidIdent_Checker(cx *testContext, tc isValidIdent_TC) {
+	res := isValidIdent(tc.arg)
+	cx.assertEqual(tc.res, res,
+		fmt.Sprintf("<%s>", tc.arg))
+}
+
 func Test_isValidIdent(t *testing.T) {
 	cx := newTestContext(t, "isValidIdent_Tab", "isValidIdent")
 	for _, tc := range isValidIdent_Tab {
-		res := isValidIdent(tc.s)
-		cx.assertEqualBool(tc.res, res, tc.s)
+		isValidIdent_Checker(cx, tc)
 		cx.bump()
 	}
 }
@@ -363,18 +373,6 @@ var fetchParams_Tab = []fetchParams_TC {
 	{ http.MethodGet, "/db/abc||junk=1&fields=a,b,c", "junk,fields", false },
 }
 
-// getKeys() returns the list of keys from the given map
-func getKeys(vmap map[string]string) []string {
-	N := len(vmap)
-	ret := make([]string, N, N)
-	i := 0
-	for k := range vmap {
-		ret[i] = k
-		i++
-	}
-	return ret
-}
-
 // strToMap() constructs a map object from a string
 // in which mappings K=V are separated by & chars.
 func strToMap(vars string) map[string]string {
@@ -389,15 +387,12 @@ func strToMap(vars string) map[string]string {
 			ret[words[0]] = words[1]
 		}
 	}
-	// fmt.Printf("strToMap(%s) = %s\n", vars, ret)
 	return ret
 }
 
 func fetchParamsHelper(verb string,
 		descStr string,
 		nameStr string) (map[string]string, error) {
-
-	// pathMap := strToMap(pathStr)
 
 	harg := parseHandlerArg(verb, descStr)
 
@@ -431,7 +426,7 @@ func fetchParams_Checker(cx *testContext, tc fetchParams_TC) {
 	_, err := fetchParamsHelper(tc.verb,
 			tc.desc,
 			tc.nameStr)
-	cx.assertEqualBool(tc.xsucc, err == nil, tc.desc)
+	cx.assertEqual(tc.xsucc, err == nil, tc.desc)
 }
 
 func Test_fetchParams(t *testing.T) {
@@ -493,8 +488,8 @@ var idTypeToA_Tab = []idTypeToA_TC {
 
 // handle one testcase
 func idTypeToA_Checker(cx *testContext, tc idTypeToA_TC) {
-	res := idTypeToA(int64(tc.arg))
-	cx.assertEqualStr(tc.xval, res, "result")
+	result := idTypeToA(int64(tc.arg))
+	cx.assertEqual(tc.xval, result, "result")
 }
 
 func Test_idTypeToA(t *testing.T) {

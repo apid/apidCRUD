@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+	"strings"
+	"path"
 )
 
 // context for printing test failure messages.
@@ -21,14 +23,16 @@ type testContext struct {
 // prefixes the message with info identifying the test.
 func (cx *testContext) Errorf(form string, args ...interface{}) {
 	var prefix string
+	loc := getTestCaller(2)
 	if cx.funcName == "" {
-		prefix = fmt.Sprintf("%s #%d: ",
-			cx.suiteName, cx.testno)
+		prefix = fmt.Sprintf("%s %s #%d: ",
+			loc, cx.suiteName, cx.testno)
 	} else {
-		prefix = fmt.Sprintf("%s #%d: %s ",
-			cx.suiteName, cx.testno, cx.funcName)
+		prefix = fmt.Sprintf("%s %s #%d: %s ",
+			loc, cx.suiteName, cx.testno, cx.funcName)
 	}
-	cx.t.Errorf(prefix + form, args...)
+	fmt.Printf(prefix + form + "\n", args...)
+	cx.t.Fail()
 }
 
 // advance the test counter
@@ -38,27 +42,9 @@ func (cx *testContext) bump() {
 
 // ----- definition of assertions
 
-func (cx *testContext) assertEqualInt(exp int, act int, msg string) bool {
+func (cx *testContext) assertEqual(exp interface{}, act interface{}, msg string) bool {
 	if exp != act {
-		cx.Errorf(`assertion failed: %s, got %d; expected %d`,
-			msg, act, exp)
-		return false
-	}
-	return true
-}
-
-func (cx *testContext) assertEqualStr(exp string, act string, msg string) bool {
-	if exp != act {
-		cx.Errorf(`assertion failed: %s, got %s; expected %s`,
-			msg, act, exp)
-		return false
-	}
-	return true
-}
-
-func (cx *testContext) assertEqualBool(exp bool, act bool, msg string) bool {
-	if exp != act {
-		cx.Errorf(`assertion failed: %s, got %t; expected %t`,
+		cx.Errorf(`assertion failed: %s, got <%v>; expected <%v>`,
 			msg, act, exp)
 		return false
 	}
@@ -67,7 +53,7 @@ func (cx *testContext) assertEqualBool(exp bool, act bool, msg string) bool {
 
 func (cx *testContext) assertEqualObj(exp interface{}, act interface{}, msg string) bool {
 	if !reflect.DeepEqual(exp, act) {
-		cx.Errorf(`assertion failed: %s, got %s; expected %s`,
+		cx.Errorf(`assertion failed: %s, got <%s>; expected <%s>`,
 			msg, act, exp)
 		return false
 	}
@@ -76,7 +62,7 @@ func (cx *testContext) assertEqualObj(exp interface{}, act interface{}, msg stri
 
 func (cx *testContext) assertTrue(act bool, msg string) bool {
 	if !act {
-		cx.Errorf(`assertion failed: %s, is %t s/b true`,
+		cx.Errorf(`assertion failed: %s, is %t; s/b true`,
 			msg, act)
 		return false
 	}
@@ -111,4 +97,21 @@ func newTestContext(t *testing.T,
 // return the name of the given function
 func getFunctionName(f interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+}
+
+func getTestCaller(nth int) string {
+	pc := make([]uintptr, 1)
+	n := runtime.Callers(nth+2, pc)
+	if n == 0 {
+		return "?"
+	}
+	frames := runtime.CallersFrames(pc[:n])
+	frame, _ := frames.Next()
+	fn := frame.Function
+	i := strings.LastIndexByte(fn, '.')
+	if i >= 0 {
+		fn = fn[i+1:]
+	}
+	return fmt.Sprintf("%s@%s:%d",
+		fn, path.Base(frame.File), frame.Line)
 }

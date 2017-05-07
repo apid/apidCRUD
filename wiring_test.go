@@ -67,7 +67,7 @@ func Test_GetMaps(t *testing.T) {
 	cx := newTestContext(t, "GetMaps")
 	ws := newApiWiring("", []apiDesc{})
 	maps := ws.GetMaps();
-	cx.assertEqualInt(0, len(maps), "maps length")
+	cx.assertEqual(0, len(maps), "maps length")
 }
 
 func Test_addApi(t *testing.T) {
@@ -76,7 +76,7 @@ func Test_addApi(t *testing.T) {
 	maps := ws.GetMaps()
 	N := countPaths(fakeApiTable)
 	wslen := len(maps)
-	cx.assertEqualInt(N, wslen, "maps length")
+	cx.assertEqual(N, wslen, "maps length")
 }
 
 // ----- unit tests for callApiMethod()
@@ -102,7 +102,7 @@ func callApiMethod_Checker(cx *testContext, ws *apiWiring, tc callApiMethod_TC) 
 		return
 	}
 	res := callApiMethod(vmap, tc.verb, parseHandlerArg(tc.verb, tc.descStr))
-	cx.assertEqualInt(tc.xcode, res.code, "result code")
+	cx.assertEqual(tc.xcode, res.code, "result code")
 }
 
 func Test_callApiMethod(t *testing.T) {
@@ -128,7 +128,7 @@ func pathDispatch_Checker(cx *testContext, ws *apiWiring, tc callApiMethod_TC) {
 
 	pathDispatch(vmap, w, mkApiHandlerArg(req, nil))
 	code := w.Code
-	cx.assertEqualInt(tc.xcode, code, "returned code")
+	cx.assertEqual(tc.xcode, code, "returned code")
 }
 
 func Test_pathDispatch(t *testing.T) {
@@ -170,7 +170,7 @@ var convData_Tab = []convData_TC {
 
 func convData_Checker(cx *testContext, tc convData_TC) {
 	res, err := convData(tc.idata)
-	cx.assertEqualBool(tc.xsucc, err == nil, "error ret")
+	cx.assertEqual(tc.xsucc, err == nil, "error ret")
 	if err != nil {
 		return
 	}
@@ -201,7 +201,7 @@ func writeErrorResponse_Checker(cx *testContext, tc writeErrorResponse_TC) {
 	w := httptest.NewRecorder()
 	err := fmt.Errorf("%s", tc.msg)
 	writeErrorResponse(w, err)
-	if ! cx.assertEqualInt(tc.xcode,
+	if ! cx.assertEqual(tc.xcode,
 			w.Code,
 			"return from writeErrorResponse") {
 		return
@@ -209,10 +209,10 @@ func writeErrorResponse_Checker(cx *testContext, tc writeErrorResponse_TC) {
 	body := w.Body.Bytes()
 	erec := &ErrorResponse{}
 	_ = json.Unmarshal(body, erec)
-	if ! cx.assertEqualInt(tc.xcode, erec.Code, "ErrorResponse code") {
+	if ! cx.assertEqual(tc.xcode, erec.Code, "ErrorResponse code") {
 		return
 	}
-	cx.assertEqualStr(tc.msg, erec.Message, "ErrorResponse msg")
+	cx.assertEqual(tc.msg, erec.Message, "ErrorResponse msg")
 }
 
 func Test_writeErrorResponse(t *testing.T) {
