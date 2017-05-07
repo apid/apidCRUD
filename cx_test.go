@@ -14,7 +14,7 @@ import (
 // context for printing test failure messages.
 type testContext struct {
 	t *testing.T
-	suiteName string
+	tabName string
 	testno int
 }
 
@@ -23,8 +23,14 @@ type testContext struct {
 func (cx *testContext) Errorf(form string, args ...interface{}) {
 	var prefix string
 	loc := getTestCaller(2)
-	prefix = fmt.Sprintf("%s %s #%d %s: ",
-			loc, cx.suiteName, cx.testno, cx.t.Name())
+	testName := cx.t.Name()
+	if cx.tabName == "" {
+		prefix = fmt.Sprintf("%s %s: ",
+			loc, testName)
+	} else {
+		prefix = fmt.Sprintf("%s %s #%d %s: ",
+			loc, testName, cx.tabName, cx.testno)
+	}
 	fmt.Printf(prefix + form + "\n", args...)
 	cx.t.Fail()
 }
@@ -73,9 +79,17 @@ func (cx *testContext) assertErrorNil(err error, msg string) bool {
 }
 
 // newTestContext() creates a new test context.
+// tabName is intended to be a single optional argument.
+// if it is specified and nonempty, it signifies that any
+// assertion failures will be labelled with the tabName
+// and an offset.
 func newTestContext(t *testing.T,
-		suiteName string) *testContext {
-	return &testContext{t, suiteName, 0}
+		opt ...string) *testContext {
+	tabName := ""
+	if len(opt) > 0 {
+		tabName = opt[0]
+	}
+	return &testContext{t, tabName, 0}
 }
 
 // return the name of the given function

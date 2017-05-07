@@ -19,6 +19,10 @@ func mySplit(str string, sep string) []string {
 
 // ----- unit tests for mkSQLRow()
 
+var mySQLRow_Tab = []int {
+	0, 1, 2, 3, 4,
+}
+
 func mkSQLRow_Checker(cx *testContext, N int) {
 	res := mkSQLRow(N)
 	cx.assertEqual(N, len(res), "number of rows")
@@ -31,10 +35,9 @@ func mkSQLRow_Checker(cx *testContext, N int) {
 }
 
 func Test_mkSQLRow(t *testing.T) {
-	M := 5
-	cx := newTestContext(t, "mkSQLRow")
-	for i := 0; i < M; i++ {
-		mkSQLRow_Checker(cx, i)
+	cx := newTestContext(t, "mySQLRow_Tab")
+	for _, tc := range mySQLRow_Tab {
+		mkSQLRow_Checker(cx, tc)
 		cx.bump()
 	}
 }
@@ -42,7 +45,7 @@ func Test_mkSQLRow(t *testing.T) {
 // ----- unit tests for notImplemented()
 
 func Test_notImplemented(t *testing.T) {
-	cx := newTestContext(t, "notImplemented")
+	cx := newTestContext(t)
 	res := notImplemented()
 	cx.assertEqual(http.StatusNotImplemented, res.code, "returned code")
 	cx.assertTrue(res.data != nil, "returned data should not be nil")
@@ -66,6 +69,10 @@ func genListInterface(form string, N int) []interface{} {
 	return ret
 }
 
+var validateSQLValues_Tab = []int {
+	0, 1, 2, 3, 4,
+}
+
 func sqlValues_Checker(cx *testContext, form string, N int) {
 	values := genListInterface(form, N)
 	err := validateSQLValues(values)
@@ -73,70 +80,78 @@ func sqlValues_Checker(cx *testContext, form string, N int) {
 }
 
 func Test_validateSQLValues(t *testing.T) {
-	cx := newTestContext(t, "validateSQLValues")
-
-	M := 5
-	for j := 0; j < M; j++ {
-		sqlValues_Checker(cx, "V%d", j)
+	cx := newTestContext(t, "validateSQLValues_Tab")
+	for _, tc := range validateSQLValues_Tab {
+		sqlValues_Checker(cx, "V%d", tc)
 		cx.bump()
 	}
+}
 
+func Test_validateSQLValues_emptyValue(t *testing.T) {
 	// empty values OK
+	cx := newTestContext(t)
 	sqlValues_Checker(cx, "", 3)
 }
 
 // ----- unit tests for validateSQLKeys()
 
-func sqlKeys_Checker(cx *testContext, form string, N int, xsucc bool) {
-	values := genList(form, N)
-	err := validateSQLKeys(values)
-	cx.assertEqual(xsucc, err==nil, "success of call")
+type validateSQLKeys_TC struct {
+	size int
+	form string
+	xres bool
 }
 
-func Test_validateSQLKeys(t *testing.T) {
-	cx := newTestContext(t, "validateSQLKeys positive test")
-	M := 3
-	for j := 0; j < M; j++ {
-		sqlKeys_Checker(cx, "K%d", j, true)
+var validateSQLKeys_Tab = []validateSQLKeys_TC {
+	{0, "K%d", true},	// regular key - ok
+	{1, "K%d", true},	// regular key
+	{2, "K%d", true},	// regular key
+	{3, "K%d", true},	// regular key
+	{3, "%d", false},	// purely numeric key - bad
+	{1, "", false},		// empty key - bad
+}
+
+func sqlKeys_Checker(cx *testContext, tc *validateSQLKeys_TC) {
+	values := genList(tc.form, tc.size)
+	err := validateSQLKeys(values)
+	cx.assertEqual(tc.xres, err==nil, "success of call")
+}
+
+func Test_validateSQLKeys_positive(t *testing.T) {
+	cx := newTestContext(t, "validateSQLKeys_Tab")
+	for _, tc := range validateSQLKeys_Tab {
+		sqlKeys_Checker(cx, &tc)
 		cx.bump()
 	}
-
-	cx = newTestContext(t, "validateSQLKeys numeric key")
-	sqlKeys_Checker(cx, "%d", 1, false)
-
-	cx = newTestContext(t, "validateSQLKeys empty key")
-	sqlKeys_Checker(cx, "", 1, false)
 }
 
 // ----- unit tests for nstring()
 
-func nstring_Checker(cx *testContext, s string, n int) {
-	result := nstring(s, n)
-	rlist := mySplit(result, ",")
-	if s == "" && n <= 1 {
-		// special case because nstring("", 0) == nstring("", 1)
-		cx.assertEqual(result, "", "empty result")
-		return
-	}
-	if !cx.assertEqual(n, len(rlist),
-		    fmt.Sprintf(`<s="%s" n=%d rsplit="%s">`, s, n, rlist)) {
-		return
-	}
-	for _, v := range rlist {
-		cx.assertEqual(s, v, "item")
-	}
+type nstring_TC struct {
+	n int
+	s string
+	xres string
+}
+
+var nstring_Tab = []nstring_TC {
+	{0, "", ""},
+	{1, "", ""},
+	{2, "", ","},
+	{3, "", ",,"},
+	{0, "abc", ""},
+	{1, "abc", "abc"},
+	{2, "abc", "abc,abc"},
+	{3, "abc", "abc,abc,abc"},
+}
+
+func nstring_Checker(cx *testContext, tc *nstring_TC) {
+	result := nstring(tc.s, tc.n)
+	cx.assertEqual(tc.xres, result, "result")
 }
 
 func Test_nstring(t *testing.T) {
-	cx := newTestContext(t, "nstring")
-	M := 3
-	for j := 0; j < M; j++ {
-		nstring_Checker(cx, "", j)
-		cx.bump()
-	}
-
-	for j:= 0; j < M; j++ {
-		nstring_Checker(cx, "abc", j)
+	cx := newTestContext(t, "nstring_Tab")
+	for _, tc := range nstring_Tab {
+		nstring_Checker(cx, &tc)
 		cx.bump()
 	}
 }
@@ -156,7 +171,7 @@ var errorRet_Tab = []errorRet_TC {
 	{ 4, "xyz", "with msg" },
 }
 
-func errorRet_Checker(cx *testContext, tc errorRet_TC) {
+func errorRet_Checker(cx *testContext, tc *errorRet_TC) {
 	err := fmt.Errorf("%s", tc.msg)
 	res := errorRet(tc.code, err, tc.dmsg)
 	cx.assertEqual(tc.code, res.code, "returned code")
@@ -169,9 +184,9 @@ func errorRet_Checker(cx *testContext, tc errorRet_TC) {
 }
 
 func Test_errorRet(t *testing.T) {
-	cx := newTestContext(t, "errorRet")
+	cx := newTestContext(t, "errorRet_Tab")
 	for _, tc := range errorRet_Tab {
-		errorRet_Checker(cx, tc)
+		errorRet_Checker(cx, &tc)
 		cx.bump()
 	}
 }
@@ -248,7 +263,7 @@ func idListToA(idlist []interface{}) (string, error) {
 	return strings.Join(alist, ","), nil
 }
 
-func mkIdClause_Checker(cx *testContext, tc idclause_TC) {
+func mkIdClause_Checker(cx *testContext, tc *idclause_TC) {
 	params := fakeParams(tc.paramstr)
 	res, idlist := mkIdClause(params)
 	cx.assertEqual(tc.xres, res, "mkIdClause query string")
@@ -261,7 +276,7 @@ func mkIdClause_Checker(cx *testContext, tc idclause_TC) {
 func Test_mkIdClause(t *testing.T) {
 	cx := newTestContext(t, "mkIdClause_Tab")
 	for _, tc := range idclause_Tab {
-		mkIdClause_Checker(cx, tc)
+		mkIdClause_Checker(cx, &tc)
 		cx.bump()
 	}
 }
@@ -275,7 +290,7 @@ var mkIdClauseUpdate_Tab = []idclause_TC {
 	{ "id_field=id", "", "", true },
 }
 
-func mkIdClauseUpdate_Checker(cx *testContext, tc idclause_TC) {
+func mkIdClauseUpdate_Checker(cx *testContext, tc *idclause_TC) {
 	params := fakeParams(tc.paramstr)
 	res := mkIdClauseUpdate(params)
 	cx.assertEqual(tc.xres, res, "result")
@@ -284,7 +299,7 @@ func mkIdClauseUpdate_Checker(cx *testContext, tc idclause_TC) {
 func Test_mkIdClauseUpdate(t *testing.T) {
 	cx := newTestContext(t, "mkIdClauseUpdate_Tab")
 	for _, tc := range mkIdClauseUpdate_Tab {
-		mkIdClauseUpdate_Checker(cx, tc)
+		mkIdClauseUpdate_Checker(cx, &tc)
 		cx.bump()
 	}
 }
@@ -340,7 +355,7 @@ var mkSelectString_Tab = []mkSelectString_TC {
 }
 
 // run one tc case
-func mkSelectString_Checker(cx *testContext, tc mkSelectString_TC) {
+func mkSelectString_Checker(cx *testContext, tc *mkSelectString_TC) {
 	params := fakeParams(tc.paramstr)
 	res, idlist := mkSelectString(params)
 	if ! cx.assertEqual(tc.xres, res, "result") {
@@ -356,7 +371,7 @@ func mkSelectString_Checker(cx *testContext, tc mkSelectString_TC) {
 func Test_mkSelectString(t *testing.T) {
 	cx := newTestContext(t, "mkSelectString_Tab")
 	for _, tc := range mkSelectString_Tab {
-		mkSelectString_Checker(cx, tc)
+		mkSelectString_Checker(cx, &tc)
 		cx.bump()
 	}
 }
@@ -402,7 +417,7 @@ var getBodyRecord_Tab = []getBodyRecord_TC {
 		"v1,v2,v3&v4,v5,v6"},
 }
 
-func getBodyRecord_Checker(cx *testContext, tc getBodyRecord_TC) {
+func getBodyRecord_Checker(cx *testContext, tc *getBodyRecord_TC) {
 	rdr := strings.NewReader(tc.data)
 	req, _ := http.NewRequest(http.MethodPost, "/xyz", rdr)
 
@@ -432,7 +447,7 @@ func getBodyRecord_Checker(cx *testContext, tc getBodyRecord_TC) {
 func Test_getBodyRecord(t *testing.T) {
 	cx := newTestContext(t, "getBodyRecord_Tab")
 	for _, tc := range getBodyRecord_Tab {
-		getBodyRecord_Checker(cx, tc)
+		getBodyRecord_Checker(cx, &tc)
 		cx.bump()
 	}
 }
@@ -463,10 +478,9 @@ func mimicTableNamesQuery(names []string) []*KVRecord {
 	return ret
 }
 
-func convTableNames_Checker(cx *testContext, tc convTableNames_TC) {
+func convTableNames_Checker(cx *testContext, tc *convTableNames_TC) {
 	names := mySplit(tc.names, ",")
 	obj := mimicTableNamesQuery(names)
-	// fmt.Printf("obj=%s\n", obj)
 	res, err := convTableNames(obj)
 	if !cx.assertErrorNil(err, "return") {
 		return
@@ -478,13 +492,13 @@ func convTableNames_Checker(cx *testContext, tc convTableNames_TC) {
 func Test_convTableNames(t *testing.T) {
 	cx := newTestContext(t, "convTableNames_Tab")
 	for _, tc := range convTableNames_Tab {
-		convTableNames_Checker(cx, tc)
+		convTableNames_Checker(cx, &tc)
 		cx.bump()
 	}
 }
 
 func Test_convTableNames_bad(t *testing.T) {
-	cx := newTestContext(t, "convTableNames")
+	cx := newTestContext(t)
 
 	// create a good object, then munge it to force error
 	names := []string{"abc", "def"}
@@ -528,7 +542,7 @@ var validateRecords_Tab = []validateRecords_TC {
 	{"k1,k2,k3|v1,v2,v3;|v4", false}, // 2 records, invalid
 }
 
-func validateRecords_Checker(cx *testContext, tc validateRecords_TC) {
+func validateRecords_Checker(cx *testContext, tc *validateRecords_TC) {
 	records := mkRecords(tc.desc)
 	res := validateRecords(records)
 	cx.assertEqual(tc.xsucc, res == nil, "result")
@@ -537,7 +551,7 @@ func validateRecords_Checker(cx *testContext, tc validateRecords_TC) {
 func Test_validateRecords(t *testing.T) {
 	cx := newTestContext(t, "validateRecords_Tab")
 	for _, tc := range validateRecords_Tab {
-		validateRecords_Checker(cx, tc)
+		validateRecords_Checker(cx, &tc)
 		cx.bump()
 	}
 }
@@ -577,7 +591,7 @@ func mkIllegalValues() []interface{} {
 }
 
 // run one testcase for function convValues.
-func convValues_Checker(cx *testContext, tc convValues_TC) {
+func convValues_Checker(cx *testContext, tc *convValues_TC) {
 	argInter := strToSQLValues(tc.arg)
 	err := convValues(argInter)
 	cx.assertErrorNil(err, "return")
@@ -590,14 +604,14 @@ func convValues_Checker(cx *testContext, tc convValues_TC) {
 func Test_convValues(t *testing.T) {
 	cx := newTestContext(t, "convValues_Tab")
 	for _, tc := range convValues_Tab {
-		convValues_Checker(cx, tc)
+		convValues_Checker(cx, &tc)
 		cx.bump()
 	}
 }
 
 // test suite for testing error return of convValues().
 func Test_convValues_illegal(t *testing.T) {
-	cx := newTestContext(t, "convValues")
+	cx := newTestContext(t)
 	vals := mkIllegalValues()
 	err := convValues(vals)
 	cx.assertTrue(err != nil, "expected error")
@@ -613,17 +627,17 @@ type apiCall_TC struct {
 	xcode int
 }
 
-func apiCall_Checker(cx *testContext, tc apiCall_TC) apiHandlerRet {
-	log.Debugf("----- %s #%d: [%s]", cx.suiteName, cx.testno, tc.title)
+func apiCall_Checker(cx *testContext, tc *apiCall_TC) apiHandlerRet {
+	log.Debugf("----- %s #%d: [%s]", cx.tabName, cx.testno, tc.title)
 	result := callApiHandler(tc.hf, tc.verb, tc.argDesc)
 	cx.assertEqual(tc.xcode, result.code, tc.title)
 	return result
 }
 
-func apiCalls_Runner(t *testing.T, suiteName string, tab []apiCall_TC) {
-	cx := newTestContext(t, suiteName)
+func apiCalls_Runner(t *testing.T, tabName string, tab []apiCall_TC) {
+	cx := newTestContext(t, tabName)
 	for _, tc := range tab {
-		apiCall_Checker(cx, tc)
+		apiCall_Checker(cx, &tc)
 		cx.bump()
 	}
 }
@@ -888,14 +902,15 @@ func Test_createDbRecordsHandler(t *testing.T) {
 
 // ----- unit tests of getDbTablesHandler()
 
-func Test_getDbTablesHandler(t *testing.T) {
-	suiteName := "getDbTablesHandler"
-	cx := newTestContext(t, suiteName)
-	tc := apiCall_TC{"get tablenames",
+var getDbTables_Tab = []apiCall_TC {
+	{"get tablenames",
 		getDbTablesHandler,
 		http.MethodGet,
 		"/db/_tables",
-		http.StatusOK}
+		http.StatusOK},
+}
+
+func getDbTablesHandler_Checker(cx *testContext, tc *apiCall_TC) {
 	result := apiCall_Checker(cx, tc)
 	if result.code != tc.xcode {
 		// would have already failed.
@@ -904,34 +919,52 @@ func Test_getDbTablesHandler(t *testing.T) {
 	// if the code was success, data should be of this type.
 	data, ok := result.data.(TablesResponse)
 	cx.assertTrue(ok, "TablesResponse data type")
-	tabnames := "bundles,users,nothing"
-	xdata := mySplit(tabnames, ",")
-	cx.assertEqualObj(xdata, data.Names, "retrieved names")
+	xtabnames := "bundles,users,nothing"
+	resnames := strings.Join(data.Names, ",")
+	cx.assertEqualObj(xtabnames, resnames, "retrieved names")
 }
 
-func Test_tablesQuery(t *testing.T) {
+func Test_getDbTablesHandler(t *testing.T) {
+	cx := newTestContext(t, "getDbTables_Tab")
+	for _, tc := range getDbTables_Tab {
+		getDbTablesHandler_Checker(cx, &tc)
+		cx.bump()
+	}
+}
 
-	// try tables query with nonexistent table
-	cx := newTestContext(t, "tablesQuery")
+// ----- unit test for tablesQuery()
+
+type tablesQuery_TC struct {
+	tableName string
+	fieldName string
+	xcode int
+}
+
+var tablesQuery_Tab = []tablesQuery_TC {
+	{"bogus_table", "name", http.StatusBadRequest},
+	{"tables", "bogus_field", http.StatusBadRequest},
+	{"tables", "name", http.StatusOK},
+}
+
+func tablesQuery_Checker(cx *testContext, tc *tablesQuery_TC) {
 	harg := parseHandlerArg(http.MethodGet, `/db/_tables`)
-	result := tablesQuery(harg, "nonexistent", "name")
-	xcode := http.StatusBadRequest  // expect error
-	cx.assertEqual(xcode, result.code, "returned code from tablesQuery")
+	result := tablesQuery(harg, tc.tableName, tc.fieldName)
+	cx.assertEqual(tc.xcode, result.code, "returned code")
+}
 
-	// try tables query with nonexistent table
-	cx.bump()
-	harg = parseHandlerArg(http.MethodGet, `/db/_tables`)
-	result = tablesQuery(harg, "tables", "bogus")
-	cx.assertEqual(xcode, result.code, "returned code from tablesQuery")
-	log.Debugf("result.data=%s", result.data)
+func Test_tablesQuery_bogusField(t *testing.T) {
+	cx := newTestContext(t, "tablesQuery_Tab")
+	for _, tc := range tablesQuery_Tab {
+		tablesQuery_Checker(cx, &tc)
+		cx.bump()
+	}
 }
 
 // ----- unit tests of updateDbRecordHandler()
 
 func Test_updateDbRecordHandler(t *testing.T) {
 
-	suiteName := "updateDbRecordHandler"
-	cx := newTestContext(t, suiteName)
+	cx := newTestContext(t)
 	tabName := "xxx"
 	recno := "2"
 	newurl := "host9:xyz"
@@ -946,13 +979,11 @@ func Test_updateDbRecordHandler(t *testing.T) {
 		argDesc,
 		http.StatusOK}
 
-	result := apiCall_Checker(cx, tc)
+	result := apiCall_Checker(cx, &tc)
 	if result.code != tc.xcode {
 		// would have already failed.
 		return
 	}
-
-	cx = newTestContext(t, suiteName)
 
 	// if the code was success, data should be of this type.
 	data, ok := result.data.(NumChangedResponse)
@@ -983,7 +1014,7 @@ func retrieveValues(cx *testContext,
 		http.MethodGet,
 		argDesc,
 		http.StatusOK}
-	result := apiCall_Checker(cx, tc)
+	result := apiCall_Checker(cx, &tc)
 	if !cx.assertEqual(tc.xcode, result.code,
 		"return code from getDbRecordHandler") {
 		return nil, false
@@ -1009,8 +1040,7 @@ func retrieveValues(cx *testContext,
 
 func Test_updateDbRecordsHandler(t *testing.T) {
 
-	suiteName := "updateDbRecordsHandler"
-	cx := newTestContext(t, suiteName)
+	cx := newTestContext(t)
 	tabName := "xxx"
 	recno := "1"
 	newname := "name7"
@@ -1026,13 +1056,12 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 		argDesc,
 		http.StatusOK}
 
-	result := apiCall_Checker(cx, tc)
+	result := apiCall_Checker(cx, &tc)
 	if result.code != tc.xcode {
 		// would have already failed.
 		return
 	}
 
-	cx = newTestContext(t, suiteName)
 	// if the code was success, data should be of this type.
 	data, ok := result.data.(NumChangedResponse)
 	if !cx.assertTrue(ok, "data should be of type NumChanedResponse") {
@@ -1047,13 +1076,12 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 		tabName, recno)
 
 	// read the record back, and check the data
-	cx = newTestContext(t, suiteName)
 	tc = apiCall_TC{"get record",
 		getDbRecordHandler,
 		http.MethodGet,
 		argDesc,
 		http.StatusOK}
-	result = apiCall_Checker(cx, tc)
+	result = apiCall_Checker(cx, &tc)
 	if tc.xcode != result.code {
 		// would have already failed.
 		return
@@ -1105,19 +1133,22 @@ func readNamesWithOffset(cx *testContext,
 }
 
 func Test_getDbRecordHandler_offset(t *testing.T) {
-	cx := newTestContext(t, "getDbRecordsHandler")
-	tab := "toomany"
+	// the table "toomany" has been seeded with more than maxRecs
+	// records that can be read.
+	cx := newTestContext(t)
+	tableName := "toomany"
 
-	names := readNamesWithOffset(cx, tab, 0)
-	cx.assertEqualObj(nameRange(1, len(names)), names,
-		"names from #1 batch")
+	// read first batch, checking values
+	names := readNamesWithOffset(cx, tableName, 0)
+	xnames := nameRange(1, len(names))
+	cx.assertEqualObj(xnames, names, "names from #1 batch")
 
-	// expect maxRecs results
+	// expect exactly maxRecs results
 	nrecs := len(names)
-	cx.assertEqual(maxRecs, nrecs,
-		"number of records")
+	cx.assertEqual(maxRecs, nrecs, "nrecs")
 
-	names = readNamesWithOffset(cx, tab, maxRecs)
-	cx.assertEqualObj(nameRange(maxRecs+1, len(names)), names,
-		"names from #2 batch")
+	// read second batch, checking values
+	names = readNamesWithOffset(cx, tableName, maxRecs)
+	xnames = nameRange(maxRecs+1, len(names))
+	cx.assertEqualObj(xnames, names, "names from #2 batch")
 }

@@ -49,7 +49,7 @@ func Test_confGet(t *testing.T) {
 // ----- unit tests for initDB()
 
 func Test_initDB(t *testing.T) {
-	cx := newTestContext(t, "initDB")
+	cx := newTestContext(t)
 	x, err := initDB(dbName)
 	if !cx.assertErrorNil(err, "error ret") {
 		return
@@ -126,7 +126,7 @@ func (fmi mockForModuler) ForModule(name string) apid.LogService {
 }
 
 func Test_realInitPlugin(t *testing.T) {
-	cx := newTestContext(t, "realInitPlugin")
+	cx := newTestContext(t)
 	gsi := mockGetStringer{}
 	fmi := mockForModuler{}
 	hfi := newMockApiService()

@@ -58,20 +58,20 @@ func countPaths(tab []apiDesc) int {
 // ----- unit tests for InitWiring, newApiWiring, GetMaps
 
 func Test_newApiWiring(t *testing.T) {
-	cx := newTestContext(t, "newApiWiring")
+	cx := newTestContext(t)
 	ws := newApiWiring("", []apiDesc{})
 	cx.assertTrue(ws != nil, "result")
 }
 
 func Test_GetMaps(t *testing.T) {
-	cx := newTestContext(t, "GetMaps")
+	cx := newTestContext(t)
 	ws := newApiWiring("", []apiDesc{})
 	maps := ws.GetMaps();
 	cx.assertEqual(0, len(maps), "maps length")
 }
 
 func Test_addApi(t *testing.T) {
-	cx := newTestContext(t, "addApi")
+	cx := newTestContext(t)
 	ws := newApiWiring("", fakeApiTable)
 	maps := ws.GetMaps()
 	N := countPaths(fakeApiTable)

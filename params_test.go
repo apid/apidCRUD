@@ -314,42 +314,52 @@ func getQueryParam_Checker(cx *testContext,
 	return harg.getParam(paramName)
 }
 
-func Test_getParam(t *testing.T) {
+func Test_getParam_idInPath(t *testing.T) {
 
 	// test getParam on id values (as path param)
-	cx := newTestContext(t, "validate_id_Tab id as path param")
+	cx := newTestContext(t, "validate_id_Tab")
 	run_validator(cx,
 		func(val string) (string, error) {
 			return getPathParam_Checker(cx, "id", val)
 		},
 		validate_id_Tab)
+}
+
+func Test_getParam_idInQuery(t *testing.T) {
 
 	// test getParam on id values (as query param)
-	cx = newTestContext(t, "validate_id_Tab id as query param")
+	cx := newTestContext(t, "validate_id_Tab")
 	run_validator(cx,
 		func(val string) (string, error) {
 			return getQueryParam_Checker(cx, "id", val)
 		},
 		validate_id_Tab)
+}
 
+func Test_getParam_ids(t *testing.T) {
 	// test getParam on ids values (as query param)
-	cx = newTestContext(t, "validate_ids_Tab ids as query param")
+	cx := newTestContext(t, "validate_ids_Tab")
 	run_validator(cx,
 		func(val string) (string, error) {
 			return getQueryParam_Checker(cx, "ids", val)
 		},
 		validate_ids_Tab)
+}
 
+func Test_getParam_id_field(t *testing.T) {
 	// test getParam on id_field values (as query param)
-	cx = newTestContext(t, "validate_id_field_Tab id_field as query param")
+	cx := newTestContext(t, "validate_id_field_Tab")
 	run_validator(cx,
 		func(val string) (string, error) {
 			return getQueryParam_Checker(cx, "id_field", val)
 		},
 		validate_id_field_Tab)
+}
+
+func Test_getParam_nofield(t *testing.T) {
 
 	// test getParam on a field with no validator (as query param)
-	cx = newTestContext(t, "validate_nofield_Tab no field")
+	cx := newTestContext(t, "validate_nofield_Tab")
 	run_validator(cx,
 		func(val string) (string, error) {
 			return getQueryParam_Checker(cx, "nofield", val)
@@ -392,21 +402,21 @@ func strToMap(vars string) map[string]string {
 
 func fetchParamsHelper(verb string,
 		descStr string,
-		nameStr string) (map[string]string, error) {
+		nameStr string) error {
 
 	harg := parseHandlerArg(verb, descStr)
 
 	namesList := mySplit(nameStr, ",")
 	vmap, err := fetchParams(harg, namesList...)
 	if err != nil {
-		return vmap, err
+		return err
 	}
 
 	// check that the map has the expected number of keys
 	nvmap := len(vmap)
 	nnames := len(namesList)
 	if nvmap != nnames {
-		return vmap, fmt.Errorf("map has %d entries; expected %d",
+		return fmt.Errorf("map has %d entries; expected %d",
 				nvmap, nnames)
 	}
 
@@ -414,16 +424,16 @@ func fetchParamsHelper(verb string,
 	for _, name := range namesList {
 		_, ok := vmap[name]
 		if !ok {
-			return vmap, fmt.Errorf("map does not have %s", name)
+			return fmt.Errorf("map does not have %s", name)
 		}
 	}
 
-	return vmap, nil
+	return nil
 }
 
 // handle one testcase
 func fetchParams_Checker(cx *testContext, tc fetchParams_TC) {
-	_, err := fetchParamsHelper(tc.verb,
+	err := fetchParamsHelper(tc.verb,
 			tc.desc,
 			tc.nameStr)
 	cx.assertEqual(tc.xsucc, err == nil, tc.desc)
