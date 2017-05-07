@@ -79,7 +79,7 @@ var validate_id_field_Tab = []validator_TC {
 }
 
 func Test_validate_id_field(t *testing.T) {
-	cx := newTestContext(t, "validate_id_field_Tab", "validate_id_field")
+	cx := newTestContext(t, "validate_id_field_Tab")
 	run_validator(cx, validate_id_field, validate_id_field_Tab)
 }
 
@@ -96,7 +96,7 @@ var validate_fields_Tab = []validator_TC {
 }
 
 func Test_validate_fields(t *testing.T) {
-	cx := newTestContext(t, "validate_fields_Tab", "validate_fields")
+	cx := newTestContext(t, "validate_fields_Tab")
 	run_validator(cx, validate_fields, validate_fields_Tab)
 }
 
@@ -112,7 +112,7 @@ var validate_table_name_Tab = []validator_TC {
 }
 
 func Test_validate_table_name(t *testing.T) {
-	cx := newTestContext(t, "validate_table_name_Tab", "validate_table_name")
+	cx := newTestContext(t, "validate_table_name_Tab")
 	run_validator(cx, validate_table_name, validate_table_name_Tab)
 }
 
@@ -138,7 +138,7 @@ var validate_id_Tab = []validator_TC {
 }
 
 func Test_validate_id(t *testing.T) {
-	cx := newTestContext(t, "validate_id_Tab", "validate_id")
+	cx := newTestContext(t, "validate_id_Tab")
 	run_validator(cx, validate_id, validate_id_Tab)
 }
 
@@ -160,7 +160,7 @@ func Test_validate_limit(t *testing.T) {
 		{ "1000000000000", strMaxRecs, true },
 	}
 
-	cx := newTestContext(t, "validate_limit_Tab", "validate_limit")
+	cx := newTestContext(t, "validate_limit_Tab")
 	run_validator(cx, validate_limit, validate_limit_Tab)
 }
 
@@ -187,7 +187,7 @@ var validate_ids_Tab = []validator_TC {
 }
 
 func Test_validate_ids(t *testing.T) {
-	cx := newTestContext(t, "validate_ids_Tab", "validate_ids")
+	cx := newTestContext(t, "validate_ids_Tab")
 	run_validator(cx, validate_ids, validate_ids_Tab)
 }
 
@@ -209,7 +209,7 @@ var validate_offset_Tab = []validator_TC {
 }
 
 func Test_validate_offset(t *testing.T) {
-	cx := newTestContext(t, "validate_offset_Tab", "validate_offset")
+	cx := newTestContext(t, "validate_offset_Tab")
 	run_validator(cx, validate_offset, validate_offset_Tab)
 }
 
@@ -243,7 +243,7 @@ func notIdentChar_Checker(cx *testContext, tc notIdentChar_TC) {
 }
 
 func Test_notIdentChar(t *testing.T) {
-	cx := newTestContext(t, "notIdentChar_Tab", "notIdentChar")
+	cx := newTestContext(t, "notIdentChar_Tab")
 	for _, tc := range notIdentChar_Tab {
 		notIdentChar_Checker(cx, tc)
 		cx.bump()
@@ -282,7 +282,7 @@ func isValidIdent_Checker(cx *testContext, tc isValidIdent_TC) {
 }
 
 func Test_isValidIdent(t *testing.T) {
-	cx := newTestContext(t, "isValidIdent_Tab", "isValidIdent")
+	cx := newTestContext(t, "isValidIdent_Tab")
 	for _, tc := range isValidIdent_Tab {
 		isValidIdent_Checker(cx, tc)
 		cx.bump()
@@ -317,7 +317,7 @@ func getQueryParam_Checker(cx *testContext,
 func Test_getParam(t *testing.T) {
 
 	// test getParam on id values (as path param)
-	cx := newTestContext(t, "validate_id_Tab", "getPathParam")
+	cx := newTestContext(t, "validate_id_Tab id as path param")
 	run_validator(cx,
 		func(val string) (string, error) {
 			return getPathParam_Checker(cx, "id", val)
@@ -325,7 +325,7 @@ func Test_getParam(t *testing.T) {
 		validate_id_Tab)
 
 	// test getParam on id values (as query param)
-	cx = &testContext{t, "validate_id_Tab", "getQueryParam", 0}
+	cx = newTestContext(t, "validate_id_Tab id as query param")
 	run_validator(cx,
 		func(val string) (string, error) {
 			return getQueryParam_Checker(cx, "id", val)
@@ -333,7 +333,7 @@ func Test_getParam(t *testing.T) {
 		validate_id_Tab)
 
 	// test getParam on ids values (as query param)
-	cx = &testContext{t, "validate_ids_Tab", "getQueryParam", 0}
+	cx = newTestContext(t, "validate_ids_Tab ids as query param")
 	run_validator(cx,
 		func(val string) (string, error) {
 			return getQueryParam_Checker(cx, "ids", val)
@@ -341,7 +341,7 @@ func Test_getParam(t *testing.T) {
 		validate_ids_Tab)
 
 	// test getParam on id_field values (as query param)
-	cx = &testContext{t, "validate_id_field_Tab", "getQueryParam", 0}
+	cx = newTestContext(t, "validate_id_field_Tab id_field as query param")
 	run_validator(cx,
 		func(val string) (string, error) {
 			return getQueryParam_Checker(cx, "id_field", val)
@@ -349,7 +349,7 @@ func Test_getParam(t *testing.T) {
 		validate_id_field_Tab)
 
 	// test getParam on a field with no validator (as query param)
-	cx = &testContext{t, "validate_nofield_Tab", "getQueryParam", 0}
+	cx = newTestContext(t, "validate_nofield_Tab no field")
 	run_validator(cx,
 		func(val string) (string, error) {
 			return getQueryParam_Checker(cx, "nofield", val)
@@ -430,7 +430,7 @@ func fetchParams_Checker(cx *testContext, tc fetchParams_TC) {
 }
 
 func Test_fetchParams(t *testing.T) {
-	cx := newTestContext(t, "fetchParams_Tab", "fetchParams")
+	cx := newTestContext(t, "fetchParams_Tab")
 	for _, tc := range fetchParams_Tab {
 		fetchParams_Checker(cx, tc)
 		cx.bump()
@@ -464,7 +464,7 @@ func aToIdType_Checker(cx *testContext, tc aToIdType_TC) {
 }
 
 func Test_aToIdType(t *testing.T) {
-	cx := newTestContext(t, "aToIdType_Tab", "aToIdType")
+	cx := newTestContext(t, "aToIdType_Tab")
 	for _, tc := range aToIdType_Tab {
 		aToIdType_Checker(cx, tc)
 		cx.bump()
@@ -493,7 +493,7 @@ func idTypeToA_Checker(cx *testContext, tc idTypeToA_TC) {
 }
 
 func Test_idTypeToA(t *testing.T) {
-	cx := newTestContext(t, "idTypeToA_Tab", "idTypeToA")
+	cx := newTestContext(t, "idTypeToA_Tab")
 	for _, tc := range idTypeToA_Tab {
 		idTypeToA_Checker(cx, tc)
 		cx.bump()

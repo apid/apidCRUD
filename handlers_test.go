@@ -94,17 +94,17 @@ func sqlKeys_Checker(cx *testContext, form string, N int, xsucc bool) {
 }
 
 func Test_validateSQLKeys(t *testing.T) {
-	cx := newTestContext(t, "validateSQLKeys positive test", "validateSQLKeys")
+	cx := newTestContext(t, "validateSQLKeys positive test")
 	M := 3
 	for j := 0; j < M; j++ {
 		sqlKeys_Checker(cx, "K%d", j, true)
 		cx.bump()
 	}
 
-	cx = newTestContext(t, "validateSQLKeys numeric key", "validateSQLKeys")
+	cx = newTestContext(t, "validateSQLKeys numeric key")
 	sqlKeys_Checker(cx, "%d", 1, false)
 
-	cx = newTestContext(t, "validateSQLKeys empty key", "validateSQLKeys")
+	cx = newTestContext(t, "validateSQLKeys empty key")
 	sqlKeys_Checker(cx, "", 1, false)
 }
 
@@ -259,7 +259,7 @@ func mkIdClause_Checker(cx *testContext, tc idclause_TC) {
 }
 
 func Test_mkIdClause(t *testing.T) {
-	cx := newTestContext(t, "mkIdClause_Tab", "mkIdClause")
+	cx := newTestContext(t, "mkIdClause_Tab")
 	for _, tc := range idclause_Tab {
 		mkIdClause_Checker(cx, tc)
 		cx.bump()
@@ -282,7 +282,7 @@ func mkIdClauseUpdate_Checker(cx *testContext, tc idclause_TC) {
 }
 
 func Test_mkIdClauseUpdate(t *testing.T) {
-	cx := newTestContext(t, "mkIdClauseUpdate_Tab", "mkIdClauseUpdate")
+	cx := newTestContext(t, "mkIdClauseUpdate_Tab")
 	for _, tc := range mkIdClauseUpdate_Tab {
 		mkIdClauseUpdate_Checker(cx, tc)
 		cx.bump()
@@ -313,7 +313,7 @@ func idTypesToInterface_Checker(cx *testContext, tc string) {
 }
 
 func Test_idTypesToInterface(t *testing.T) {
-	cx := newTestContext(t, "idTypesToInterface_Tab", "idTypesToInterface")
+	cx := newTestContext(t, "idTypesToInterface_Tab")
 	for _, tc := range idTypesToInterface_Tab {
 		idTypesToInterface_Checker(cx, tc)
 		cx.bump()
@@ -354,7 +354,7 @@ func mkSelectString_Checker(cx *testContext, tc mkSelectString_TC) {
 }
 
 func Test_mkSelectString(t *testing.T) {
-	cx := newTestContext(t, "mkSelectString_Tab", "mkSelectString")
+	cx := newTestContext(t, "mkSelectString_Tab")
 	for _, tc := range mkSelectString_Tab {
 		mkSelectString_Checker(cx, tc)
 		cx.bump()
@@ -430,7 +430,7 @@ func getBodyRecord_Checker(cx *testContext, tc getBodyRecord_TC) {
 }
 
 func Test_getBodyRecord(t *testing.T) {
-	cx := newTestContext(t, "getBodyRecord_Tab", "getBodyRecord")
+	cx := newTestContext(t, "getBodyRecord_Tab")
 	for _, tc := range getBodyRecord_Tab {
 		getBodyRecord_Checker(cx, tc)
 		cx.bump()
@@ -476,7 +476,7 @@ func convTableNames_Checker(cx *testContext, tc convTableNames_TC) {
 }
 
 func Test_convTableNames(t *testing.T) {
-	cx := newTestContext(t, "convTableNames_Tab", "convTableNames")
+	cx := newTestContext(t, "convTableNames_Tab")
 	for _, tc := range convTableNames_Tab {
 		convTableNames_Checker(cx, tc)
 		cx.bump()
@@ -535,7 +535,7 @@ func validateRecords_Checker(cx *testContext, tc validateRecords_TC) {
 }
 
 func Test_validateRecords(t *testing.T) {
-	cx := newTestContext(t, "validateRecords_Tab", "validateRecords")
+	cx := newTestContext(t, "validateRecords_Tab")
 	for _, tc := range validateRecords_Tab {
 		validateRecords_Checker(cx, tc)
 		cx.bump()
@@ -588,7 +588,7 @@ func convValues_Checker(cx *testContext, tc convValues_TC) {
 
 // main test suite for convValues().
 func Test_convValues(t *testing.T) {
-	cx := newTestContext(t, "convValues_Tab", "convValues")
+	cx := newTestContext(t, "convValues_Tab")
 	for _, tc := range convValues_Tab {
 		convValues_Checker(cx, tc)
 		cx.bump()
@@ -952,7 +952,7 @@ func Test_updateDbRecordHandler(t *testing.T) {
 		return
 	}
 
-	cx = newTestContext(t, suiteName, "getDbTablesHandler")
+	cx = newTestContext(t, suiteName)
 
 	// if the code was success, data should be of this type.
 	data, ok := result.data.(NumChangedResponse)

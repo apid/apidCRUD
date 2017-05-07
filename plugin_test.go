@@ -38,7 +38,7 @@ func confGet_Checker(cx *testContext, gs getStringer, tc *confGet_TC) {
 }
 
 func Test_confGet(t *testing.T) {
-	cx := newTestContext(t, "confGet_Tab", "confGet")
+	cx := newTestContext(t, "confGet_Tab")
 	gs := mockGetStringer{fakeConfData}
 	for _, tc := range confGet_Tab {
 		confGet_Checker(cx, gs, &tc)
@@ -49,7 +49,7 @@ func Test_confGet(t *testing.T) {
 // ----- unit tests for initDB()
 
 func Test_initDB(t *testing.T) {
-	cx := newTestContext(t, "initDB", "initDB")
+	cx := newTestContext(t, "initDB")
 	x, err := initDB(dbName)
 	if !cx.assertErrorNil(err, "error ret") {
 		return
@@ -106,7 +106,7 @@ func Test_registerHandlers(t *testing.T) {
 	service := newMockApiService()
 	registerHandlers(service, fakeApiTable)
 
-	cx := newTestContext(t, "callApiMethod_Tab", "registerHandler")
+	cx := newTestContext(t, "callApiMethod_Tab")
 	// check that the expected paths were in fact registered.
 	for _, desc := range callApiMethod_Tab {
 		registerHandler_Checker(cx, service, desc)

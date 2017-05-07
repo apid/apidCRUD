@@ -15,7 +15,6 @@ import (
 type testContext struct {
 	t *testing.T
 	suiteName string
-	funcName string
 	testno int
 }
 
@@ -24,13 +23,8 @@ type testContext struct {
 func (cx *testContext) Errorf(form string, args ...interface{}) {
 	var prefix string
 	loc := getTestCaller(2)
-	if cx.funcName == "" {
-		prefix = fmt.Sprintf("%s %s #%d: ",
-			loc, cx.suiteName, cx.testno)
-	} else {
-		prefix = fmt.Sprintf("%s %s #%d: %s ",
-			loc, cx.suiteName, cx.testno, cx.funcName)
-	}
+	prefix = fmt.Sprintf("%s %s #%d %s: ",
+			loc, cx.suiteName, cx.testno, cx.t.Name())
 	fmt.Printf(prefix + form + "\n", args...)
 	cx.t.Fail()
 }
@@ -78,20 +72,10 @@ func (cx *testContext) assertErrorNil(err error, msg string) bool {
 	return true
 }
 
-func (cx *testContext) setFuncName(name string) {
-	cx.funcName = name
-}
-
 // newTestContext() creates a new test context.
-// the optional final argument is the funcName for the context.
 func newTestContext(t *testing.T,
-		suiteName string,
-		opt ...string) *testContext {
-	funcName := suiteName
-	if len(opt) > 0 {
-		funcName = opt[0]
-	}
-	return &testContext{t, suiteName, funcName, 0}
+		suiteName string) *testContext {
+	return &testContext{t, suiteName, 0}
 }
 
 // return the name of the given function

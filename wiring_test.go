@@ -106,7 +106,7 @@ func callApiMethod_Checker(cx *testContext, ws *apiWiring, tc callApiMethod_TC) 
 }
 
 func Test_callApiMethod(t *testing.T) {
-	cx := newTestContext(t, "callApiMethod_Tab", "callApiMethod")
+	cx := newTestContext(t, "callApiMethod_Tab")
 	ws := newApiWiring("", fakeApiTable)
 	for _, tc := range callApiMethod_Tab {
 		callApiMethod_Checker(cx, ws, tc)
@@ -132,7 +132,7 @@ func pathDispatch_Checker(cx *testContext, ws *apiWiring, tc callApiMethod_TC) {
 }
 
 func Test_pathDispatch(t *testing.T) {
-	cx := newTestContext(t, "pathDispatch_Tab", "pathDispatch")
+	cx := newTestContext(t, "pathDispatch_Tab")
 	ws := newApiWiring("", fakeApiTable)
 	for _, tc := range callApiMethod_Tab {
 		pathDispatch_Checker(cx, ws, tc)
@@ -178,7 +178,7 @@ func convData_Checker(cx *testContext, tc convData_TC) {
 }
 
 func Test_convData(t *testing.T) {
-	cx := newTestContext(t, "convData_Tab", "convData")
+	cx := newTestContext(t, "convData_Tab")
 	for _, tc := range convData_Tab {
 		convData_Checker(cx, tc)
 		cx.bump()
@@ -216,7 +216,7 @@ func writeErrorResponse_Checker(cx *testContext, tc writeErrorResponse_TC) {
 }
 
 func Test_writeErrorResponse(t *testing.T) {
-	cx := newTestContext(t, "writeErrorResponse_Tab", "writeErrorResponse")
+	cx := newTestContext(t, "writeErrorResponse_Tab")
 	for _, tc := range writeErrorResponse_Tab {
 		writeErrorResponse_Checker(cx, tc)
 		cx.bump()
