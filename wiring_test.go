@@ -4,7 +4,6 @@ import (
 	"testing"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"fmt"
 	"encoding/json"
 )
@@ -122,13 +121,10 @@ func pathDispatch_Checker(cx *testContext, ws *apiWiring, tc callApiMethod_TC) {
 		return
 	}
 
-	rdr := strings.NewReader("")
-	req, _ := http.NewRequest(tc.verb, tc.descStr, rdr)
 	w := httptest.NewRecorder()
-
-	pathDispatch(vmap, w, mkApiHandlerArg(req, nil))
-	code := w.Code
-	cx.assertEqual(tc.xcode, code, "returned code")
+	arg := parseHandlerArg(tc.verb, tc.descStr)
+	pathDispatch(vmap, w, arg)
+	cx.assertEqual(tc.xcode, w.Code, "returned code")
 }
 
 func Test_pathDispatch(t *testing.T) {
@@ -141,13 +137,6 @@ func Test_pathDispatch(t *testing.T) {
 }
 
 // ----- unit tests for convData()
-
-func errRep(err error) string {
-	if err == nil {
-		return "true"
-	}
-	return err.Error()
-}
 
 type convData_TC struct {
 	idata interface{}
@@ -209,10 +198,10 @@ func writeErrorResponse_Checker(cx *testContext, tc writeErrorResponse_TC) {
 	body := w.Body.Bytes()
 	erec := &ErrorResponse{}
 	_ = json.Unmarshal(body, erec)
-	if ! cx.assertEqual(tc.xcode, erec.Code, "ErrorResponse code") {
+	if !cx.assertEqual(tc.xcode, erec.Code, "Code") {
 		return
 	}
-	cx.assertEqual(tc.msg, erec.Message, "ErrorResponse msg")
+	cx.assertEqual(tc.msg, erec.Message, "Message")
 }
 
 func Test_writeErrorResponse(t *testing.T) {
