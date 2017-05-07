@@ -299,16 +299,14 @@ func parseHandlerArg(verb string, descStr string) *apiHandlerArg {
 }
 
 // checker for params that come from the path
-func getPathParam_Checker(cx *testContext,
-		paramName string, val string) (string, error) {
+func getPathParam_Helper(paramName string, val string) (string, error) {
 	descStr := fmt.Sprintf("/apid/db|%s=%s", paramName, val)
 	harg := parseHandlerArg(http.MethodGet, descStr)
 	return harg.getParam(paramName)
 }
 
 // checker for params that come from the query portion of url
-func getQueryParam_Checker(cx *testContext,
-		paramName string, val string) (string, error) {
+func getQueryParam_Helper(paramName string, val string) (string, error) {
 	descStr := fmt.Sprintf("/apid/db||%s=%s", paramName, val)
 	harg := parseHandlerArg(http.MethodGet, descStr)
 	return harg.getParam(paramName)
@@ -320,7 +318,7 @@ func Test_getParam_idInPath(t *testing.T) {
 	cx := newTestContext(t, "validate_id_Tab")
 	run_validator(cx,
 		func(val string) (string, error) {
-			return getPathParam_Checker(cx, "id", val)
+			return getPathParam_Helper("id", val)
 		},
 		validate_id_Tab)
 }
@@ -331,7 +329,7 @@ func Test_getParam_idInQuery(t *testing.T) {
 	cx := newTestContext(t, "validate_id_Tab")
 	run_validator(cx,
 		func(val string) (string, error) {
-			return getQueryParam_Checker(cx, "id", val)
+			return getQueryParam_Helper("id", val)
 		},
 		validate_id_Tab)
 }
@@ -341,7 +339,7 @@ func Test_getParam_ids(t *testing.T) {
 	cx := newTestContext(t, "validate_ids_Tab")
 	run_validator(cx,
 		func(val string) (string, error) {
-			return getQueryParam_Checker(cx, "ids", val)
+			return getQueryParam_Helper("ids", val)
 		},
 		validate_ids_Tab)
 }
@@ -351,7 +349,7 @@ func Test_getParam_id_field(t *testing.T) {
 	cx := newTestContext(t, "validate_id_field_Tab")
 	run_validator(cx,
 		func(val string) (string, error) {
-			return getQueryParam_Checker(cx, "id_field", val)
+			return getQueryParam_Helper("id_field", val)
 		},
 		validate_id_field_Tab)
 }
@@ -362,7 +360,7 @@ func Test_getParam_nofield(t *testing.T) {
 	cx := newTestContext(t, "validate_nofield_Tab")
 	run_validator(cx,
 		func(val string) (string, error) {
-			return getQueryParam_Checker(cx, "nofield", val)
+			return getQueryParam_Helper("nofield", val)
 		},
 		validate_nofield_Tab)
 }
