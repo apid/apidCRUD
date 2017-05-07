@@ -1,5 +1,6 @@
 .PHONY: default clean clobber update build install preinstall test run
 .PHONY: killer lint test unit-test cov-view setup
+.PHONY: fix-readme
 
 default: install
 
@@ -70,3 +71,6 @@ lint: setup
 # not yet implemented
 doc:
 	godoc
+
+fix-readme:
+	./fix-readme.sh README.md template.txt

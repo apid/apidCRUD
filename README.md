@@ -99,7 +99,7 @@ var XYZ_Tab = XYZ_TC {
 }
 
 // run one testcase for function XYZ.
-func XYZ_Checker(cx *testContext, tc XYZ_TC) {
+func XYZ_Checker(cx *testContext, tc *XYZ_TC) {
 	// CUSTOMIZE
 	result := XYZ(tc.args)
 	if tc.result !- result {
@@ -112,7 +112,7 @@ func XYZ_Checker(cx *testContext, tc XYZ_TC) {
 func Test_XYZ(t *testing.T) {
 	cx := newTestContext(t, "XYZ_Tab")
 	for _, tc := range XYZ_Tab {
-		XYZ_Checker(cx, tc)
+		XYZ_Checker(cx, &tc)
 		cx.bump()
 	}
 }
