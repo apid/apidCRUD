@@ -115,7 +115,14 @@ if [[ "$uri1" == "$uri2" ]]; then
 fi
 echo OK
 
-./rwftest.sh cmd/apidCRUD/main.go
+echo -n "# try writing a small file and reading it back - "
+./rwftest.sh cmd/apidCRUD/main.go > /dev/null 2>&1
+xstat=$?
+if [[ "$xstat" -ne 0 ]]; then
+echo FAIL
+else
+echo OK
+fi
 
 echo "# all passed"
 exit 0

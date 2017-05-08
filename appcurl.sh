@@ -1,5 +1,5 @@
 #! /bin/bash
-#	apicurl VERB API_PATH [OTHER_CURL_ARGS]
+#	appcurl VERB API_PATH [OTHER_CURL_ARGS]
 #
 
 vrun()
