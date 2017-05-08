@@ -51,53 +51,6 @@ func Test_notImplemented(t *testing.T) {
 	cx.assertEqual(http.StatusNotImplemented, res.code, "returned code")
 }
 
-// ----- unit tests for validateSQLValues()
-
-func genList(form string, N int) []string {
-	ret := make([]string, N)
-	for i := 0; i < N; i++ {
-		ret[i] = fmt.Sprintf(form, i)
-	}
-	return ret
-}
-
-func genListInterface(form string, N int) []interface{} {
-	ret := make([]interface{}, N)
-	for i := 0; i < N; i++ {
-		ret[i] = fmt.Sprintf(form, i)
-	}
-	return ret
-}
-
-type validateSQLValues_TC struct {
-	n int
-	form string
-	xsucc bool
-}
-
-var validateSQLValues_Tab = []validateSQLValues_TC {
-	{0, "V%d", true},	// empty list is OK
-	{1, "V%d", true},
-	{2, "V%d", true},
-	{3, "V%d", true},
-	{4, "V%d", true},
-	{3, "", true},		// empty string items are OK
-}
-
-func sqlValues_Checker(cx *testContext, tc *validateSQLValues_TC) {
-	values := genListInterface(tc.form, tc.n)
-	err := validateSQLValues(values)
-	cx.assertEqual(tc.xsucc, err == nil, "success")
-}
-
-func Test_validateSQLValues(t *testing.T) {
-	cx := newTestContext(t, "validateSQLValues_Tab")
-	for _, tc := range validateSQLValues_Tab {
-		sqlValues_Checker(cx, &tc)
-		cx.bump()
-	}
-}
-
 // ----- unit tests for validateSQLKeys()
 
 type validateSQLKeys_TC struct {
@@ -113,6 +66,14 @@ var validateSQLKeys_Tab = []validateSQLKeys_TC {
 	{3, "K%d", true},	// regular key
 	{3, "%d", false},	// purely numeric key - bad
 	{1, "", false},		// empty key - bad
+}
+
+func genList(form string, N int) []string {
+	ret := make([]string, N)
+	for i := 0; i < N; i++ {
+		ret[i] = fmt.Sprintf(form, i)
+	}
+	return ret
 }
 
 func sqlKeys_Checker(cx *testContext, tc *validateSQLKeys_TC) {

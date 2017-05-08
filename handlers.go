@@ -367,13 +367,6 @@ func validateSQLKeys(keys []string) error {
 	return nil
 }
 
-// validateSQLValues() checks an array of string values,
-// returning a non-nil error if anything is found that
-// would not be a valid SQL value.
-func validateSQLValues(values []interface{}) error {
-	return nil    // no error for now
-}
-
 // getBodyRecord() returns a json record from the body of the given request.
 func getBodyRecord(harg *apiHandlerArg) (BodyRecord, error) {
 	jrec := BodyRecord{}
@@ -538,7 +531,9 @@ func convTableNames(result []*KVRecord) ([]string, error) {
 }
 
 // validateRecords() checks the validity of an array of KVRecord.
-// returns an error if any record has an invalid key or value.
+// returns an error if any record has an invalid key.
+// no validation is done on the values except to check
+// that the length matches.
 func validateRecords(records []KVRecord) error {
 	for i, rec := range records {
 		// log.Debugf("rec = (%T) %s", rec, rec)
@@ -548,10 +543,6 @@ func validateRecords(records []KVRecord) error {
 			return fmt.Errorf("Record %d nkeys != nvalues", i)
 		}
 		err := validateSQLKeys(keys)
-		if err != nil {
-			return err
-		}
-		err = validateSQLValues(values)
 		if err != nil {
 			return err
 		}
