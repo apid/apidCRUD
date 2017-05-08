@@ -21,7 +21,7 @@ func mySplit(str string, sep string) []string {
 // ----- unit tests for mkSQLRow()
 
 var mySQLRow_Tab = []int {
-	0, 1, 2, 3, 4,
+	0, 1, 2, 4,
 }
 
 func mkSQLRow_Checker(cx *testContext, N int) {
@@ -49,7 +49,6 @@ func Test_notImplemented(t *testing.T) {
 	cx := newTestContext(t)
 	res := notImplemented()
 	cx.assertEqual(http.StatusNotImplemented, res.code, "returned code")
-	cx.assertTrue(res.data != nil, "returned data should not be nil")
 }
 
 // ----- unit tests for validateSQLValues()
@@ -327,7 +326,7 @@ func idTypesToInterface_Checker(cx *testContext, tc string) {
 	alist := mySplit(tc, ",")
 	res := idTypesToInterface(alist)
 	str, err := idListToA(res)
-	if ! cx.assertErrorNil(err, "idListToA") {
+	if !cx.assertErrorNil(err, "idListToA") {
 		return
 	}
 	cx.assertEqual(tc, str, "result")
@@ -364,11 +363,11 @@ var mkSelectString_Tab = []mkSelectString_TC {
 func mkSelectString_Checker(cx *testContext, tc *mkSelectString_TC) {
 	params := fakeParams(tc.paramstr)
 	res, idlist := mkSelectString(params)
-	if ! cx.assertEqual(tc.xres, res, "result") {
+	if !cx.assertEqual(tc.xres, res, "result") {
 		return
 	}
 	ids, err := idListToA(idlist)
-	if ! cx.assertErrorNil(err, "idListToA") {
+	if !cx.assertErrorNil(err, "idListToA") {
 		return
 	}
 	cx.assertEqual(tc.xids, ids, "idlist")
@@ -734,6 +733,12 @@ var createDbRecords_Tab = []apiCall_TC {
 		`/db/_table/tabname|table_name=bundles|ids=1,2&fields=name,uri`,
 		http.StatusOK},
 
+	{"get record 1 bad field",
+		getDbRecordHandler,
+		http.MethodGet,
+		`/db/_table/tabname|table_name=bundles&id=123|fields=name,uri,bogus`,
+		http.StatusBadRequest},
+
 	{"delete records 2,4",
 		deleteDbRecordsHandler,
 		http.MethodDelete,
@@ -1058,7 +1063,7 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 	if !cx.assertTrue(ok, "data should be of type NumChanedResponse") {
 		return
 	}
-	if ! cx.assertEqual(1, int(data.NumChanged),
+	if !cx.assertEqual(1, int(data.NumChanged),
 			"number changed") {
 		return
 	}
@@ -1103,13 +1108,13 @@ func readNamesWithOffset(cx *testContext,
 	argDesc := fmt.Sprintf(`/db/_table|table_name=%s|fields=name&offset=%d`,
 		tab, offset)
 	result := callApiHandler(getDbRecordsHandler, http.MethodGet, argDesc)
-	if ! cx.assertEqual(http.StatusOK, result.code,
+	if !cx.assertEqual(http.StatusOK, result.code,
 		"return code from getDbRecordsHandler") {
 		return ret
 	}
 
 	resp, ok := result.data.(RecordsResponse)
-	if ! cx.assertTrue(ok, "data of type RecordsResponse") {
+	if !cx.assertTrue(ok, "data of type RecordsResponse") {
 		return ret
 	}
 
@@ -1120,6 +1125,7 @@ func readNamesWithOffset(cx *testContext,
 		svals := unmaskStrings(rec.Values)
 		ret[i] = svals[0]
 	}
+
 	return ret
 }
 
