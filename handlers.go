@@ -201,6 +201,8 @@ func mkSQLRow(N int) []interface{} {
 	return ret
 }
 
+// queryErrorRet() passes thru the first 2 args (ret and err),
+// while logging the third argument (dmsg).
 func queryErrorRet(ret []*KVRecord,
 		err error,
 		dmsg string) ([]*KVRecord, error) {
@@ -287,6 +289,8 @@ type sqlExecResult struct {
 	rowsAffected idType
 }
 
+// getExecResult() constructs an sqlExecResult from the given
+// res argument, presumably obtained from calling sql.Exec.
 func getExecResult(res sql.Result) sqlExecResult {
 	// fmt.Debugf("result=%s", res)
 	lastid, _ := res.LastInsertId()
@@ -326,6 +330,8 @@ func delCommon(params map[string]string) apiHandlerRet {
 	return apiHandlerRet{http.StatusOK, NumChangedResponse{int64(nc)}}
 }
 
+// dbErrorRet() returns an error value on behalf of a db caller
+// that normally returns an idType/error pair.
 func dbErrorRet(err error) (idType, error) {
 	return idType(-1), err
 }

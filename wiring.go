@@ -159,6 +159,8 @@ func (harg *apiHandlerArg) bodyClose() error {
 	return harg.req.Body.Close()
 }
 
+// mkApiHandlerArg() takes an http.Request and a map of path variables,
+// and returns the corresponding apiHandlerArg object.
 func mkApiHandlerArg(req *http.Request,
 		pathParams map[string]string) *apiHandlerArg {
 	err := req.ParseForm()
