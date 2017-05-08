@@ -3,6 +3,7 @@ package apidCRUD
 import (
 	"testing"
 	"fmt"
+	"strconv"
 	"strings"
 	"net/http"
 	"database/sql"
@@ -69,28 +70,33 @@ func genListInterface(form string, N int) []interface{} {
 	return ret
 }
 
-var validateSQLValues_Tab = []int {
-	0, 1, 2, 3, 4,
+type validateSQLValues_TC struct {
+	n int
+	form string
+	xsucc bool
 }
 
-func sqlValues_Checker(cx *testContext, form string, N int) {
-	values := genListInterface(form, N)
+var validateSQLValues_Tab = []validateSQLValues_TC {
+	{0, "V%d", true},	// empty list is OK
+	{1, "V%d", true},
+	{2, "V%d", true},
+	{3, "V%d", true},
+	{4, "V%d", true},
+	{3, "", true},		// empty string items are OK
+}
+
+func sqlValues_Checker(cx *testContext, tc *validateSQLValues_TC) {
+	values := genListInterface(tc.form, tc.n)
 	err := validateSQLValues(values)
-	cx.assertErrorNil(err, "validateSqlValues...")
+	cx.assertEqual(tc.xsucc, err == nil, "success")
 }
 
 func Test_validateSQLValues(t *testing.T) {
 	cx := newTestContext(t, "validateSQLValues_Tab")
 	for _, tc := range validateSQLValues_Tab {
-		sqlValues_Checker(cx, "V%d", tc)
+		sqlValues_Checker(cx, &tc)
 		cx.bump()
 	}
-}
-
-func Test_validateSQLValues_emptyValue(t *testing.T) {
-	// empty values OK
-	cx := newTestContext(t)
-	sqlValues_Checker(cx, "", 3)
 }
 
 // ----- unit tests for validateSQLKeys()
@@ -456,13 +462,15 @@ func Test_getBodyRecord(t *testing.T) {
 
 type convTableNames_TC struct {
 	names string
+	xsucc bool
 }
 
 var convTableNames_Tab = []convTableNames_TC {
-	{""},
-	{"a"},
-	{"a,b"},
-	{"abc,def,ghi"},
+	{"", true},
+	{"a", true},
+	{"a,b", true},
+	{"abc,def,ghi", true},
+	{"abc,bogus,ghi", false},
 }
 
 // mimicTableNamesQuery() returns an object that mimics the return from
@@ -472,7 +480,15 @@ func mimicTableNamesQuery(names []string) []*KVRecord {
 	ret := make([]*KVRecord, N)
 	for i := 0; i < N; i++ {
 		Keys := []string{"name"}
-		Values := []interface{}{names[i]}
+		val := names[i]
+		var ival interface{}
+		if val == "bogus" {
+			// an inconvertible value
+			ival = interface{}(func() {})
+		} else {
+			ival = interface{}(val)
+		}
+		Values := []interface{}{ival}
 		ret[i] = &KVRecord{Keys, Values}
 	}
 	return ret
@@ -482,11 +498,8 @@ func convTableNames_Checker(cx *testContext, tc *convTableNames_TC) {
 	names := mySplit(tc.names, ",")
 	obj := mimicTableNamesQuery(names)
 	res, err := convTableNames(obj)
-	if !cx.assertErrorNil(err, "return") {
-		return
-	}
-	resJoin := strings.Join(res, ",")
-	cx.assertEqual(tc.names, resJoin, "names")
+	ok := (err == nil && tc.names == strings.Join(res, ","))
+	cx.assertEqual(tc.xsucc, ok, "conversion success")
 }
 
 func Test_convTableNames(t *testing.T) {
@@ -495,19 +508,6 @@ func Test_convTableNames(t *testing.T) {
 		convTableNames_Checker(cx, &tc)
 		cx.bump()
 	}
-}
-
-func Test_convTableNames_bad(t *testing.T) {
-	cx := newTestContext(t)
-
-	// create a good object, then munge it to force error
-	names := []string{"abc", "def"}
-	obj := mimicTableNamesQuery(names)
-	vals := obj[0].Values
-	vals[0] = Test_convTableNames_bad  // junk that can't be converted
-
-	_, err := convTableNames(obj)
-	cx.assertTrue(err != nil, "should have failed")
 }
 
 // ----- unit tests for validateRecords()
@@ -561,14 +561,16 @@ func Test_validateRecords(t *testing.T) {
 // inputs and outputs for one convValues testcase.
 type convValues_TC struct {
 	arg string
+	xres bool
 }
 
 // table of convValues testcases.
 var convValues_Tab = []convValues_TC {
-	{ "" },
-	{ "abc" },
-	{ "abc,def" },
-	{ "abc,def,ghi" },
+	{ "", true },
+	{ "abc", true },
+	{ "abc,def", true },
+	{ "abc,def,ghi", true },
+	{ "1,def,ghi", false },
 }
 
 func strToSQLValues(arg string) []interface{} {
@@ -576,17 +578,15 @@ func strToSQLValues(arg string) []interface{} {
 	N := len(args)
 	ret := make([]interface{}, N)
 	for i, s := range args {
-		rb := sql.RawBytes(s)
-		ret[i] = &rb;
+		j, err := strconv.Atoi(s)
+		if err == nil {
+			// an unconvertible value
+			ret[i] = &j
+		} else {
+			rb := sql.RawBytes(s)
+			ret[i] = &rb;
+		}
 	}
-	return ret
-}
-
-// return something that can't be converted by convValues().
-func mkIllegalValues() []interface{} {
-	ret := make([]interface{}, 1)
-	val := 555
-	ret[0] = &val
 	return ret
 }
 
@@ -594,10 +594,9 @@ func mkIllegalValues() []interface{} {
 func convValues_Checker(cx *testContext, tc *convValues_TC) {
 	argInter := strToSQLValues(tc.arg)
 	err := convValues(argInter)
-	cx.assertErrorNil(err, "return")
-	argStrings := unmaskStrings(argInter)
-	resultStr := strings.Join(argStrings, ",")
-	cx.assertEqual(tc.arg, resultStr, "conversion")
+	ok := (err == nil &&
+		tc.arg == strings.Join(unmaskStrings(argInter), ","))
+	cx.assertEqual(tc.xres, ok, "conversion result")
 }
 
 // main test suite for convValues().
@@ -607,14 +606,6 @@ func Test_convValues(t *testing.T) {
 		convValues_Checker(cx, &tc)
 		cx.bump()
 	}
-}
-
-// test suite for testing error return of convValues().
-func Test_convValues_illegal(t *testing.T) {
-	cx := newTestContext(t)
-	vals := mkIllegalValues()
-	err := convValues(vals)
-	cx.assertTrue(err != nil, "expected error")
 }
 
 // ----- unit tests for support for testing of api calls
