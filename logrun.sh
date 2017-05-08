@@ -5,5 +5,7 @@
 
 LOGFILE=$1; shift
 
+mkdir -p "$(dirname "$LOGFILE")"
+
 "$@" 2>&1 | tee "$LOGFILE"
 exit ${PIPESTATUS[0]}

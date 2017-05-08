@@ -8,5 +8,5 @@ FILE=${1:-swagger.yaml}
 TABLE=file
 KEY=line
 
-./appcurl.sh GET "db/_table/$TABLE?fields=$KEY" -v \
+./appcurl.sh GET "db/_table/$TABLE?fields=$KEY" \
 | jq -S -r .Records[].Values[]

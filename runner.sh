@@ -3,9 +3,8 @@
 . ./env.sh
 
 DAEMON=apidCRUD
-MYTMP=./logs
-LOGFILE=$MYTMP/$DAEMON.log
-PIDFILE=$MYTMP/$DAEMON.pid
+LOG_DIR=${LOG_DIR:-./logs}
+LOGFILE=$LOG_DIR/$DAEMON.log
 EXE=$GOPATH/bin/$DAEMON
 
 vrun()
@@ -16,20 +15,16 @@ vrun()
 
 dorun()
 {
-	if [[ -f "$PIDFILE" ]]; then
-		# vrun kill -9 "$(cat "$PIDFILE")"
-		vrun pkill -f "$DAEMON"
-		vrun /bin/rm -f "$PIDFILE"
-	fi
-	vrun "$EXE" "$@" 2>&1 &
-
-	# this doesn't yet work correctly
-	local pid=$!
-	echo "$pid" > "$PIDFILE"
-	wait
+	vrun pkill -f "$DAEMON"
+	vrun "$EXE" "$@" > "$LOGFILE" 2>&1 &
 }
 
 # ----- start of mainline
+mkdir -p "$(dirname "$LOGFILE")"
+NSLEEP=2
 dorun "$@" &
-sleep 2
+
+sleep "$NSLEEP"
+
+# cause a failure exit if the daemon didn't start
 pgrep -l $DAEMON

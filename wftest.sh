@@ -36,4 +36,4 @@ RESOURCES="[$(jescape "$FILE" | mkrecs)]"
 BODY="{\"records\":$RESOURCES}"
 # echo 1>&2 "BODY=$BODY"
 
-./appcurl.sh POST "db/_table/$TABLE" -v -d "$BODY"
+./appcurl.sh POST "db/_table/$TABLE" -d "$BODY"

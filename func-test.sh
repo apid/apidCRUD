@@ -10,13 +10,15 @@ vrun()
 }
 
 # ----- start of mainline code
+LOG_DIR=${LOG_DIR:-logs}
+LOGFILE=$LOG_DIR/func-test.out
 NSLEEP=2
 
 vrun ./runner.sh
-sleep "$NSLEEP"
+# sleep "$NSLEEP"
 echo ""
 
-vrun ./tester.sh
+vrun ./logrun.sh "$LOGFILE" ./tester.sh
 xstat=$?
 sleep "$NSLEEP"
 echo ""
