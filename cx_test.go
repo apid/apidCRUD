@@ -29,7 +29,7 @@ func (cx *testContext) Errorf(form string, args ...interface{}) {
 			loc, testName)
 	} else {
 		prefix = fmt.Sprintf("%s %s #%d %s: ",
-			loc, testName, cx.tabName, cx.testno)
+			loc, testName, cx.testno, cx.tabName)
 	}
 	fmt.Printf(prefix + form + "\n", args...)
 	cx.t.Fail()

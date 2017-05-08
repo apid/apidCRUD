@@ -14,6 +14,7 @@ LOG_DIR=${LOG_DIR:-logs}
 COV_DIR=${COV_DIR:-cov}
 COV_FILE=${COV_FILE:-$COV_DIR/covdata.out}
 COV_HTML=${COV_HTML:-$COV_DIR/apidCRUD-coverage.html}
+PKG=github.com/30x/apidCRUD
 
 mkdir -p "$LOG_DIR" "$COV_DIR"
 
@@ -28,4 +29,3 @@ go tool cover -html="$COV_FILE" -o "$COV_HTML"
 
 ./tested_funcs.sh | sort > "$LOG_DIR/covered.out"
 ./uncovered.sh > "$LOG_DIR/uncovered.out"
-

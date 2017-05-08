@@ -13,7 +13,7 @@ const ut_DBNAME = "unit-test.db"
 // note that tests using this DB are not true unit tests,
 // since they are implicitly filesystem dependent.
 func fakeInitDB() (dbType, error) {
-	os.Remove(ut_DBNAME)
+	_ = os.Remove(ut_DBNAME)
 	dbHandle, err := sql.Open(ut_DBTYPE, ut_DBNAME)
 	db = dbType{dbHandle}	// assigns to global
 	if err == nil {

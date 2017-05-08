@@ -3,11 +3,14 @@
 
 badfunc()
 {
-	awk 'BEGIN {
-		hascom = 0
+	local file=$1
+	awk < "$file" \
+		-v "FNAME=$file" '
+		BEGIN {
+			hascom = 0
 		}
 		!hascom && /^func[ 	]/ {
-			print $0
+			print FNAME ":" $0
 			next
 		}
 		/^\/\// {
@@ -27,4 +30,7 @@ srcfiles()
 }
 
 # ----- start of mainline code
-cat $(srcfiles "$@") | badfunc
+
+for f in $(srcfiles *.go); do
+	badfunc "$f"
+done
