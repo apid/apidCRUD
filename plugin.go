@@ -1,7 +1,6 @@
 package apidCRUD
 
 import (
-	"strconv"
 	"net/http"
 	"github.com/30x/apid-core"
 )
@@ -11,12 +10,6 @@ import (
 // these narrowed interfaces make testing easier,
 // by making it easier to hand craft a simple mock interface
 // that can be used as an argument to pieces of code under test.
-
-// getStringer is an interface that supports GetString().
-// narrowed from apid.ConfigService.
-type getStringer interface {
-	GetString(vname string) string
-}
 
 // handleFuncer interface provides the HandleFunc() method.
 // narrowed from apid.APISerivce.
@@ -99,25 +92,6 @@ func addPath(service handleFuncer, path string, vmap verbMap) {
 			pathDispatch(vmap, w, mkApiHandlerArg(r, getPathParams(r)))
 		})
 
-}
-
-// confGet() returns the config value of the named string,
-// or if there is no configured value, the given default value.
-func confGet(gsi getStringer, vname string, defval string) string {
-	ret := gsi.GetString(vname)
-	if ret == "" {
-		return defval
-	}
-	return ret
-}
-
-// initConfig() sets up some global configuration parameters for this plugin.
-func initConfig(gsi getStringer) {
-	// these are all global assignments!
-	dbDriver = confGet(gsi, "apidCRUD_db_driver", "sqlite3")
-	dbName = confGet(gsi, "apidCRUD_db_name", "apidCRUD.db")
-	basePath = confGet(gsi, "apidCRUD_base_path", "/apid")
-	maxRecs, _ = strconv.Atoi(confGet(gsi, "apidCRUD_max_recs", "500"))
 }
 
 // getPathParams() returns a map of path params from the given http request.

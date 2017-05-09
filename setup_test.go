@@ -19,14 +19,8 @@ func TestMain(m *testing.M) {
 	log = apid.Log()
 	log.Debugf("in TestMain")
 
-	// for testing purposes, set global maxRecs to some smallish value
-	maxRecs = 7
-
-	var err error
-	db, err = fakeInitDB()
-	if err != nil {
-		panic(err.Error())
-	}
+	utInitConfig()
+	utInitDB()
 
 	// required boilerplate
 	os.Exit(m.Run())

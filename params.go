@@ -23,9 +23,6 @@ const (
 	paramPathOrQuery = 2	// may come from path or query.
 )
 
-// maxRecs is the max number of results allowed in a bulk request.
-var maxRecs = 1000
-
 // the type of parameter validator function
 type paramValidator func (value string) (string, error)
 

@@ -3,23 +3,17 @@ package apidCRUD
 import (
 	"fmt"
 	"os"
-	"database/sql"
 )
 
-const ut_DBTYPE = "sqlite3"
 const ut_DBNAME = "unit-test.db"
 
-// fakeInitDB initializes the fake DB used for testing.
+// utInitDB initializes the fake DB used for testing.
 // note that tests using this DB are not true unit tests,
 // since they are implicitly filesystem dependent.
-func fakeInitDB() (dbType, error) {
+func utInitDB() {
 	_ = os.Remove(ut_DBNAME)
-	dbHandle, err := sql.Open(ut_DBTYPE, ut_DBNAME)
-	db = dbType{dbHandle}	// assigns to global
-	if err == nil {
-		err = createDbData(db)
-	}
-	return db, err
+	db, _ = initDB(dbName)
+	_ = createDbData(db)
 }
 
 var cmds = []string {
