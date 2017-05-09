@@ -1,5 +1,7 @@
 api_listen: 127.0.0.1:9000  # will allow local connections only
 api_expvar_path: null  # not exposed
 log_level: Debug    # valid values: Debug, Info, Warning, Error, Panic, Fatal
+apidCRUD_max_recs: sqlite3
+apidCRUD_db_driver: sqlite3
 apidCRUD_db_name: apidCRUD.db
 apidCRUD_base_path: /apid

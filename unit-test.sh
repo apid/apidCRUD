@@ -19,7 +19,7 @@ PKG=github.com/30x/apidCRUD
 mkdir -p "$LOG_DIR" "$COV_DIR"
 
 ./logrun.sh "$LOG_DIR/unit-test.out" \
-go test -coverprofile="$COV_FILE" \
+go test -coverprofile="$COV_FILE" github.com/30x/apidCRUD \
 || exit 1
 
 go tool cover -func="$COV_FILE" > "$LOG_DIR/cover-func.out"

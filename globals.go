@@ -20,6 +20,9 @@ const badStat = http.StatusBadRequest
 // dbName is the name of the database that is implicitly used in these APIs.
 var dbName = "apidCRUD.db"
 
+// dbDriver is the name of the database driver to use
+var dbDriver = "sqlite3"
+
 // db is our global database handle
 var db dbType
 

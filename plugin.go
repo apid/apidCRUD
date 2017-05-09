@@ -1,6 +1,7 @@
 package apidCRUD
 
 import (
+	"strconv"
 	"net/http"
 	"github.com/30x/apid-core"
 )
@@ -112,8 +113,11 @@ func confGet(gsi getStringer, vname string, defval string) string {
 
 // initConfig() sets up some global configuration parameters for this plugin.
 func initConfig(gsi getStringer) {
+	// these are all global assignments!
+	dbDriver = confGet(gsi, "apidCRUD_db_driver", "sqlite3")
 	dbName = confGet(gsi, "apidCRUD_db_name", "apidCRUD.db")
 	basePath = confGet(gsi, "apidCRUD_base_path", "/apid")
+	maxRecs, _ = strconv.Atoi(confGet(gsi, "apidCRUD_max_recs", "500"))
 }
 
 // getPathParams() returns a map of path params from the given http request.

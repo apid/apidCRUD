@@ -17,8 +17,8 @@ type confGet_TC struct {
 }
 
 var confGet_Tab = []confGet_TC {
-	{"there", "no", "yes"},		// this key is present in
-	{"not-there", "no", "no"},	// this key is not present
+	{"apidCRUD_db_name", "garbage", "unit-test.db"}, // this key is present
+	{"not-there", "no", "no"},		// this key is not present
 }
 
 // mockGetStringer is compatible with the interface expected by confGet().
@@ -30,7 +30,12 @@ func (gs mockGetStringer) GetString(name string) string {
 	return gs.data[name]
 }
 
-var fakeConfData = map[string]string{"there": "yes"}
+var utConfData = map[string]string {
+	"there": "yes",
+	"apidCRUD_max_recs": "7",
+	"apidCRUD_db_driver": "sqlite3",
+	"apidCRUD_db_name": "unit-test.db",
+}
 
 func confGet_Checker(cx *testContext, gs getStringer, tc *confGet_TC) {
 	res := confGet(gs, tc.name, tc.defval)
@@ -39,7 +44,7 @@ func confGet_Checker(cx *testContext, gs getStringer, tc *confGet_TC) {
 
 func Test_confGet(t *testing.T) {
 	cx := newTestContext(t, "confGet_Tab")
-	gs := mockGetStringer{fakeConfData}
+	gs := mockGetStringer{utConfData}
 	for _, tc := range confGet_Tab {
 		confGet_Checker(cx, gs, &tc)
 		cx.bump()
@@ -61,7 +66,7 @@ func Test_initDB(t *testing.T) {
 
 func Test_initConfig(t *testing.T) {
 	// this just proves it can be called without crashing
-	gs := mockGetStringer{fakeConfData}
+	gs := mockGetStringer{utConfData}
 	initConfig(gs)
 }
 

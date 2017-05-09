@@ -16,7 +16,8 @@ vrun()
 dorun()
 {
 	vrun pkill -f "$DAEMON"
-	vrun "$EXE" "$@" > "$LOGFILE" 2>&1 &
+	# vrun "$EXE" "$@" > "$LOGFILE" 2>&1 &
+	vrun "$EXE" "$@" 2>&1 &
 }
 
 # ----- start of mainline

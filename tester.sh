@@ -31,15 +31,15 @@ fail()
 echo -n "# creating empty database - "
 ./mkdb.sh || exit 1
 echo OK
-
-echo -n "# checking tables (tabtest.sh) - "
-out=$(./tabtest.sh 2>/dev/null | sort | tr '\n' ' ')
-tabs=( $out )
-exp=( bundles file nothing users )
-if [[ "${tabs[*]}" != "${exp[*]}" ]]; then
-	fail "tabtest.sh expected [${exp[*]}], got [${tabs[*]}]"
-fi
-echo OK
+#
+#echo -n "# checking tables (tabtest.sh) - "
+#out=$(./tabtest.sh 2>/dev/null | sort | tr '\n' ' ')
+#tabs=( $out )
+#exp=( bundles file nothing users )
+#if [[ "${tabs[*]}" != "${exp[*]}" ]]; then
+#	fail "tabtest.sh expected [${exp[*]}], got [${tabs[*]}]"
+#fi
+#echo OK
 
 
 echo -n "# adding a few records (crtest.sh) - "
