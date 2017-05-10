@@ -1,6 +1,8 @@
 #! /bin/bash
 
 set -o physical
-export GOROOT=${GOROOT:-/usr/local/go}
-export GOPATH=${GOPATH:-$HOME/edgex/go}
-PATH=:$GOROOT/bin:$GOPATH/bin:$PATH
+H=~djfong
+# export GOROOT=${GOROOT:-/usr/local/go}
+unset GOROOT
+export GOPATH=${GOPATH:-$H/edgex/go}
+PATH=:$H/homebrew/bin:$GOROOT/bin:$GOPATH/bin:$PATH

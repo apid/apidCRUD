@@ -73,7 +73,7 @@ fi
 echo OK
 
 echo -n "# checking total number of records (recstest.sh) "
-total=$(get_rec_ids | wc -l)
+total=$(get_rec_ids | grep -c "")
 ((xtotal=nrecs-1))
 if [[ "$total" != "$xtotal" ]]; then
 	fail "deltest.sh expected $xtotal, got $total"
