@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"strconv"
+	"bytes"
 	"net/http"
 	"encoding/json"
 	"database/sql"
@@ -121,9 +122,45 @@ func getDbSchemasHandler(harg *apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
-// createDbTableHandler handles POST requests on /db/_schema .
+// createDbTableHandler handles POST requests on /db/_schema/{table_name} .
 func createDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
-	return notImplemented()
+	params, err := fetchParams(harg, "table_name")
+	if err != nil {
+		return errorRet(badStat, err, "after fetchParams")
+	}
+	log.Debugf("... params = %v", params)
+	schema, err := getBodySchemas(harg)
+	if err != nil {
+		return errorRet(badStat, err, "missing or ill-formed schema")
+	}
+	log.Debugf("schema=%v", schema)
+
+	retNames := make([]string, 0)
+	for i, tab := range schema.Resource {
+		log.Debugf("... i = %d, tab = %v", i, tab)
+		var guts bytes.Buffer
+		sep := ""
+		for _, field := range tab.Fields {
+			guts.WriteString(sep)
+			guts.WriteString(field.Name)
+			props := listToMap(field.Properties)
+			if props["primary"] != 0 {
+				guts.WriteString(" integer primary key autoincrement")
+			} else {
+				guts.WriteString(" text not null")
+			}
+			sep = ", "
+		}
+		cmd := fmt.Sprintf("create table %s(%s)", tab.Name, guts.String())
+		log.Debugf("cmd = %s", cmd)
+		result, err := db.handle.Exec(cmd)
+		if err != nil {
+			return errorRet(badStat, err, "after Exec")
+		}
+		log.Debugf("result = %v", result)
+		retNames = append(retNames, tab.Name)
+	}
+	return apiHandlerRet{http.StatusCreated, SchemasResponse{retNames}}
 }
 
 // updateDbTables handles PATCH requests on /db/_schema .
@@ -136,14 +173,25 @@ func describeDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
-// createDbTablesHandler handles POST requests on /db/_schema/{table_name} .
+// createDbTablesHandler handles POST requests on /db/_schema .
 func createDbTablesHandler(harg *apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
 // deleteDbTableHandler handles DELETE requests on /db/_schema/{table_name} .
 func deleteDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
-	return notImplemented()
+	params, err := fetchParams(harg, "table_name")
+	if err != nil {
+		return errorRet(badStat, err, "after fetchParams")
+	}
+	cmd := fmt.Sprintf("drop table %s", params["table_name"])
+	log.Debugf("cmd = %s", cmd)
+	result, err := db.handle.Exec(cmd)
+	if err != nil {
+		return errorRet(badStat, err, "after Exec")
+	}
+	log.Debugf("result = %s", result)
+	return apiHandlerRet{http.StatusOK, nil}
 }
 
 // describeDbFieldHandler handles GET requests on /db/_schema/{table_name} .
@@ -367,6 +415,13 @@ func validateSQLKeys(keys []string) error {
 	return nil
 }
 
+// getBodySchemas() returns a json schema from the body of the request.
+func getBodySchemas(harg *apiHandlerArg) (TableSchemas, error) {
+	jrec := TableSchemas{}
+	err := json.NewDecoder(harg.getBody()).Decode(&jrec)
+	return jrec, err
+}
+
 // getBodyRecord() returns a json record from the body of the given request.
 func getBodyRecord(harg *apiHandlerArg) (BodyRecord, error) {
 	jrec := BodyRecord{}
@@ -563,4 +618,12 @@ func convValues(vals []interface{}) error {
 		vals[i] = string(*rbp)
 	}
 	return nil
+}
+
+func listToMap(strList []string) map[string]int {
+	ret := map[string]int{}
+	for _, s := range strList {
+		ret[s] = 1
+	}
+	return ret
 }

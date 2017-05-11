@@ -38,3 +38,26 @@ type IdsResponse struct {
 type TablesResponse struct {
 	Names []string
 }
+
+// FieldSchema is the type used to specify a field in a table.
+type FieldSchema struct {
+	Name string
+	Properties []string
+}
+
+// TableSchema is the type used to describe one table to be created.
+type TableSchema struct {
+	Name string
+	Primary_key string
+	Fields []FieldSchema
+}
+
+// TableSchemas is the type used to specify multiple tables to be created.
+type TableSchemas struct {
+	Resource []TableSchema
+}
+
+// SchemasResponse is the response format for table creation.
+type SchemasResponse struct {
+	Names []string
+}

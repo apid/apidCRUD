@@ -610,11 +610,11 @@ var notimpl_Tab = []apiCall_TC {
 		http.MethodGet,
 		"/db/_schema",
 		http.StatusNotImplemented},
-	{"API not implemented",
+	/* {"API not implemented",
 		createDbTableHandler,
 		http.MethodPost,
 		"/db/_schema",
-		http.StatusNotImplemented},
+		http.StatusNotImplemented}, */
 	{"API not implemented",
 		updateDbTablesHandler,
 		http.MethodPatch,
