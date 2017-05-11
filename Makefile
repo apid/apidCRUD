@@ -4,7 +4,6 @@
 
 default: install
 
-unexport GOROOT
 export MYAPP := apidCRUD
 export COV_DIR := cov
 export COV_FILE := $(COV_DIR)/covdata.out
