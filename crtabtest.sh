@@ -1,7 +1,7 @@
 #! /bin/bash
 #	crtabtest.sh [TABNAME]
-# create a table.
-# the API is POST /db/_schema aka createDbTable
+# create multiple tables in one call.
+# the API is POST /db/_schema/XXX aka createDbTables
 
 . tester-env.sh || exit 1
 

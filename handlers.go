@@ -133,34 +133,14 @@ func createDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 	if err != nil {
 		return errorRet(badStat, err, "missing or ill-formed schema")
 	}
-	log.Debugf("schema=%v", schema)
-
-	retNames := make([]string, 0)
-	for i, tab := range schema.Resource {
-		log.Debugf("... i = %d, tab = %v", i, tab)
-		var guts bytes.Buffer
-		sep := ""
-		for _, field := range tab.Fields {
-			guts.WriteString(sep)
-			guts.WriteString(field.Name)
-			props := listToMap(field.Properties)
-			if props["primary"] != 0 {
-				guts.WriteString(" integer primary key autoincrement")
-			} else {
-				guts.WriteString(" text not null")
-			}
-			sep = ", "
-		}
-		cmd := fmt.Sprintf("create table %s(%s)", tab.Name, guts.String())
-		log.Debugf("cmd = %s", cmd)
-		result, err := db.handle.Exec(cmd)
-		if err != nil {
-			return errorRet(badStat, err, "after Exec")
-		}
-		log.Debugf("result = %v", result)
-		retNames = append(retNames, tab.Name)
+	if len(schema.Resource) != 1 {
+		return errorRet(badStat,
+			fmt.Errorf("body schema should have exactly 1 spec"),
+			"schema count")
 	}
-	return apiHandlerRet{http.StatusCreated, SchemasResponse{retNames}}
+	log.Debugf("schema=%v", schema)
+	tabNames := []string{params["table_name"]}
+	return createTablesCommon(tabNames, schema)
 }
 
 // updateDbTables handles PATCH requests on /db/_schema .
@@ -175,7 +155,27 @@ func describeDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 
 // createDbTablesHandler handles POST requests on /db/_schema .
 func createDbTablesHandler(harg *apiHandlerArg) apiHandlerRet {
-	return notImplemented()
+	/*
+	params, err := fetchParams(harg)
+	if err != nil {
+		return errorRet(badStat, err, "after fetchParams")
+	}
+	 */
+	schema, err := getBodySchemas(harg)
+	if err != nil {
+		return errorRet(badStat, err, "missing or ill-formed schema")
+	}
+	tabNames := make([]string, 0, 1)
+	for _, sch := range schema.Resource {
+		tname, err := validate_table_name(sch.Name)
+		if err != nil {
+			return errorRet(badStat, err, "invalid table name")
+		}
+		tabNames = append(tabNames, tname)
+	}
+	log.Debugf("schema=%v", schema)
+	log.Debugf("tabNames=%v", tabNames)
+	return createTablesCommon(tabNames, schema)
 }
 
 // deleteDbTableHandler handles DELETE requests on /db/_schema/{table_name} .
@@ -626,4 +626,34 @@ func listToMap(strList []string) map[string]int {
 		ret[s] = 1
 	}
 	return ret
+}
+
+func createTablesCommon(tabNames []string, schema TableSchemas) apiHandlerRet {
+	retNames := make([]string, 0)
+	for i, tab := range schema.Resource {
+		log.Debugf("... i = %d, tab = %v", i, tab)
+		var guts bytes.Buffer
+		sep := ""
+		for _, field := range tab.Fields {
+			guts.WriteString(sep)
+			guts.WriteString(field.Name)
+			props := listToMap(field.Properties)
+			if props["primary"] != 0 {
+				guts.WriteString(" integer primary key autoincrement")
+			} else {
+				guts.WriteString(" text not null")
+			}
+			sep = ", "
+		}
+		cmd := fmt.Sprintf("create table %s(%s)",
+				tabNames[i], guts.String())
+		log.Debugf("cmd = %s", cmd)
+		result, err := db.handle.Exec(cmd)
+		if err != nil {
+			return errorRet(badStat, err, "after Exec")
+		}
+		log.Debugf("result = %v", result)
+		retNames = append(retNames, tab.Name)
+	}
+	return apiHandlerRet{http.StatusCreated, SchemasResponse{retNames}}
 }

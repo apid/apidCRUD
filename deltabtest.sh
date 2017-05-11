@@ -1,7 +1,7 @@
 #! /bin/bash
 #	deltabtest.sh [TABNAME]
 # delete a table.
-# the API is DELETE /db/_schema aka createDbTable
+# the API is DELETE /db/_schema/XXX aka createDbTable
 
 . tester-env.sh || exit 1
 TABNAME=${1:-anewtab}

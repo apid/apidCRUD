@@ -44,7 +44,7 @@ func (cx *testContext) bump() {
 
 func (cx *testContext) assertEqual(exp interface{}, act interface{}, msg string) bool {
 	if exp != act {
-		cx.Errorf(`assertion failed: %s, got <%v>; expected <%v>`,
+		cx.Errorf(`*** Assertion Failed: %s, got <%v>; expected <%v>`,
 			msg, act, exp)
 		return false
 	}
