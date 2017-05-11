@@ -30,6 +30,7 @@ EOF
 }
 
 # ----- start of mainline code
+. tester-env.sh || exit 1
 FILE=${1:-swagger.yaml}
 TABLE=file
 RESOURCES="[$(jescape "$FILE" | mkrecs)]"

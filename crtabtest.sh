@@ -3,7 +3,7 @@
 # create a table.
 # the API is POST /db/_schema aka createDbTable
 
-DBFILE=apidCRUD.db
+. tester-env.sh || exit 1
 
 TABNAME=${1:-anewtab}
 FIELD_ID='{"name":"id","properties":["primary","int32"]}'

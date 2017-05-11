@@ -27,13 +27,15 @@ mk_nrecs()
 	done
 }
 
+# ----- start of mainline code
+. tester-env.sh || exit 1
+
 NRECS=${1:-2}
-TABLE=bundles
 RESOURCES="[$(mk_nrecs "$NRECS")]"
 BODY="{\"records\":$RESOURCES}"
 # echo 1>&2 "BODY=$BODY"
 
-out=$(./appcurl.sh POST "db/_table/$TABLE" -v -d "$BODY")
+out=$(./appcurl.sh POST "db/_table/$TABLE_NAME" -v -d "$BODY")
 echo "$out"
 
 # echo "$out" | jq -S .Ids[]

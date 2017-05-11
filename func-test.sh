@@ -10,6 +10,7 @@ vrun()
 }
 
 # ----- start of mainline code
+. tester-env.sh || exit 1
 LOG_DIR=${LOG_DIR:-logs}
 LOGFILE=$LOG_DIR/func-test.out
 NSLEEP=2
@@ -23,5 +24,5 @@ xstat=$?
 sleep "$NSLEEP"
 echo ""
 
-vrun pkill -f apidCRUD
+vrun pkill -f "$DAEMON_NAME"
 exit $xstat

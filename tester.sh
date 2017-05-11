@@ -43,7 +43,7 @@ AssertOK()
 }
 
 # ----- start of mainline
-DBFILE=apidCRUD.db
+. tester-env.sh || exit 1
 
 # start clean
 TestHeader creating empty database

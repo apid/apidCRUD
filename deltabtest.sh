@@ -3,7 +3,7 @@
 # delete a table.
 # the API is DELETE /db/_schema aka createDbTable
 
-DBFILE=apidCRUD.db
+. tester-env.sh || exit 1
 TABNAME=${1:-anewtab}
 
 out=$(./appcurl.sh DELETE "db/_schema/$TABNAME" -v -d "$BODY")

@@ -6,7 +6,8 @@ notice()
 }
 
 # ----- start of mainline code
-DBFILE=apidCRUD.db
+. tester-env.sh || exit 1
+
 TESTFILE=${1:-main}
 PROGNAME=${0##*/}
 TMPFILE=/tmp/$PROGNAME-$$.tmp
