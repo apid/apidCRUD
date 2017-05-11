@@ -610,11 +610,6 @@ var notimpl_Tab = []apiCall_TC {
 		http.MethodGet,
 		"/db/_schema",
 		http.StatusNotImplemented},
-	/* {"API not implemented",
-		createDbTableHandler,
-		http.MethodPost,
-		"/db/_schema",
-		http.StatusNotImplemented}, */
 	{"API not implemented",
 		updateDbTablesHandler,
 		http.MethodPatch,
@@ -1110,6 +1105,16 @@ func Test_getDbRecordHandler_offset(t *testing.T) {
 
 // table of createDbTable testcases.
 var createDbTable_Tab = []apiCall_TC {
+	{"create table w/ missing table_name",
+		createDbTableHandler,
+		http.MethodPost,
+		`/db/_schema|||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
+		http.StatusBadRequest},
+	{"create table w/ invalid table_name",
+		createDbTableHandler,
+		http.MethodPost,
+		`/db/_schema|table_name=XYZ.DEF||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
+		http.StatusBadRequest},
 	{"create table ABC expecting success",
 		createDbTableHandler,
 		http.MethodPost,
