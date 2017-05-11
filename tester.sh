@@ -20,109 +20,112 @@ get_rec_uri()
 	| jq -r -S '.Records[].Values[0]'
 }
 
-fail()
+list_tables()
 {
-	echo "FAIL - $*"
-	exit 1
+	echo ".tables" \
+	| sqlite3 "$DBFILE" 2>/dev/null \
+	| tr ' ' '\n' | grep -v '^$'
+}
+
+TestHeader()
+{
+	echo -n "# $* - "
+}
+
+AssertOK()
+{
+	if [ $? -ne 0 ]; then
+		echo "FAIL - $*"
+		exit 1
+	else
+		echo OK
+	fi
 }
 
 # ----- start of mainline
-# start clean
-echo -n "# creating empty database - "
-./mkdb.sh || exit 1
-echo OK
+DBFILE=apidCRUD.db
 
-echo -n "# checking tables (tabtest.sh) - "
+# start clean
+TestHeader creating empty database
+./mkdb.sh
+AssertOK "database initialization"
+
+TestHeader checking tables "(tabtest.sh)"
 out=$(./tabtest.sh 2>/dev/null | sort | tr '\n' ' ')
 tabs=( $out )
 exp=( bundles file nothing users )
-if [[ "${tabs[*]}" != "${exp[*]}" ]]; then
-	fail "tabtest.sh expected [${exp[*]}], got [${tabs[*]}]"
-fi
-echo OK
+[[ "${tabs[*]}" == "${exp[*]}" ]]
+AssertOK "tabtest.sh expected [${exp[*]}], got [${tabs[*]}]"
 
-
-echo -n "# adding a few records (crtest.sh) - "
+TestHeader "adding a few records (crtest.sh)"
 nrecs=7
 out=$(./crtest.sh "$nrecs" 2>/dev/null | jq -S '.Ids[]')
 nc=$(echo "$out" | grep -c "")
-if [[ "$nc" != "$nrecs" ]]; then
-	fail "crtest.sh expected $nrecs, got $nc"
-fi
-echo OK
+[[ "$nc" == "$nrecs" ]]
+AssertOK "crtest.sh expected $nrecs, got $nc"
 
-echo -n "# read one record (rectest.sh) - "
+TestHeader "read one record (rectest.sh)"
 out=$(./rectest.sh 7 2>/dev/null)
-if [[ "$out" != 7 ]]; then
-	fail "rectest.sh expected 7, got $out"
-fi
-echo OK
+[[ "$out" == 7 ]]
+AssertOK "rectest.sh expected 7, got $out"
 
-echo -n "# reading the records (recstest.sh) - "
+TestHeader "reading the records (recstest.sh)"
 total=$(get_rec_ids | grep -c "")
-if [[ "$total" != "$nc" ]]; then
-	fail "recstest.sh expected $total, got $nc"
-fi
-echo OK
+[[ "$total" == "$nc" ]]
+AssertOK "recstest.sh expected $total, got $nc"
 
-echo -n "# deleting a record (deltest.sh) - "
+TestHeader "deleting a record (deltest.sh)"
 nc=$(./deltest.sh 7 2>/dev/null)
-if [[ "$nc" != 1 ]]; then
-	fail "deltest.sh expected 1, got $nc"
-fi
-echo OK
+[[ "$nc" == 1 ]]
+AssertOK "deltest.sh expected 1, got $nc"
 
-echo -n "# checking total number of records (recstest.sh) "
+TestHeader "checking total number of records (recstest.sh)"
 total=$(get_rec_ids | grep -c "")
 ((xtotal=nrecs-1))
-if [[ "$total" != "$xtotal" ]]; then
-	fail "deltest.sh expected $xtotal, got $total"
-fi
-echo OK
+[[ "$total" == "$xtotal" ]]
+AssertOK "deltest.sh expected $xtotal, got $total"
 
-echo -n "# deleting more records (delstest.sh) - "
+TestHeader "deleting more records (delstest.sh)"
 nc=$(./delstest.sh 2,3,4 2>/dev/null)
-if [[ "$nc" != 3 ]]; then
-	fail "delstest.sh expected 3, got $nc"
-fi
-echo OK
+[[ "$nc" == 3 ]]
+AssertOK "delstest.sh expected 3, got $nc"
 
-echo -n "# updating a record (uptest.sh) - "
+TestHeader "updating a record (uptest.sh)"
 nc=$(./uptest.sh 5 2>/dev/null)
-if [[ "$nc" != 1 ]]; then
-	fail "uptest.sh expected 1, got $nc"
-fi
-echo OK
+[[ "$nc" == 1 ]]
+AssertOK "uptest.sh expected 1, got $nc"
 
-echo -n "# check rec 6 uri before update (get_rec_uri) - "
+TestHeader "check rec 6 uri before update (get_rec_uri)"
 uri1=$(get_rec_uri 6)
 # echo "uri1=$uri1"
-echo OK
+[[ $uri1 != "" ]]
+AssertOK "uri1 empty"
 
-echo -n "# updating 2 records (upstest.sh) - "
+TestHeader "updating 2 records (upstest.sh)"
 nc=$(./upstest.sh 1,6 2>/dev/null)
-if [[ "$nc" != 2 ]]; then
-	fail "upstest.sh expected 2, got $nc"
-fi
-echo OK
+[[ "$nc" == 2 ]]
+AssertOK "upstest.sh expected 2, got $nc"
 
-echo -n "# checking the update (get_rec_uri) - "
+TestHeader "checking the update (get_rec_uri)"
 uri2=$(get_rec_uri 6)
 # echo "uri2=$uri2"
+[[ "$uri1" != "$uri2" ]]
+AssertOK "update did not change uri = $uri1"
 
-if [[ "$uri1" == "$uri2" ]]; then
-	fail "update did not change uri = $uri1"
-fi
-echo OK
-
-echo -n "# try writing a small file and reading it back - "
+TestHeader "try writing a small file and reading it back (rwftest.sh)"
 ./rwftest.sh cmd/apidCRUD/main.go > /dev/null 2>&1
-xstat=$?
-if [[ "$xstat" -ne 0 ]]; then
-echo FAIL
-else
-echo OK
-fi
+AssertOK file comparison
+
+TestHeader "trying table creation (crtabtest.sh)"
+out=$(crtabtest.sh ABC 2>/dev/null)
+out=$(list_tables | grep '^ABC$')
+AssertOK "table creation"
+
+TestHeader "trying table deletion (deltabtest.sh)"
+out=$(deltabtest.sh ABC 2>/dev/null)
+out=$(list_tables | grep '^$ABC$')
+[[ $? != 0 ]]  # the grep should have failed
+AssertOK "table deletion"
 
 echo "# all passed"
 exit 0

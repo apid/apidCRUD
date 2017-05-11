@@ -1,12 +1,12 @@
 #! /bin/bash
-#	deltabtest.sh
+#	deltabtest.sh [TABNAME]
 # delete a table.
 # the API is DELETE /db/_schema aka createDbTable
 
 DBFILE=apidCRUD.db
-TABLE=newtab
+TABNAME=${1:-anewtab}
 
-out=$(./appcurl.sh DELETE "db/_schema/$TABLE" -v -d "$BODY")
+out=$(./appcurl.sh DELETE "db/_schema/$TABNAME" -v -d "$BODY")
 echo "$out"
 
 echo 1>&2 ""
