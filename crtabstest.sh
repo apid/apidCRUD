@@ -36,7 +36,7 @@ if [[ $# -eq 0 ]]; then
 	exit 1
 fi
 
-out=$(./appcurl.sh POST "db/_schema/$TABNAME" -v -d "$BODY")
+out=$(./appcurl.sh POST "db/_schema" -v -d "$BODY")
 echo "$out"
 
 echo "" 1>&2
