@@ -1105,3 +1105,65 @@ func Test_getDbRecordHandler_offset(t *testing.T) {
 	xnames = nameRange(maxRecs+1, len(names))
 	cx.assertEqualObj(xnames, names, "names from #2 batch")
 }
+
+// ----- unit tests for createDbTableHandler()
+
+// table of createDbTable testcases.
+var createDbTable_Tab = []apiCall_TC {
+	{"create table ABC expecting success",
+		createDbTableHandler,
+		http.MethodPost,
+		`/db/_schema/ABC|table_name=ABC||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
+		http.StatusCreated},
+	{"create table ABC expecting failure",
+		createDbTableHandler,
+		http.MethodPost,
+		`/db/_schema/ABC|table_name=ABC||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
+		http.StatusBadRequest},
+}
+
+// the createDbTable test suite.  run all createDbTable testcases.
+func Test_createDbTable(t *testing.T) {
+	apiCalls_Runner(t, "createDbTable_Tab", createDbTable_Tab)
+}
+
+// ----- unit tests for deleteDbTableHandler()
+
+// table of deleteDbTableHandler testcases.
+var deleteDbTable_Tab = []apiCall_TC {
+	{"delete table ABC missing table_name",
+		deleteDbTableHandler,
+		http.MethodDelete,
+		`/db/_schema`,
+		http.StatusBadRequest},
+	{"delete table ABC empty table_name",
+		deleteDbTableHandler,
+		http.MethodDelete,
+		`/db/_schema|table_name=`,
+		http.StatusBadRequest},
+	{"delete table ABCD expecting failure",
+		deleteDbTableHandler,
+		http.MethodDelete,
+		`/db/_schema/ABCD|table_name=ABCD`,
+		http.StatusBadRequest},
+	{"create table ABCD expecting success",
+		createDbTableHandler,
+		http.MethodPost,
+		`/db/_schema/ABCD|table_name=ABCD||{"resource":[{"name":"ABCD","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
+		http.StatusCreated},
+	{"delete table ABCD expecting success",
+		deleteDbTableHandler,
+		http.MethodDelete,
+		`/db/_schema/ABCD|table_name=ABCD`,
+		http.StatusOK},
+	{"delete table ABCD expecting failure",
+		deleteDbTableHandler,
+		http.MethodDelete,
+		`/db/_schema/ABCD|table_name=ABCD`,
+		http.StatusBadRequest},
+}
+
+// the deleteDbTable test suite.  run all deleteDbTable testcases.
+func Test_deleteDbTable(t *testing.T) {
+	apiCalls_Runner(t, "deleteDbTable_Tab", deleteDbTable_Tab)
+}
