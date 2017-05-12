@@ -122,27 +122,6 @@ func getDbSchemasHandler(harg *apiHandlerArg) apiHandlerRet {
 	return notImplemented()
 }
 
-// createDbTableHandler handles POST requests on /db/_schema/{table_name} .
-func createDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
-	params, err := fetchParams(harg, "table_name")
-	if err != nil {
-		return errorRet(badStat, err, "after fetchParams")
-	}
-	log.Debugf("... params = %v", params)
-	schema, err := getBodySchemas(harg)
-	if err != nil {
-		return errorRet(badStat, err, "missing or ill-formed schema")
-	}
-	if len(schema.Resource) != 1 {
-		return errorRet(badStat,
-			fmt.Errorf("body schema should have exactly 1 spec"),
-			"schema count")
-	}
-	log.Debugf("schema=%v", schema)
-	tabNames := []string{params["table_name"]}
-	return createTablesCommon(tabNames, schema)
-}
-
 // updateDbTables handles PATCH requests on /db/_schema .
 func updateDbTablesHandler(harg *apiHandlerArg) apiHandlerRet {
 	return notImplemented()
@@ -155,12 +134,6 @@ func describeDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 
 // createDbTablesHandler handles POST requests on /db/_schema .
 func createDbTablesHandler(harg *apiHandlerArg) apiHandlerRet {
-	/*
-	params, err := fetchParams(harg)
-	if err != nil {
-		return errorRet(badStat, err, "after fetchParams")
-	}
-	 */
 	schema, err := getBodySchemas(harg)
 	if err != nil {
 		return errorRet(badStat, err, "missing or ill-formed schema")

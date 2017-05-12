@@ -116,22 +116,17 @@ TestHeader "try writing a small file and reading it back (rwftest.sh)"
 ./rwftest.sh cmd/apidCRUD/main.go > /dev/null 2>&1
 AssertOK file comparison
 
-TestHeader "trying table creation (crtabtest.sh)"
-out=$(crtabtest.sh ABC 2>/dev/null)
-out=$(list_tables | grep '^ABC$')
-AssertOK "table creation"
-
-TestHeader "trying table deletion (deltabtest.sh)"
-out=$(deltabtest.sh ABC 2>/dev/null)
-out=$(list_tables | grep '^$ABC$')
-[[ $? != 0 ]]  # the grep should have failed
-AssertOK "table deletion"
-
 TestHeader "trying tables creation (crtabstest.sh)"
 out=$(crtabstest.sh X Y Z 2>/dev/null)
 out=$(list_tables | grep -c '^[XYZ]$')
 [[ "$out" == 3 ]]
 AssertOK "tables creation"
+
+TestHeader "trying table deletion (deltabtest.sh)"
+out=$(deltabtest.sh X Y Z 2>/dev/null)
+out=$(list_tables | grep '^$[XYZ]$')
+[[ $? != 0 ]]  # the grep should have failed
+AssertOK "table deletion"
 
 echo "# all passed"
 exit 0

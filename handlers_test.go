@@ -1096,57 +1096,6 @@ func Test_getDbRecordHandler_offset(t *testing.T) {
 	cx.assertEqualObj(xnames, names, "names from #2 batch")
 }
 
-// ----- unit tests for createDbTableHandler()
-
-// table of createDbTable testcases.
-var createDbTable_Tab = []apiCall_TC {
-	{"create table w/ missing table_name",
-		createDbTableHandler,
-		http.MethodPost,
-		`/db/_schema|||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
-		http.StatusBadRequest},
-	{"create table w/ invalid table_name",
-		createDbTableHandler,
-		http.MethodPost,
-		`/db/_schema|table_name=XYZ.DEF||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
-		http.StatusBadRequest},
-	{"create table w/ malformed body",
-		createDbTableHandler,
-		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name"}]}}`,
-		http.StatusBadRequest},
-	{"create table ABC excess tables in body",
-		createDbTableHandler,
-		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]},{"name":"DEF","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
-		http.StatusBadRequest},
-	{"create table ABC expecting success",
-		createDbTableHandler,
-		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
-		http.StatusCreated},
-	{"create table ABC expecting failure",
-		createDbTableHandler,
-		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
-		http.StatusBadRequest},
-	{"create record in ABC",
-		createDbRecordsHandler,
-		http.MethodPost,
-		`/db/_table/tabname|table_name=ABC||{"Records":[{"Keys":["name","uri"],"Values":["xyz-abc4","abc-xyz4"]}]}`,
-		http.StatusCreated},
-	{"get record 1 in ABC",
-		getDbRecordHandler,
-		http.MethodGet,
-		`/db/_table/tabname|table_name=ABC&id=1|fields=name,uri`,
-		http.StatusOK},
-}
-
-// the createDbTable test suite.  run all createDbTable testcases.
-func Test_createDbTable(t *testing.T) {
-	apiCalls_Runner(t, "createDbTable_Tab", createDbTable_Tab)
-}
-
 // ----- unit tests for deleteDbTableHandler()
 
 // table of deleteDbTableHandler testcases.
@@ -1167,9 +1116,9 @@ var deleteDbTable_Tab = []apiCall_TC {
 		`/db/_schema/ABCD|table_name=ABCD`,
 		http.StatusBadRequest},
 	{"create table ABCD expecting success",
-		createDbTableHandler,
+		createDbTablesHandler,
 		http.MethodPost,
-		`/db/_schema/ABCD|table_name=ABCD||{"resource":[{"name":"ABCD","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
+		`/db/_schema|||{"resource":[{"name":"ABCD","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
 		http.StatusCreated},
 	{"delete table ABCD expecting success",
 		deleteDbTableHandler,
