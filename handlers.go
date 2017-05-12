@@ -127,19 +127,16 @@ func createDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 	if err != nil {
 		return errorRet(badStat, err, "after fetchParams")
 	}
-	log.Debugf("... params = %v", params)
-	schema, err := getBodySchemas(harg)
+	schema, err := getBodySchema(harg)
 	if err != nil {
-		return errorRet(badStat, err, "missing or ill-formed schema")
-	}
-	if len(schema.Resource) != 1 {
-		return errorRet(badStat,
-			fmt.Errorf("body schema should have exactly 1 spec"),
-			"schema count")
+		return errorRet(badStat, err, "after getBodySchema")
 	}
 	log.Debugf("schema=%v", schema)
-	tabNames := []string{params["table_name"]}
-	return createTablesCommon(tabNames, schema)
+	err = createTable(params, schema)
+	if err != nil {
+		return errorRet(badStat, err, "after createTable")
+	}
+	return apiHandlerRet{http.StatusCreated, nil}
 }
 
 // updateDbTables handles PATCH requests on /db/_schema .
@@ -407,9 +404,9 @@ func validateSQLKeys(keys []string) error {
 	return nil
 }
 
-// getBodySchemas() returns a json schema from the body of the request.
-func getBodySchemas(harg *apiHandlerArg) (TableSchemas, error) {
-	jrec := TableSchemas{}
+// getBodySchema() returns a json schema from the body of the request.
+func getBodySchema(harg *apiHandlerArg) (TableSchema, error) {
+	jrec := TableSchema{}
 	err := json.NewDecoder(harg.getBody()).Decode(&jrec)
 	return jrec, err
 }
@@ -631,19 +628,8 @@ func deleteTable(tabName string) error {
 	return exec2(cmd1, args1, cmd2, args2)
 }
 
-func createTablesCommon(tabNames []string, schema TableSchemas) apiHandlerRet {
-	retNames := make([]string, 0)
-	for i, tab := range schema.Resource {
-		err := createTable(tabNames[i], tab)
-		if err != nil {
-			return errorRet(badStat, err, "after createTable")
-		}
-		retNames = append(retNames, tabNames[i])
-	}
-	return apiHandlerRet{http.StatusCreated, SchemasResponse{retNames}}
-}
-
-func createTable(tabName string, sch TableSchema) error {
+func createTable(params map[string]string, sch TableSchema) error {
+	tabName := params["table_name"]
 	log.Debugf("... tabName = %s, sch = %v", tabName, sch)
 	
 	schStr, _ := json.Marshal(sch)

@@ -11,12 +11,10 @@ dotab()
 	local FIELD_NAME='{"name":"name","properties":[]}'
 	local FIELDS='['"$FIELD_ID,$FIELD_URI,$FIELD_NAME"']'
 	local BTABLE='{"fields":'"$FIELDS"'}'
-	local TABLES='['"$BTABLE"']'
-	local BODY='{"resource":'"$TABLES"'}'
 
-	# echo "$BODY" | jq .
+	# echo "$BTABLE" | jq .
 
-	./appcurl.sh POST "db/_schema/$TABNAME" -v -d "$BODY"
+	./appcurl.sh POST "db/_schema/$TABNAME" -v -d "$BTABLE"
 }
 
 # ----- start of mainline code
