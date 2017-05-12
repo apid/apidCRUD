@@ -234,33 +234,6 @@ paths:
           schema:
             $ref: '#/definitions/Error'
       description: 'This describes the table, its fields and relations to other tables.'
-    post: # VERB
-      tags:
-        - schema
-      summary: createDbTable() - Create a table with the given properties and fields.
-      operationId: createDbTable
-      x-published:	# notyet
-        - 'db._schema.{table_name}.create'
-        - db._schema.table_created
-      parameters:
-        - name: schema
-          description: Array of table properties and fields definitions.
-          schema:
-            $ref: '#/definitions/TableSchema'
-          in: body
-          required: true
-      responses:
-        '201':
-          description: Success
-          schema:
-            $ref: '#/definitions/Success'
-        default:
-          description: Error
-          schema:
-            $ref: '#/definitions/Error'
-      description: >-
-        Post data should be an array of field properties for a single record or
-        an array of fields.
     put: # VERB
       tags:
         - schema
