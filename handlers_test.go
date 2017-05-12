@@ -1113,7 +1113,7 @@ var createDbTable_Tab = []apiCall_TC {
 	{"create table w/ malformed body",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema|||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name"}]}`,
+		`/db/_schema/ABC|||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["primary","int32"]},{"name":"uri","properties":[]},{"name":"name"}]}}`,
 		http.StatusBadRequest},
 	{"create table ABC excess tables in body",
 		createDbTableHandler,
