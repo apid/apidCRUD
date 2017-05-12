@@ -50,7 +50,7 @@ TestHeader creating empty database
 ./mkdb.sh
 AssertOK "database initialization"
 
-TestHeader checking tables "(tabtest.sh)"
+TestHeader checking _tables_ "(tabtest.sh)"
 out=$(./tabtest.sh 2>/dev/null | sort | tr '\n' ' ')
 tabs=( $out )
 exp=( bundles file nothing users )
@@ -97,7 +97,6 @@ AssertOK "uptest.sh expected 1, got $nc"
 
 TestHeader "check rec 6 uri before update (get_rec_uri)"
 uri1=$(get_rec_uri 6)
-# echo "uri1=$uri1"
 [[ $uri1 != "" ]]
 AssertOK "uri1 empty"
 
@@ -108,7 +107,6 @@ AssertOK "upstest.sh expected 2, got $nc"
 
 TestHeader "checking the update (get_rec_uri)"
 uri2=$(get_rec_uri 6)
-# echo "uri2=$uri2"
 [[ "$uri1" != "$uri2" ]]
 AssertOK "update did not change uri = $uri1"
 

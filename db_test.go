@@ -17,15 +17,17 @@ func utInitDB() {
 }
 
 var cmds = []string {
+	// create the special table _tables_
+	`create table _tables_(name text unique not null, schema text)`,
+	`insert into _tables_ (name,schema) values ("bundles", "xxx")`,
+	`insert into _tables_ (name,schema) values ("users", "xxx")`,
+	`insert into _tables_ (name,schema) values ("nothing", "xxx")`,
+
 	// ordinary tables
-	`create table tables(name text unique not null)`,
 	`create table bundles(id integer not null primary key autoincrement, name text not null, uri text not null)`,
 	`insert into bundles (name, uri) values ("b1", "http://localhost/~dfong/bundles/b1.zip")`,
 	`insert into bundles (name, uri) values ("b2", "http://localhost/~dfong/bundles/b2.zip")`,
 	`insert into bundles (name, uri) values ("b3", "http://localhost/~dfong/bundles/b3.zip")`,
-	`insert into tables (name) values ("bundles")`,
-	`insert into tables (name) values ("users")`,
-	`insert into tables (name) values ("nothing")`,
 
 	// xxx is an extra scratch table
 	`create table xxx(id integer not null primary key autoincrement, name text not null, uri text not null)`,

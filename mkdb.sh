@@ -18,13 +18,17 @@ create table file(line text);
 .quit
 EOF
 
-# create the tables table
+# create the _tables_ table
 sqlite3 "$DBFILE" <<EOF
-create table tables (name text unique not null);
-insert into tables (name) values ("bundles");
-insert into tables (name) values ("users");
-insert into tables (name) values ("nothing");
-insert into tables (name) values ("file");
+create table _tables_ (name text unique not null, schema text not null);
+insert into _tables_ (name,schema) values ("bundles",
+'{"fields":[{"name":"id",properties:["is_primary_key"]},{"name":"name"},{"name":"uri"}]}');
+insert into _tables_ (name,schema) values ("users",
+'{"fields":[{"name":"id",properties:["is_primary_key"]},{"name":"name"}]}');
+insert into _tables_ (name,schema) values ("nothing",
+'{"fields":[{"name":"id",properties:["is_primary_key"]},{"name":"name"}]}');
+insert into _tables_ (name,schema) values ("file",
+'{"files":[{"name":"line"}]}');
 .quit
 EOF
 

@@ -43,6 +43,9 @@ var basePath = "/apid"
 // maxRecs is the max number of results allowed in a bulk request.
 var maxRecs = 1000
 
+// tobleOfTables is the name of the internal table of table names/schemas
+var  tableOfTables = "_tables_"
+
 // getStringer is an interface that supports GetString().
 // narrowed from apid.ConfigService.
 type getStringer interface {

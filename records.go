@@ -47,8 +47,6 @@ type FieldSchema struct {
 
 // TableSchema is the type used to describe one table to be created.
 type TableSchema struct {
-	Name string
-	Primary_key string
 	Fields []FieldSchema
 }
 

@@ -10,7 +10,7 @@ dotab()
 	local FIELD_URI='{"name":"uri","properties":[]}'
 	local FIELD_NAME='{"name":"name","properties":[]}'
 	local FIELDS='['"$FIELD_ID,$FIELD_URI,$FIELD_NAME"']'
-	local BTABLE='{"name":"'"$TABNAME"'","fields":'"$FIELDS"'}'
+	local BTABLE='{"fields":'"$FIELDS"'}'
 	local TABLES='['"$BTABLE"']'
 	local BODY='{"resource":'"$TABLES"'}'
 

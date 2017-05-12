@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sort"
 	"net/http"
 	"database/sql"
 )
@@ -434,7 +435,7 @@ var convTableNames_Tab = []convTableNames_TC {
 }
 
 // mimicTableNamesQuery() returns an object that mimics the return from
-// the query to the "tables" table.
+// the query to the "_tables_" table.
 func mimicTableNamesQuery(names []string) []*KVRecord {
 	N := len(names)
 	ret := make([]*KVRecord, N)
@@ -861,9 +862,11 @@ func getDbTablesHandler_Checker(cx *testContext, tc *apiCall_TC) {
 	// if the code was success, data should be of this type.
 	data, ok := result.data.(TablesResponse)
 	cx.assertTrue(ok, "TablesResponse data type")
-	xtabnames := "bundles,users,nothing"
-	resnames := strings.Join(data.Names, ",")
-	cx.assertEqualObj(xtabnames, resnames, "retrieved names")
+	xtabNames := "bundles,nothing,users"
+	dataNames := data.Names
+	sort.Strings(dataNames)
+	resNames := strings.Join(dataNames, ",")
+	cx.assertEqualObj(xtabNames, resNames, "retrieved names")
 }
 
 func Test_getDbTablesHandler(t *testing.T) {
@@ -884,8 +887,8 @@ type tablesQuery_TC struct {
 
 var tablesQuery_Tab = []tablesQuery_TC {
 	{"bogus_table", "name", http.StatusBadRequest},
-	{"tables", "bogus_field", http.StatusBadRequest},
-	{"tables", "name", http.StatusOK},
+	{"_tables_", "bogus_field", http.StatusBadRequest},
+	{"_tables_", "name", http.StatusOK},
 }
 
 func tablesQuery_Checker(cx *testContext, tc *tablesQuery_TC) {
@@ -1103,32 +1106,32 @@ var createDbTable_Tab = []apiCall_TC {
 	{"create table w/ missing table_name",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema|||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
+		`/db/_schema|||{"resource":[{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
 		http.StatusBadRequest},
 	{"create table w/ invalid table_name",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema|table_name=XYZ.DEF||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
+		`/db/_schema|table_name=XYZ.DEF||{"resource":[{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
 		http.StatusBadRequest},
 	{"create table w/ malformed body",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name"}]}}`,
+		`/db/_schema/ABC|table_name=ABC||{"resource":[{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name"}]}}`,
 		http.StatusBadRequest},
 	{"create table ABC excess tables in body",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]},{"name":"DEF","fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
+		`/db/_schema/ABC|table_name=ABC||{"resource":[{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]},{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
 		http.StatusBadRequest},
 	{"create table ABC expecting success",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
+		`/db/_schema/ABC|table_name=ABC||{"resource":[{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
 		http.StatusCreated},
 	{"create table ABC expecting failure",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||{"resource":[{"name":"ABC","fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
+		`/db/_schema/ABC|table_name=ABC||{"resource":[{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
 		http.StatusBadRequest},
 	{"create record in ABC",
 		createDbRecordsHandler,
@@ -1169,7 +1172,7 @@ var deleteDbTable_Tab = []apiCall_TC {
 	{"create table ABCD expecting success",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABCD|table_name=ABCD||{"resource":[{"name":"ABCD","fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
+		`/db/_schema/ABCD|table_name=ABCD||{"resource":[{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}]}`,
 		http.StatusCreated},
 	{"delete table ABCD expecting success",
 		deleteDbTableHandler,

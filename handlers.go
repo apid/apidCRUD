@@ -20,7 +20,7 @@ func getDbResourcesHandler(harg *apiHandlerArg) apiHandlerRet {
 
 // getDbTablesHandler handles GET requests on /db/_table
 func getDbTablesHandler(harg *apiHandlerArg) apiHandlerRet {
-	return tablesQuery(harg, "tables", "name")
+	return tablesQuery(harg, tableOfTables, "name")
 }
 
 // createDbRecordsHandler() handles POST requests on /db/_table/{table_name} .
@@ -46,7 +46,6 @@ func createDbRecordsHandler(harg *apiHandlerArg) apiHandlerRet {
 	}
 
 	for _, rec := range records {
-		// log.Debugf("rec = (%T) %s", rec, rec)
 		id, err := runInsert(db, params["table_name"], rec.Keys, rec.Values)
 		if err != nil {
 			return apiHandlerRet{badStat, err}
@@ -159,14 +158,32 @@ func deleteDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 	if err != nil {
 		return errorRet(badStat, err, "after fetchParams")
 	}
-	cmd := fmt.Sprintf("drop table %s", params["table_name"])
-	log.Debugf("cmd = %s", cmd)
-	result, err := db.handle.Exec(cmd)
+	err = deleteTable(params["table_name"])
 	if err != nil {
-		return errorRet(badStat, err, "after Exec")
+		return errorRet(badStat, err, "after exec2")
 	}
-	log.Debugf("result = %s", result)
 	return apiHandlerRet{http.StatusOK, nil}
+}
+
+// run 2 execs as a transaction.
+func exec2(cmd1 string, args1 []interface{}, cmd2 string, args2[] interface{}) error {
+	tx, err := db.handle.Begin()
+	if err != nil {
+		return nil
+	}
+	log.Debugf("cmd1 = %s", cmd1)
+	_, err = tx.Exec(cmd1, args1...)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	log.Debugf("cmd2 = %s", cmd2)
+	_, err = tx.Exec(cmd2, args2...)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	return tx.Commit()
 }
 
 // describeDbFieldHandler handles GET requests on /db/_schema/{table_name} .
@@ -181,7 +198,7 @@ func describeDbFieldHandler(harg *apiHandlerArg) apiHandlerRet {
 func tablesQuery(harg *apiHandlerArg,
 		tabname string,
 		fieldname string) apiHandlerRet {
-	// the "tables" table is our convention, not maintained by sqlite.
+	// the tableOfTables table is our convention, not maintained by sqlite.
 
 	idlist := []interface{}{}
 	qstring := fmt.Sprintf("select %s from %s;", fieldname, tabname)
@@ -606,32 +623,46 @@ func listToMap(strList []string) map[string]int {
 	return ret
 }
 
+func deleteTable(tabName string) error {
+	cmd1 := fmt.Sprintf("drop table %s", tabName)
+	args1 := []interface{}{}
+	cmd2 := fmt.Sprintf("delete from %s where (name) in (?)", tableOfTables)
+	args2 := []interface{}{tabName}
+	return exec2(cmd1, args1, cmd2, args2)
+}
+
 func createTablesCommon(tabNames []string, schema TableSchemas) apiHandlerRet {
 	retNames := make([]string, 0)
 	for i, tab := range schema.Resource {
-		log.Debugf("... i = %d, tab = %v", i, tab)
-		var guts bytes.Buffer
-		sep := ""
-		for _, field := range tab.Fields {
-			guts.WriteString(sep)
-			guts.WriteString(field.Name)
-			props := listToMap(field.Properties)
-			if props["is_primary_key"] != 0 {
-				guts.WriteString(" integer primary key autoincrement")
-			} else {
-				guts.WriteString(" text not null")
-			}
-			sep = ", "
-		}
-		cmd := fmt.Sprintf("create table %s(%s)",
-				tabNames[i], guts.String())
-		log.Debugf("cmd = %s", cmd)
-		result, err := db.handle.Exec(cmd)
+		err := createTable(tabNames[i], tab)
 		if err != nil {
-			return errorRet(badStat, err, "after Exec")
+			return errorRet(badStat, err, "after createTable")
 		}
-		log.Debugf("result = %v", result)
-		retNames = append(retNames, tab.Name)
+		retNames = append(retNames, tabNames[i])
 	}
 	return apiHandlerRet{http.StatusCreated, SchemasResponse{retNames}}
+}
+
+func createTable(tabName string, sch TableSchema) error {
+	log.Debugf("... tabName = %s, sch = %v", tabName, sch)
+	
+	schStr, _ := json.Marshal(sch)
+	var guts bytes.Buffer
+	sep := ""
+	for _, field := range sch.Fields {
+		guts.WriteString(sep)
+		guts.WriteString(field.Name)
+		props := listToMap(field.Properties)
+		if props["is_primary_key"] != 0 {
+			guts.WriteString(" integer primary key autoincrement")
+		} else {
+			guts.WriteString(" text not null")
+		}
+		sep = ", "
+	}
+	cmd1 := fmt.Sprintf("create table %s(%s)", tabName, guts.String())
+	args1 := []interface{}{}
+	cmd2 := fmt.Sprintf("insert into %s (name,schema) values (?,?)", tableOfTables)
+	args2 := []interface{}{tabName, schStr}
+	return exec2(cmd1, args1, cmd2, args2)
 }
