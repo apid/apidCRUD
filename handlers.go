@@ -10,6 +10,20 @@ import (
 	"database/sql"
 )
 
+// ----- types used internally
+
+// type xResult represents the info of Result returned from sql.Exec().
+type xResult struct {
+	lastInsertId idType
+	rowsAffected idType
+}
+
+// type xCmd holds the arguments to SQL Exec()
+type xCmd struct {
+	cmd string
+	args []interface{}
+}
+
 // ----- plain old handlers that are compatible with the apiHandler type.
 
 // getDbResourcesHandler handles GET requests on /db
@@ -157,30 +171,9 @@ func deleteDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 	}
 	err = deleteTable(params["table_name"])
 	if err != nil {
-		return errorRet(badStat, err, "after exec2")
+		return errorRet(badStat, err, "deleteTable")
 	}
 	return apiHandlerRet{http.StatusOK, nil}
-}
-
-// run 2 execs as a transaction.
-func exec2(cmd1 string, args1 []interface{}, cmd2 string, args2[] interface{}) error {
-	tx, err := db.handle.Begin()
-	if err != nil {
-		return nil
-	}
-	log.Debugf("cmd1 = %s", cmd1)
-	_, err = tx.Exec(cmd1, args1...)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-	log.Debugf("cmd2 = %s", cmd2)
-	_, err = tx.Exec(cmd2, args2...)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-	return tx.Commit()
 }
 
 // describeDbFieldHandler handles GET requests on /db/_schema/{table_name} .
@@ -313,22 +306,16 @@ func idTypesToInterface(vals []string) []interface{} {
 // nstring() returns a string with n comma-separated copies of
 // the given string s.
 func nstring(s string, n int) string {
-	ret := make([]string, n, n)
+	ret := make([]string, n)
 	for i := 0; i < n; i++ {
 		ret[i] = s
 	}
 	return strings.Join(ret, ",")
 }
 
-// sqlExecResult represents the info of Result returned from sql.Exec().
-type sqlExecResult struct {
-	lastInsertId idType
-	rowsAffected idType
-}
-
-// getExecResult() constructs an sqlExecResult from the given
+// getExecResult() constructs an xResult from the given
 // res argument, presumably obtained from calling sql.Exec.
-func getExecResult(res sql.Result) sqlExecResult {
+func getExecResult(res sql.Result) xResult {
 	// fmt.Debugf("result=%s", res)
 	lastid, _ := res.LastInsertId()
 	log.Debugf("lastid = %d", lastid)
@@ -336,7 +323,7 @@ func getExecResult(res sql.Result) sqlExecResult {
 	nrecs, _ := res.RowsAffected()
 	log.Debugf("rowsaffected = %d", nrecs)
 
-	return sqlExecResult{idType(lastid), idType(nrecs)}
+	return xResult{idType(lastid), idType(nrecs)}
 }
 
 // runInsert() inserts a record whose data is specified by the
@@ -498,16 +485,16 @@ func updateRec(db dbType,
 // Prepare followed by Exec followed by getting the exec results.
 func runExec(db dbType,
 		query string,
-		values []interface{}) (sqlExecResult, error) {
+		values []interface{}) (xResult, error) {
 	log.Debugf("query = %s", query)
 	stmt, err := db.handle.Prepare(query)
 	if err != nil {
-		return sqlExecResult{}, err
+		return xResult{}, err
 	}
 	defer stmt.Close()	// nolint
 	result, err := stmt.Exec(values...)
 	if err != nil {
-		return sqlExecResult{}, err
+		return xResult{}, err
 	}
 	return getExecResult(result), nil
 }
@@ -609,6 +596,7 @@ func convValues(vals []interface{}) error {
 	return nil
 }
 
+// listToMap() turns a list of property strings into a property map.
 func listToMap(strList []string) map[string]int {
 	ret := map[string]int{}
 	if strList == nil {
@@ -620,25 +608,27 @@ func listToMap(strList []string) map[string]int {
 	return ret
 }
 
+// deleteTable() does the guts of table deletion.
 func deleteTable(tabName string) error {
-	cmd1 := fmt.Sprintf("drop table %s", tabName)
-	args1 := []interface{}{}
-	cmd2 := fmt.Sprintf("delete from %s where (name) in (?)", tableOfTables)
-	args2 := []interface{}{tabName}
-	return exec2(cmd1, args1, cmd2, args2)
+	// x1 deletes the actual table requested in the API.
+	x1 := newXCmd(fmt.Sprintf("drop table %s", tabName))
+
+	// x2 deletes the table's entry in our internal table of tables.
+	x2 := newXCmd(fmt.Sprintf("delete from %s where (name) in (?)",
+		tableOfTables), tabName)
+	return execN(x1, x2)
 }
 
-func createTable(params map[string]string, sch TableSchema) error {
-	tabName := params["table_name"]
-	log.Debugf("... tabName = %s, sch = %v", tabName, sch)
-	
-	schStr, _ := json.Marshal(sch)
+// mkSchemaClause() constructs the SQL schema string
+// for the given list of fields.
+func mkSchemaClause(fields []FieldSchema) string {
 	var guts bytes.Buffer
 	sep := ""
-	for _, field := range sch.Fields {
+	for _, field := range fields {
 		guts.WriteString(sep)
 		guts.WriteString(field.Name)
 		props := listToMap(field.Properties)
+		// more properties should be added
 		if props["is_primary_key"] != 0 {
 			guts.WriteString(" integer primary key autoincrement")
 		} else {
@@ -646,9 +636,44 @@ func createTable(params map[string]string, sch TableSchema) error {
 		}
 		sep = ", "
 	}
-	cmd1 := fmt.Sprintf("create table %s(%s)", tabName, guts.String())
-	args1 := []interface{}{}
-	cmd2 := fmt.Sprintf("insert into %s (name,schema) values (?,?)", tableOfTables)
-	args2 := []interface{}{tabName, schStr}
-	return exec2(cmd1, args1, cmd2, args2)
+	return guts.String()
+}
+
+// createTable() runs SQL commands to create a table.
+func createTable(params map[string]string, sch TableSchema) error {
+	tabName := params["table_name"]
+	log.Debugf("... tabName = %s, sch = %v", tabName, sch)
+	
+	jschema, _ := json.Marshal(sch)		// schema as json
+	fieldStr := mkSchemaClause(sch.Fields)  // schema in SQL
+
+	// x1 creates the actual table requested in the API.
+	x1 := newXCmd(fmt.Sprintf("create table %s(%s)", tabName, fieldStr))
+
+	// x2 updates our internal table of tables.
+	x2 := newXCmd(fmt.Sprintf("insert into %s (name,schema) values (?,?)",
+			tableOfTables), tabName, jschema)
+	return execN(x1, x2)
+}
+
+// newXCmd() constructs an xCmd object from the given string and arguments.
+func newXCmd(cmd string, args...interface{}) *xCmd {
+	return &xCmd{cmd, args}
+}
+
+// execN() runs multiple execs as a transaction.
+func execN(cmdList ...*xCmd) error {
+	tx, err := db.handle.Begin()
+	if err != nil {
+		return nil
+	}
+	for i, xCmd := range cmdList {
+		log.Debugf("cmd%d = %s", i, xCmd)
+		_, err = tx.Exec(xCmd.cmd, xCmd.args...)
+		if err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
+	return tx.Commit()
 }

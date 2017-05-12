@@ -75,7 +75,6 @@ type mockForModuler struct {
 }
 
 func (fmi mockForModuler) ForModule(name string) apid.LogService {
-	fmi.name = name
 	return apid.Log()
 }
 

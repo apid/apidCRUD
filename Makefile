@@ -74,3 +74,17 @@ doc:
 
 fix-readme:
 	./fix-readme.sh README.md template.txt
+
+##
+## this is not a working target.
+## these commands may not work on all platforms.
+## these commands are only representative
+## of what's needed, beyond go, to build this project.
+##
+#tools:
+#	sudo apt-get install sqlite3
+#	sudo apt-get install jq
+#	go get -u gopkg.in/alecthomas/gometalinter.v1
+#	gometalinter.v1 --install
+#	go get github.com/Masterminds/glide
+#	go get github.com/mattn/goveralls

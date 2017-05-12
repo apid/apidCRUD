@@ -70,5 +70,6 @@ func initConfig(gsi getStringer) {
 	dbDriver = confGet(gsi, "apidCRUD_db_driver", dbDriver)
 	dbName = confGet(gsi, "apidCRUD_db_name", dbName)
 	basePath = confGet(gsi, "apidCRUD_base_path", basePath)
-	maxRecs, _ = strconv.Atoi(confGet(gsi, "apidCRUD_max_recs", aMaxRecs))
+	maxRecs, _ = strconv.Atoi(			// nolint
+		confGet(gsi, "apidCRUD_max_recs", aMaxRecs))
 }
