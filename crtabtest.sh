@@ -1,11 +1,9 @@
 #! /bin/bash
-#	crtabstest.sh [TABNAMES]
+#	crtabtest.sh TABNAMES
 # create multiple tables in one call.
-# the API is POST /db/_schema aka createDbTables
+# the API is POST /db/_schema/XXX aka createDbTables
 
-. tester-env.sh || exit 1
-
-tabdata()
+dotab()
 {
 	local TABNAME=$1
 	local FIELD_ID='{"name":"id","properties":["primary","int32"]}'
@@ -13,31 +11,23 @@ tabdata()
 	local FIELD_NAME='{"name":"name","properties":[]}'
 	local FIELDS='['"$FIELD_ID,$FIELD_URI,$FIELD_NAME"']'
 	local BTABLE='{"name":"'"$TABNAME"'","fields":'"$FIELDS"'}'
-	echo "$BTABLE"
+	local TABLES='['"$BTABLE"']'
+	local BODY='{"resource":'"$TABLES"'}'
+
+	# echo "$BODY" | jq .
+
+	./appcurl.sh POST "db/_schema/$TABNAME" -v -d "$BODY"
 }
 
-dotabs()
-{
-	local tsep=''
-	for tab in "$@"; do
-		echo "$tsep"
-		tabdata "$tab"
-		tsep=","
-	done
-}
-
-# ----- start of mainline
-BODY='{"resource":['"$(dotabs "$@")"']}'
-
-# echo "$BODY" | jq .
-
+# ----- start of mainline code
+. tester-env.sh || exit 1
 if [[ $# -eq 0 ]]; then
-	echo 1>&2 "error: TABLE_NAMES must be specified on cmd line"
+	echo 1>&2 "error: TABNAMES must be specified on cmd line"
 	exit 1
 fi
 
-out=$(./appcurl.sh POST "db/_schema" -v -d "$BODY")
-echo "$out"
-
+for tab in "$@"; do
+	dotab "$tab"
+done
 echo "" 1>&2
 echo ".tables" | sqlite3 "$DBFILE" 1>&2

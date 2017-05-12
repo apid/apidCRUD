@@ -116,8 +116,8 @@ TestHeader "try writing a small file and reading it back (rwftest.sh)"
 ./rwftest.sh cmd/apidCRUD/main.go > /dev/null 2>&1
 AssertOK file comparison
 
-TestHeader "trying tables creation (crtabstest.sh)"
-out=$(crtabstest.sh X Y Z 2>/dev/null)
+TestHeader "trying tables creation (crtabtest.sh)"
+out=$(crtabtest.sh X Y Z 2>/dev/null)
 out=$(list_tables | grep -c '^[XYZ]$')
 [[ "$out" == 3 ]]
 AssertOK "tables creation"
