@@ -597,6 +597,9 @@ func convValues(vals []interface{}) error {
 
 func listToMap(strList []string) map[string]int {
 	ret := map[string]int{}
+	if strList == nil {
+		return ret
+	}
 	for _, s := range strList {
 		ret[s] = 1
 	}
@@ -613,7 +616,7 @@ func createTablesCommon(tabNames []string, schema TableSchemas) apiHandlerRet {
 			guts.WriteString(sep)
 			guts.WriteString(field.Name)
 			props := listToMap(field.Properties)
-			if props["primary"] != 0 {
+			if props["is_primary_key"] != 0 {
 				guts.WriteString(" integer primary key autoincrement")
 			} else {
 				guts.WriteString(" text not null")

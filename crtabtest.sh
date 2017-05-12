@@ -6,7 +6,7 @@
 dotab()
 {
 	local TABNAME=$1
-	local FIELD_ID='{"name":"id","properties":["primary","int32"]}'
+	local FIELD_ID='{"name":"id","properties":["is_primary_key","int32"]}'
 	local FIELD_URI='{"name":"uri","properties":[]}'
 	local FIELD_NAME='{"name":"name","properties":[]}'
 	local FIELDS='['"$FIELD_ID,$FIELD_URI,$FIELD_NAME"']'

@@ -24,7 +24,7 @@ type forModuler interface {
 }
 
 // ----- apiTable is the list of APIs that need to be wired up.
-var apiTable = []apiDesc{
+var apiTable = []apiDesc {
 	{ "/db", http.MethodGet, getDbResourcesHandler },
 	{ "/db/_table", http.MethodGet, getDbTablesHandler },
 	{ "/db/_table/{table_name}", http.MethodGet, getDbRecordsHandler },
@@ -59,7 +59,6 @@ func initPlugin(services apid.Services) (apid.PluginData, error) {
 func realInitPlugin(gsi getStringer,
 		fmi forModuler,
 		hfi handleFuncer) (apid.PluginData, error) {
-
 	initConfig(gsi)
 	log = fmi.ForModule(pluginData.Name)	// NOTE: non-local var
 	registerHandlers(hfi, apiTable)
@@ -90,7 +89,6 @@ func addPath(service handleFuncer, path string, vmap verbMap) {
 		func(w http.ResponseWriter, r *http.Request) {
 			pathDispatch(vmap, w, mkApiHandlerArg(r, getPathParams(r)))
 		})
-
 }
 
 // getPathParams() returns a map of path params from the given http request.
