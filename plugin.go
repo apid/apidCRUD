@@ -39,7 +39,6 @@ var apiTable = []apiDesc {
 	{ "/db/_schema/{table_name}", http.MethodPost, createDbTableHandler },
 	{ "/db/_schema/{table_name}", http.MethodGet, describeDbTableHandler },
 	{ "/db/_schema/{table_name}", http.MethodDelete, deleteDbTableHandler },
-	{ "/db/_schema/{table_name}/{field_name}", http.MethodGet, describeDbFieldHandler },
 }
 
 // ----- functions go below this line

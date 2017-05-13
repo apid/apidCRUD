@@ -181,11 +181,6 @@ func deleteDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 	return apiHandlerRet{http.StatusOK, nil}
 }
 
-// describeDbFieldHandler handles GET requests on /db/_schema/{table_name} .
-func describeDbFieldHandler(harg *apiHandlerArg) apiHandlerRet {
-	return notImplemented()
-}
-
 // ----- misc support functions
 
 // tablesQuery is the guts of getDbTablesHandler().
