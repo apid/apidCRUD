@@ -34,7 +34,7 @@ func getDbResourcesHandler(harg *apiHandlerArg) apiHandlerRet {
 
 // getDbTablesHandler handles GET requests on /db/_table
 func getDbTablesHandler(harg *apiHandlerArg) apiHandlerRet {
-	return tablesQuery(harg, tableOfTables, "name")
+	return tablesQuery(tableOfTables, "name")
 }
 
 // createDbRecordsHandler() handles POST requests on /db/_table/{table_name} .
@@ -160,7 +160,12 @@ func updateDbTablesHandler(harg *apiHandlerArg) apiHandlerRet {
 
 // describeDbTableHandler handles GET requests on /db/_schema/{table_name} .
 func describeDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
-	return notImplemented()
+	params, err := fetchParams(harg, "table_name")
+	if err != nil {
+		return errorRet(badStat, err, "after fetchParams")
+	}
+	return schemaQuery(tableOfTables,
+		"schema", "name", params["table_name"])
 }
 
 // deleteDbTableHandler handles DELETE requests on /db/_schema/{table_name} .
@@ -185,8 +190,7 @@ func describeDbFieldHandler(harg *apiHandlerArg) apiHandlerRet {
 
 // tablesQuery is the guts of getDbTablesHandler().
 // it's easier to test with an argument.
-func tablesQuery(harg *apiHandlerArg,
-		tabname string,
+func tablesQuery(tabname string,
 		fieldname string) apiHandlerRet {
 	// the tableOfTables table is our convention, not maintained by sqlite.
 
@@ -202,6 +206,36 @@ func tablesQuery(harg *apiHandlerArg,
 	}
 
 	return apiHandlerRet{http.StatusOK, TablesResponse{Names: ret}}
+}
+
+// schemaQuery is the guts of describeDbTableHandler().
+// it's easier to test with an argument.
+func schemaQuery(tabname string,
+		fieldname string,
+		selector string,
+		item string) apiHandlerRet {
+	// the tableOfTables table is our convention, not maintained by sqlite.
+
+	idlist := []interface{}{}
+	qstring := fmt.Sprintf(`select %s from %s where %s = "%s"`,
+			fieldname, tabname, selector, item)
+	result, err := runQuery(db, qstring, idlist)
+	if err != nil {
+		return errorRet(badStat, err, "after runQuery")
+	}
+	if len(result) != 1 {
+		return errorRet(badStat,
+			fmt.Errorf("results length mismatch"),
+			"after runQuery")
+	}
+	data, ok := (*result[0]).Values[0].(string)
+	if !ok {
+		return errorRet(badStat,
+			fmt.Errorf("results conversion error"),
+			"after runQuery")
+	}
+
+	return apiHandlerRet{http.StatusOK, SchemaResponse{data}}
 }
 
 // errorRet() is called by apiHandler routines to pass back the code/data

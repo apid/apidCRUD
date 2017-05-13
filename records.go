@@ -56,6 +56,6 @@ type TableSchemas struct {
 }
 
 // SchemasResponse is the response format for table creation.
-type SchemasResponse struct {
-	Names []string
+type SchemaResponse struct {
+	Schema string
 }

@@ -115,16 +115,21 @@ TestHeader "try writing a small file and reading it back (rwftest.sh)"
 AssertOK file comparison
 
 TestHeader "trying tables creation (crtabtest.sh)"
-out=$(crtabtest.sh X Y Z 2>/dev/null)
+out=$(./crtabtest.sh X Y Z 2>/dev/null)
 out=$(list_tables | grep -c '^[XYZ]$')
 [[ "$out" == 3 ]]
 AssertOK "tables creation"
 
 TestHeader "trying table deletion (deltabtest.sh)"
-out=$(deltabtest.sh X Y Z 2>/dev/null)
+out=$(./deltabtest.sh X Y Z 2>/dev/null)
 out=$(list_tables | grep '^$[XYZ]$')
 [[ $? != 0 ]]  # the grep should have failed
 AssertOK "table deletion"
+
+TestHeader "trying table schema (desctabtest.sh)"
+out=$(./desctabtest.sh users 2>/dev/null)
+[[ "$out" != "" ]]
+AssertOK "table description"
 
 echo "# all passed"
 exit 0

@@ -617,11 +617,6 @@ var notimpl_Tab = []apiCall_TC {
 		"/db/_schema",
 		http.StatusNotImplemented},
 	{"API not implemented",
-		describeDbTableHandler,
-		http.MethodGet,
-		"/db/_schema/tabname",
-		http.StatusNotImplemented},
-	{"API not implemented",
 		describeDbFieldHandler,
 		http.MethodDelete,
 		"/db/_schema/tabname",
@@ -892,8 +887,7 @@ var tablesQuery_Tab = []tablesQuery_TC {
 }
 
 func tablesQuery_Checker(cx *testContext, tc *tablesQuery_TC) {
-	harg := parseHandlerArg(http.MethodGet, `/db/_tables`)
-	result := tablesQuery(harg, tc.tableName, tc.fieldName)
+	result := tablesQuery(tc.tableName, tc.fieldName)
 	cx.assertEqual(tc.xcode, result.code, "returned code")
 }
 
@@ -1184,4 +1178,48 @@ var deleteDbTable_Tab = []apiCall_TC {
 // the deleteDbTable test suite.  run all deleteDbTable testcases.
 func Test_deleteDbTable(t *testing.T) {
 	apiCalls_Runner(t, "deleteDbTable_Tab", deleteDbTable_Tab)
+}
+
+// ----- unit tests for schemaQuery().
+
+// inputs and outputs for one schemaQuery testcase.
+type schemaQuery_TC struct {
+	tableName string
+	fieldName string
+	selector string
+	item string
+	xcode int
+	xdata string
+}
+
+// table of schemaQuery testcases.
+var schemaQuery_Tab = []schemaQuery_TC {
+	{ "_tables_", "schema", "name", "users", http.StatusOK, "result1" },
+
+	{ "_tables_", "schema", "name", "bundles", http.StatusOK, "result1" },
+
+	// bogus table
+	{ "bogus", "schema", "name", "users", http.StatusBadRequest, "result1" },
+
+	// bogus field
+	{ "_tables_", "schema", "bogus", "users", http.StatusBadRequest, "result1" },
+
+	// bogus item
+	{ "_tables_", "schema", "name", "bogus", http.StatusBadRequest, "result1" },
+}
+
+// run one testcase for function schemaQuery.
+func schemaQuery_Checker(cx *testContext, tc *schemaQuery_TC) {
+	res := schemaQuery(tc.tableName, tc.fieldName,
+			tc.selector, tc.item)
+	cx.assertEqual(tc.xcode, res.code, "returned code")
+}
+
+// the schemaQuery test suite.  run all schemaQuery testcases.
+func Test_schemaQuery(t *testing.T) {
+	cx := newTestContext(t, "schemaQuery_Tab")
+	for _, tc := range schemaQuery_Tab {
+		schemaQuery_Checker(cx, &tc)
+		cx.bump()
+	}
 }

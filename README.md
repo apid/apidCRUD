@@ -93,7 +93,7 @@ type XYZ_TC struct {
 }
 
 // table of XYZ testcases.
-var XYZ_Tab = XYZ_TC {
+var XYZ_Tab = []XYZ_TC {
 	// CUSTOMIZE
 	{ "arg1", "result1" },
 }
@@ -101,11 +101,8 @@ var XYZ_Tab = XYZ_TC {
 // run one testcase for function XYZ.
 func XYZ_Checker(cx *testContext, tc *XYZ_TC) {
 	// CUSTOMIZE
-	result := XYZ(tc.args)
-	if tc.result !- result {
-		cx.Errorf(`("%s")="%s"; expected "%s"`,
-			tc.args, result, tc.result)
-	}
+	result := XYZ(tc.arg)
+	cx.assertEqual(tc.result, result)
 }
 
 // the XYZ test suite.  run all XYZ testcases.
