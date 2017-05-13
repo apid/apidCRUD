@@ -11,7 +11,7 @@ info:
     | schema  | Represents the schema operations, e.g. manipulate table structure |
     | table   | Represents the table operations, e.g. manipulate table data       |
     
-  version: '0.3'
+  version: '0.5'
   contact:
     name: 'Apigee Inc.'
     email: support@apigee.com
