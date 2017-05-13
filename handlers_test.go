@@ -1265,8 +1265,24 @@ func Test_describeDbTable(t *testing.T) {
 
 // ----- unit tests for execN()
 
+// execN() is pretty well tested thru API test cases.
+// this test is only to exercise an error condition
+// which can't be easily reproduced thru the API.
 func Test_execN(t *testing.T) {
 	cx := newTestContext(t)
 	err := execN(mkBadDb())
+	cx.assertTrue(err != nil, "expected error")
+}
+
+// ----- unit tests for runExec()
+
+// runExec() is pretty well tested thru API test cases.
+// this test is only to exercise an error condition
+// which can't be easily reproduced thru the API.
+func Test_runExec(t *testing.T) {
+	cx := newTestContext(t)
+	query := "select * from bundles where name = ?"
+	values := []interface{}{}  // insufficient values
+	_, err := runExec(db, query, values)
 	cx.assertTrue(err != nil, "expected error")
 }
