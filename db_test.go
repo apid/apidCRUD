@@ -19,17 +19,17 @@ func utInitDB() {
 var cmds = []string {
 	// create the special table _tables_
 	`create table _tables_(name text unique not null, schema text)`,
-	`insert into _tables_ (name,schema) values ("bundles", "xxx")`,
-	`insert into _tables_ (name,schema) values ("users", "xxx")`,
-	`insert into _tables_ (name,schema) values ("nothing", "xxx")`,
+	`insert into _tables_ (name,schema) values ("bundles", "bundles_schema")`,
+	`insert into _tables_ (name,schema) values ("users", "users_schema")`,
+	`insert into _tables_ (name,schema) values ("nothing", "nothing_schema")`,
 
-	// ordinary tables
+	// create the table bundles
 	`create table bundles(id integer not null primary key autoincrement, name text not null, uri text not null)`,
 	`insert into bundles (name, uri) values ("b1", "http://localhost/~dfong/bundles/b1.zip")`,
 	`insert into bundles (name, uri) values ("b2", "http://localhost/~dfong/bundles/b2.zip")`,
 	`insert into bundles (name, uri) values ("b3", "http://localhost/~dfong/bundles/b3.zip")`,
 
-	// xxx is an extra scratch table
+	// create a scratch table xxx
 	`create table xxx(id integer not null primary key autoincrement, name text not null, uri text not null)`,
 	`insert into xxx (name, uri) values ("x1", "url1")`,
 	`insert into xxx (name, uri) values ("x2", "url2")`,
@@ -38,7 +38,7 @@ var cmds = []string {
 	`insert into xxx (name, uri) values ("x5", "url5")`,
 	`insert into xxx (name, uri) values ("x6", "url6")`,
 
-	// create table for testing behavior around maxRecs
+	// create a table toomany for testing behavior around maxRecs
 	`create table toomany(id integer not null primary key autoincrement, name text not null, uri text not null)`,
 	`insert into toomany (name, uri) values ("x1", "url1")`,
 	`insert into toomany (name, uri) values ("x2", "url2")`,

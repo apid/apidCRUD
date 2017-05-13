@@ -229,6 +229,7 @@ func schemaQuery(tabname string,
 			fmt.Errorf("results conversion error"),
 			"after runQuery")
 	}
+	log.Debugf("schema = %s", data)
 
 	return apiHandlerRet{http.StatusOK, SchemaResponse{data}}
 }
@@ -650,10 +651,10 @@ func deleteTable(tabName string) error {
 
 // mkSchemaClause() constructs the SQL schema string
 // for the given list of fields.
-func mkSchemaClause(fields []FieldSchema) string {
+func mkSchemaClause(sch TableSchema) string {
 	var guts bytes.Buffer
 	sep := ""
-	for _, field := range fields {
+	for _, field := range sch.Fields {
 		guts.WriteString(sep)
 		guts.WriteString(field.Name)
 		props := listToMap(field.Properties)
@@ -674,7 +675,7 @@ func createTable(params map[string]string, sch TableSchema) error {
 	log.Debugf("... tabName = %s, sch = %v", tabName, sch)
 	
 	jschema, _ := json.Marshal(sch)		// schema as json
-	fieldStr := mkSchemaClause(sch.Fields)  // schema in SQL
+	fieldStr := mkSchemaClause(sch)  	// schema in SQL
 
 	// x1 creates the actual table requested in the API.
 	x1 := newXCmd(fmt.Sprintf("create table %s(%s)", tabName, fieldStr))

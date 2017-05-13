@@ -1090,37 +1090,39 @@ func Test_getDbRecordHandler_offset(t *testing.T) {
 
 // ----- unit tests for createDbTableHandler()
 
+var users_schema = `{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}`
+
 // table of createDbTable testcases.
 var createDbTable_Tab = []apiCall_TC {
 	{"create table w/ missing table_name",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema|||{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}`,
+		`/db/_schema|||`+users_schema,
 		http.StatusBadRequest},
 	{"create table w/ invalid table_name",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema|table_name=XYZ.DEF||{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}`,
+		`/db/_schema|table_name=XYZ.DEF||`+users_schema,
 		http.StatusBadRequest},
 	{"create table w/ malformed body",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name"]}}`,
+		`/db/_schema/ABC|table_name=ABC||bogus`+users_schema,
 		http.StatusBadRequest},
 	{"create table ABC expecting success",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}`,
+		`/db/_schema/ABC|table_name=ABC||`+users_schema,
 		http.StatusCreated},
 	{"create table GHI expecting success, absent properties",
 		createDbTableHandler,
 		http.MethodPost,
 		`/db/_schema/GHI|table_name=GHI||{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri"},{"name":"name"}]}`,
 		http.StatusCreated},
-	{"create table ABC expecting failure",
+	{"create table ABC expecting failure, pre-existing",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}`,
+		`/db/_schema/ABC|table_name=ABC||`+users_schema,
 		http.StatusBadRequest},
 	{"create record in ABC",
 		createDbRecordsHandler,
@@ -1194,18 +1196,20 @@ type schemaQuery_TC struct {
 
 // table of schemaQuery testcases.
 var schemaQuery_Tab = []schemaQuery_TC {
-	{ "_tables_", "schema", "name", "users", http.StatusOK, "result1" },
+	// a good request
+	{ "_tables_", "schema", "name", "users", http.StatusOK, "{users_schema}" },
 
-	{ "_tables_", "schema", "name", "bundles", http.StatusOK, "result1" },
+	// a good request
+	{ "_tables_", "schema", "name", "bundles", http.StatusOK, "{bundles_schema}" },
 
 	// bogus table
-	{ "bogus", "schema", "name", "users", http.StatusBadRequest, "result1" },
+	{ "bogus", "schema", "name", "users", http.StatusBadRequest, "xxx" },
 
 	// bogus field
-	{ "_tables_", "schema", "bogus", "users", http.StatusBadRequest, "result1" },
+	{ "_tables_", "schema", "bogus", "users", http.StatusBadRequest, "xxx" },
 
 	// bogus item
-	{ "_tables_", "schema", "name", "bogus", http.StatusBadRequest, "result1" },
+	{ "_tables_", "schema", "name", "bogus", http.StatusBadRequest, "xxx" },
 }
 
 // run one testcase for function schemaQuery.
@@ -1213,6 +1217,10 @@ func schemaQuery_Checker(cx *testContext, tc *schemaQuery_TC) {
 	res := schemaQuery(tc.tableName, tc.fieldName,
 			tc.selector, tc.item)
 	cx.assertEqual(tc.xcode, res.code, "returned code")
+	if tc.xcode == http.StatusOK {
+		dataStr := fmt.Sprintf("%v", res.data)
+		cx.assertEqual(tc.xdata, dataStr, "returned data")
+	}
 }
 
 // the schemaQuery test suite.  run all schemaQuery testcases.
