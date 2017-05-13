@@ -646,7 +646,7 @@ func deleteTable(tabName string) error {
 	// x2 deletes the table's entry in our internal table of tables.
 	x2 := newXCmd(fmt.Sprintf("delete from %s where (name) in (?)",
 		tableOfTables), tabName)
-	return execN(x1, x2)
+	return execN(db, x1, x2)
 }
 
 // mkSchemaClause() constructs the SQL schema string
@@ -683,7 +683,7 @@ func createTable(params map[string]string, sch TableSchema) error {
 	// x2 updates our internal table of tables.
 	x2 := newXCmd(fmt.Sprintf("insert into %s (name,schema) values (?,?)",
 			tableOfTables), tabName, jschema)
-	return execN(x1, x2)
+	return execN(db, x1, x2)
 }
 
 // newXCmd() constructs an xCmd object from the given string and arguments.
@@ -692,10 +692,10 @@ func newXCmd(cmd string, args...interface{}) *xCmd {
 }
 
 // execN() runs multiple execs as a transaction.
-func execN(cmdList ...*xCmd) error {
+func execN(db dbType, cmdList ...*xCmd) error {
 	tx, err := db.handle.Begin()
 	if err != nil {
-		return nil
+		return err
 	}
 	for i, xCmd := range cmdList {
 		log.Debugf("cmd%d = %s", i, xCmd)

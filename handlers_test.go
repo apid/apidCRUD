@@ -1262,3 +1262,11 @@ var describeDbTable_Tab = []apiCall_TC {
 func Test_describeDbTable(t *testing.T) {
 	apiCalls_Runner(t, "describeDbTable_Tab", describeDbTable_Tab)
 }
+
+// ----- unit tests for execN()
+
+func Test_execN(t *testing.T) {
+	cx := newTestContext(t)
+	err := execN(mkBadDb())
+	cx.assertTrue(err != nil, "expected error")
+}

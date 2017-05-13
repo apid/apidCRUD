@@ -3,6 +3,7 @@ package apidCRUD
 import (
 	"fmt"
 	"os"
+	"database/sql"
 )
 
 const ut_DBNAME = "unit-test.db"
@@ -12,8 +13,8 @@ const ut_DBNAME = "unit-test.db"
 // since they are implicitly filesystem dependent.
 func utInitDB() {
 	_ = os.Remove(ut_DBNAME)
-	db, _ = initDB(dbName)
-	_ = createDbData(db)
+	db, _ = initDB(dbName)	// non-local assignment
+	createDbData(db)
 }
 
 var cmds = []string {
@@ -58,15 +59,23 @@ var cmds = []string {
 	`insert into toomany (name, uri) values ("x16", "url16")`,
 }
 
-func createDbData(db dbType) error {
+// createDbData() sets up the tables expected by some unit tests.
+func createDbData(db dbType) {
 	dbh := db.handle
 	for _, cmd := range cmds {
 		_, err := dbh.Exec(cmd)
 		// fmt.Printf("cmd=%s\n", cmd)
 		if err != nil {
-			fmt.Printf(`Exec error on "%s": [%s]\n`, cmd, err)
-			return err
+			panic(fmt.Sprintf(
+				`Exec error on "%s": [%s]\n`, cmd, err))
 		}
 	}
-	return nil
+}
+
+// mkBadDb() returns a closed db handle that should cause errors,
+// to facilitate exercising error-handling code.
+func mkBadDb() dbType {
+	h, _ := sql.Open(dbDriver, dbName)
+	h.Close()
+	return dbType{h}
 }
