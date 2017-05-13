@@ -126,58 +126,6 @@ paths:
           description: Error
           schema:
             $ref: '#/definitions/Error'
-    put: # VERB
-      tags:
-        - schema
-      summary: replaceDbTables() - Update (replace) one or more tables.
-      operationId: replaceDbTables
-      x-published:	# notyet
-        - db._schema.alter
-      parameters:
-        - name: tables
-          description: Array of table definitions.
-          schema:
-            $ref: '#/definitions/TableSchemas'
-          in: body
-          required: true
-      responses:
-        '200':
-          description: Tables Updated
-          schema:
-            $ref: '#/definitions/SchemasResponse'
-        default:
-          description: Error
-          schema:
-            $ref: '#/definitions/Error'
-      description: >-
-        Post data should be a single table definition or an array of table
-        definitions.
-    patch: # VERB
-      tags:
-        - schema
-      summary: updateDbTables() - Update (patch) one or more tables.
-      operationId: updateDbTables
-      x-published:	# notyet
-        - db._schema.alter
-      parameters:
-        - name: tables
-          description: Array of table definitions.
-          schema:
-            $ref: '#/definitions/TableSchemas'
-          in: body
-          required: true
-      responses:
-        '200':
-          description: Tables Updated
-          schema:
-            $ref: '#/definitions/SchemasResponse'
-        default:
-          description: Error
-          schema:
-            $ref: '#/definitions/Error'
-      description: >-
-        Post data should be a single table definition or an array of table
-        definitions.
   '/db/_schema/{table_name}': # PATH
     parameters:
       - name: table_name
@@ -785,18 +733,10 @@ definitions:
         description: Array of resources available to this path.
         items:
           $ref: '#/definitions/SchemaResponse'
-  TableSchemas:
-    type: object
-    properties:
-      resource:
-        type: array
-        description: An array of table definitions.
-        items:
-          $ref: '#/definitions/TableSchema'
   TableSchema:
     type: object
     properties:
-      field:
+      fields:
         type: array
         description: An array of available fields in each record.
         items:
@@ -825,37 +765,6 @@ definitions:
       is_primary_key:
         type: boolean
         description: Is this field used as/part of the primary key.
-  RelatedSchema:
-    type: object
-    properties:
-      name:
-        type: string
-        description: Name of the relationship.
-      type:
-        type: string
-        description: 'Relationship type - belongs_to, has_many, many_many.'
-      field:
-        type: string
-        description: The current table field that is used in the relationship.
-      ref_table:
-        type: string
-        description: The table name that is referenced by the relationship.
-      ref_fields:
-        type: string
-        description: The field name that is referenced by the relationship.
-      junction_table:
-        type: string
-        description: The intermediate junction table used for many_many relationships.
-      junction_field:
-        type: string
-        description: >-
-          The intermediate junction table field used for many_many
-          relationships.
-      junction_ref_field:
-        type: string
-        description: >-
-          The intermediate joining table referencing field used for many_many
-          relationships.
   TablesResponse:
     type: object
     properties:
