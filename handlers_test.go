@@ -1243,6 +1243,11 @@ var describeDbTable_Tab = []apiCall_TC {
 		http.MethodGet,
 		"/db/_schema/bogus|table_name=bogus",
 		http.StatusBadRequest},
+	{"get schema for no table_name",
+		describeDbTableHandler,
+		http.MethodGet,
+		"/db/_schema/|",
+		http.StatusBadRequest},
 }
 
 // the describeDbTable test suite.  run all describeDbTable testcases.
