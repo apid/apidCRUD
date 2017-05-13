@@ -834,7 +834,7 @@ var createDbRecords_Tab = []apiCall_TC {
 
 // the handlers must be called in a certain order, in order for the
 // calls to succeed or fail as expected.
-func Test_createDbRecordsHandler(t *testing.T) {
+func Test_createDbRecords(t *testing.T) {
 	apiCalls_Runner(t, "createDbRecords_Tab", createDbRecords_Tab)
 }
 
@@ -848,7 +848,7 @@ var getDbTables_Tab = []apiCall_TC {
 		http.StatusOK},
 }
 
-func getDbTablesHandler_Checker(cx *testContext, tc *apiCall_TC) {
+func getDbTables_Checker(cx *testContext, tc *apiCall_TC) {
 	result := apiCall_Checker(cx, tc)
 	if result.code != tc.xcode {
 		// would have already failed.
@@ -864,10 +864,10 @@ func getDbTablesHandler_Checker(cx *testContext, tc *apiCall_TC) {
 	cx.assertEqualObj(xtabNames, resNames, "retrieved names")
 }
 
-func Test_getDbTablesHandler(t *testing.T) {
+func Test_getDbTables(t *testing.T) {
 	cx := newTestContext(t, "getDbTables_Tab")
 	for _, tc := range getDbTables_Tab {
-		getDbTablesHandler_Checker(cx, &tc)
+		getDbTables_Checker(cx, &tc)
 		cx.bump()
 	}
 }
@@ -901,7 +901,7 @@ func Test_tablesQuery_bogusField(t *testing.T) {
 
 // ----- unit tests of updateDbRecordHandler()
 
-func Test_updateDbRecordHandler(t *testing.T) {
+func Test_updateDbRecord(t *testing.T) {
 
 	cx := newTestContext(t)
 	tabName := "xxx"
@@ -977,7 +977,7 @@ func retrieveValues(cx *testContext,
 
 // ----- unit tests for updateDbRecordsHandler()
 
-func Test_updateDbRecordsHandler(t *testing.T) {
+func Test_updateDbRecords(t *testing.T) {
 
 	cx := newTestContext(t)
 	tabName := "xxx"
@@ -1222,4 +1222,30 @@ func Test_schemaQuery(t *testing.T) {
 		schemaQuery_Checker(cx, &tc)
 		cx.bump()
 	}
+}
+
+// ----- unit tests for describeDbTable().
+
+// table of describeDbTable testcases.
+var describeDbTable_Tab = []apiCall_TC {
+	{"get schema for users table",
+		describeDbTableHandler,
+		http.MethodGet,
+		"/db/_schema/users|table_name=users",
+		http.StatusOK},
+	{"get schema for bundles table",
+		describeDbTableHandler,
+		http.MethodGet,
+		"/db/_schema/bundles|table_name=bundles",
+		http.StatusOK},
+	{"get schema for bogus table",
+		describeDbTableHandler,
+		http.MethodGet,
+		"/db/_schema/bogus|table_name=bogus",
+		http.StatusBadRequest},
+}
+
+// the describeDbTable test suite.  run all describeDbTable testcases.
+func Test_describeDbTable(t *testing.T) {
+	apiCalls_Runner(t, "describeDbTable_Tab", describeDbTable_Tab)
 }
