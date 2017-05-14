@@ -14,11 +14,14 @@ dotab()
 
 	# echo "$BTABLE" | jq .
 
-	./appcurl.sh POST "db/_schema/$TABNAME" -v -d "$BTABLE"
+	apicurl POST "db/_schema/$TABNAME" -v -d "$BTABLE"
 }
 
 # ----- start of mainline code
-. tester-env.sh || exit 1
+PROGDIR=$(cd "$(dirname "$0")" && /bin/pwd)
+. "$PROGDIR/tester-env.sh" || exit 1
+. "$PROGDIR/test-common.sh" || exit 1
+
 if [[ $# -eq 0 ]]; then
 	echo 1>&2 "error: TABNAMES must be specified on cmd line"
 	exit 1

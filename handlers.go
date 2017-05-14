@@ -190,7 +190,7 @@ func tablesQuery(tabname string,
 	// the tableOfTables table is our convention, not maintained by sqlite.
 
 	idlist := []interface{}{}
-	qstring := fmt.Sprintf("select %s from %s;", fieldname, tabname)
+	qstring := fmt.Sprintf("select %s from %s", fieldname, tabname)
 	result, err := runQuery(db, qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err, "after runQuery")

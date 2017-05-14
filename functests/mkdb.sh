@@ -1,8 +1,12 @@
 #! /bin/bash
 #	mkdb
 
+# ----- start of mainline code
+PROGDIR=$(cd "$(dirname "$0")" && /bin/pwd)
+. "$PROGDIR/tester-env.sh" || exit 1
+. "$PROGDIR/test-common.sh" || exit 1
+
 # zap the file
-DBFILE=apidCRUD.db
 cp /dev/null "$DBFILE"
 
 # create the bundles table, the users table, the nothing table, the file table.

@@ -30,11 +30,14 @@ EOF
 }
 
 # ----- start of mainline code
-. tester-env.sh || exit 1
+PROGDIR=$(cd "$(dirname "$0")" && /bin/pwd)
+. "$PROGDIR/tester-env.sh" || exit 1
+. "$PROGDIR/test-common.sh" || exit 1
+
 FILE=${1:-swagger.yaml}
 TABLE=file
 RESOURCES="[$(jescape "$FILE" | mkrecs)]"
 BODY="{\"records\":$RESOURCES}"
 # echo 1>&2 "BODY=$BODY"
 
-./appcurl.sh POST "db/_table/$TABLE" -d "$BODY"
+apicurl POST "db/_table/$TABLE" -d "$BODY"

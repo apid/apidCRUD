@@ -3,14 +3,18 @@
 # delete a table.
 # the API is DELETE /db/_schema/XXX aka createDbTable
 
-. tester-env.sh || exit 1
+# ----- start of mainline code
+PROGDIR=$(cd "$(dirname "$0")" && /bin/pwd)
+. "$PROGDIR/tester-env.sh" || exit 1
+. "$PROGDIR/test-common.sh" || exit 1
+
 if [[ $# -eq 0 ]]; then
 	echo 1>&2 "error: TABNAME must be specified on cmd line"
 	exit 1
 fi
 
 for tab in "$@"; do
-out=$(./appcurl.sh DELETE "db/_schema/$tab" -v)
+out=$(apicurl DELETE "db/_schema/$tab" -v)
 echo "$out"
 done
 

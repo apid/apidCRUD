@@ -28,14 +28,16 @@ mk_nrecs()
 }
 
 # ----- start of mainline code
-. tester-env.sh || exit 1
+PROGDIR=$(cd "$(dirname "$0")" && /bin/pwd)
+. "$PROGDIR/tester-env.sh" || exit 1
+. "$PROGDIR/test-common.sh" || exit 1
 
 NRECS=${1:-2}
 RESOURCES="[$(mk_nrecs "$NRECS")]"
 BODY="{\"records\":$RESOURCES}"
 # echo 1>&2 "BODY=$BODY"
 
-out=$(./appcurl.sh POST "db/_table/$TABLE_NAME" -v -d "$BODY")
+out=$(apicurl POST "db/_table/$TABLE_NAME" -v -d "$BODY")
 echo "$out"
 
 # echo "$out" | jq -S .Ids[]

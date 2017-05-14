@@ -1,6 +1,5 @@
-#! /bin/bash
-#	appcurl VERB API_PATH [OTHER_CURL_ARGS]
-#
+# test scripts may source in this file
+# to obtain definitions of common functions.
 
 vrun()
 {
@@ -26,6 +25,10 @@ apicurl()
 {
 	local VERB=$1 API_PATH=$2
 	shift 2
+
+	local API_PREFIX=$(get_config_var "$CFG_FILE" apidCRUD_base_path)
+	local API_LISTEN=$(get_config_var "$CFG_FILE" api_listen)
+	local URL_BASE=http://$API_LISTEN$API_PREFIX
 
 	local WFMT=":code:%{http_code}"
 	local out
@@ -53,12 +56,3 @@ apicurl()
 	fi
 	return $xstat
 }
-
-# ----- start of mainline code
-CFG=./apid_config.yaml
-API_PREFIX=apid
-
-API_LISTEN=$(get_config_var "$CFG" api_listen)
-URL_BASE=http://$API_LISTEN/$API_PREFIX
-
-apicurl "$@"
