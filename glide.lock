@@ -1,5 +1,5 @@
-hash: 969749bacd2241305eab4db64f52d77f330d29801498257ffdccbc8f06b0a99c
-updated: 2017-05-02T23:16:50.505141218-07:00
+hash: 2ed4c24f22d608f678620382823181f96cd3f0167eda8ac97e45f51e4e3fb1db
+updated: 2017-05-13T22:57:59.405039152-07:00
 imports:
 - name: github.com/30x/apid-core
   version: b601a5f26268b404a32fbd104dafb6f98d47934c
@@ -44,14 +44,6 @@ imports:
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml
   version: 22139eb5469018e7374b3e7ef653de37ffb44f72
-- name: github.com/proullon/ramsql
-  version: 647ba4b3f57d857065183608f5ec75156bfd4cf1
-  subpackages:
-  - driver
-  - engine
-  - engine/log
-  - engine/parser
-  - engine/protocol
 - name: github.com/SermoDigital/jose
   version: 2bd9b81ac51d6d6134fcd4fd846bd2e7347a15f9
   subpackages:
