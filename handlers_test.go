@@ -611,11 +611,6 @@ var notimpl_Tab = []apiCall_TC {
 		http.MethodGet,
 		"/db/_schema",
 		http.StatusNotImplemented},
-	{"API not implemented",
-		updateDbTablesHandler,
-		http.MethodPatch,
-		"/db/_schema",
-		http.StatusNotImplemented},
 }
 
 func Test_notimpl(t *testing.T) {

@@ -153,11 +153,6 @@ func createDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 	return apiHandlerRet{http.StatusCreated, nil}
 }
 
-// updateDbTables handles PATCH requests on /db/_schema .
-func updateDbTablesHandler(harg *apiHandlerArg) apiHandlerRet {
-	return notImplemented()
-}
-
 // describeDbTableHandler handles GET requests on /db/_schema/{table_name} .
 func describeDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 	params, err := fetchParams(harg, "table_name")

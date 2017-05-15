@@ -183,60 +183,6 @@ paths:
       description: >-
         Post data should be an array of field properties for a single record or
         an array of fields.
-    put: # VERB
-      tags:
-        - schema
-      summary: replaceDbTable() - Update (replace) a table with the given properties.
-      operationId: replaceDbTable
-      x-published:	# notyet
-        - 'db._schema.{table_name}.alter'
-        - db._schema.table_altered
-      parameters:
-        - name: schema
-          description: Array of field definitions.
-          schema:
-            $ref: '#/definitions/TableSchema'
-          in: body
-          required: true
-      responses:
-        '200':
-          description: Success
-          schema:
-            $ref: '#/definitions/Success'
-        default:
-          description: Error
-          schema:
-            $ref: '#/definitions/Error'
-      description: >-
-        Post data should be an array of field properties for a single record or
-        an array of fields.
-    patch: # VERB
-      tags:
-        - schema
-      summary: updateDbTable() - Update (patch) a table with the given properties.
-      operationId: updateDbTable
-      x-published:	# notyet
-        - 'db._schema.{table_name}.alter'
-        - db._schema.table_altered
-      parameters:
-        - name: schema
-          description: Array of field definitions.
-          schema:
-            $ref: '#/definitions/TableSchema'
-          in: body
-          required: true
-      responses:
-        '200':
-          description: Success
-          schema:
-            $ref: '#/definitions/Success'
-        default:
-          description: Error
-          schema:
-            $ref: '#/definitions/Error'
-      description: >-
-        Post data should be an array of field properties for a single record or
-        an array of fields.
     delete: # VERB
       tags:
         - schema
@@ -256,18 +202,6 @@ paths:
           schema:
             $ref: '#/definitions/Error'
       description: 'Careful, this drops the database table and all of its contents.'
-  '/db/_schema/{table_name}/{field_name}': # PATH
-    parameters:
-      - name: table_name
-        description: Name of the table to perform operations on.
-        type: string
-        in: path
-        required: true
-      - name: field_name
-        description: Name of the field to perform operations on.
-        type: string
-        in: path
-        required: true
   /db/_table: # PATH
     get: # VERB
       tags: [table, getDbTables, implemented]
