@@ -1254,3 +1254,19 @@ func Test_runExec(t *testing.T) {
 	_, err := runExec(db, query, values)
 	cx.assertTrue(err != nil, "expected error")
 }
+
+// ----- unit tests for getDbResourcesHandler().
+
+// table of getDbResources testcases.
+var getDbResources_Tab = []apiCall_TC {
+	{"get db resources",
+		getDbResourcesHandler,
+		http.MethodGet,
+		"/db",
+		http.StatusOK},
+}
+
+// the getDbResources test suite.  run all getDbResources testcases.
+func Test_getDbResources(t *testing.T) {
+	apiCalls_Runner(t, "getDbResources_Tab", getDbResources_Tab)
+}

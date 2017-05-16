@@ -14,6 +14,7 @@ VENDOR_DIR := github.com/30x/$(MYAPP)/vendor
 SQLITE_PKG := github.com/mattn/go-sqlite3
 
 clean:
+	/bin/rm -f swagger.go
 	go clean
 	/bin/rm -rf $(LOG_DIR)
 	mkdir -p $(LOG_DIR)
@@ -42,10 +43,10 @@ preinstall: get
 	[ -d $(VENDOR_DIR)/$(SQLITE_PKG) ] \
 	|| go install $(VENDOR_DIR)/$(SQLITE_PKG)
 
-install: setup preinstall
+install: setup preinstall swagger.go
 	go $@ ./cmd/$(MYAPP)
 
-run: install swagger.go
+run: install
 	./runner.sh
 
 killer:
@@ -53,7 +54,7 @@ killer:
 
 test: unit-test
 
-unit-test:
+unit-test: swagger.go
 	./unit-test.sh
 
 cov-view:
