@@ -34,7 +34,6 @@ var apiTable = []apiDesc {
 	{ "/db/_table/{table_name}/{id}", http.MethodGet, getDbRecordHandler },
 	{ "/db/_table/{table_name}/{id}", http.MethodPatch, updateDbRecordHandler },
 	{ "/db/_table/{table_name}/{id}", http.MethodDelete, deleteDbRecordHandler },
-	{ "/db/_schema", http.MethodGet, getDbSchemasHandler },
 	{ "/db/_schema/{table_name}", http.MethodPost, createDbTableHandler },
 	{ "/db/_schema/{table_name}", http.MethodGet, describeDbTableHandler },
 	{ "/db/_schema/{table_name}", http.MethodDelete, deleteDbTableHandler },

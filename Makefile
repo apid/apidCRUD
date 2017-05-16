@@ -31,7 +31,7 @@ get:
 	[ -d ./vendor ] \
 	|| glide install
 
-build:
+build: swagger.go
 	time go $@
 
 setup:
@@ -45,7 +45,7 @@ preinstall: get
 install: setup preinstall
 	go $@ ./cmd/$(MYAPP)
 
-run: install
+run: install swagger.go
 	./runner.sh
 
 killer:
@@ -74,6 +74,9 @@ doc:
 
 fix-readme:
 	./fix-readme.sh README.md template.txt
+
+swagger.go: swagger.yaml mk-swagger-go.sh cmd/yaml2json/yaml2json.go
+	./mk-swagger-go.sh $< > $@
 
 ##
 ## this is not a working target.

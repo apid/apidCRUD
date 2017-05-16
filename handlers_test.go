@@ -44,14 +44,6 @@ func Test_mkSQLRow(t *testing.T) {
 	}
 }
 
-// ----- unit tests for notImplemented()
-
-func Test_notImplemented(t *testing.T) {
-	cx := newTestContext(t)
-	res := notImplemented()
-	cx.assertEqual(http.StatusNotImplemented, res.code, "returned code")
-}
-
 // ----- unit tests for validateSQLKeys()
 
 type validateSQLKeys_TC struct {
@@ -596,25 +588,6 @@ func apiCalls_Runner(t *testing.T, tabName string, tab []apiCall_TC) {
 
 func callApiHandler(hf apiHandler, verb string, desc string) apiHandlerRet {
 	return hf(parseHandlerArg(verb, desc))
-}
-
-// ----- unit tests for not-implemented handlers.
-
-var notimpl_Tab = []apiCall_TC {
-	{"API not implemented",
-		getDbResourcesHandler,
-		http.MethodGet,
-		"/db",
-		http.StatusNotImplemented},
-	{"API not implemented",
-		getDbSchemasHandler,
-		http.MethodGet,
-		"/db/_schema",
-		http.StatusNotImplemented},
-}
-
-func Test_notimpl(t *testing.T) {
-	apiCalls_Runner(t, "notimpl_Tab", notimpl_Tab)
 }
 
 // ----- unit tests for various implemented handlers.

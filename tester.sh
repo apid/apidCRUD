@@ -133,5 +133,11 @@ out=$("$TESTS_DIR/desctabtest.sh" users 2>/dev/null)
 [[ "$out" != "" ]]
 AssertOK "table description"
 
+TestHeader "trying db resources (getres.sh)"
+out=$("$TESTS_DIR/getres.sh" h 2>/dev/null)
+xstat=$?
+[[ $xstat == 0 && "$out" != "" ]]
+AssertOK "db resources"
+
 echo "# all passed"
 exit 0

@@ -76,6 +76,6 @@ func createDbData(db dbType) {
 // to facilitate exercising error-handling code.
 func mkBadDb() dbType {
 	h, _ := sql.Open(dbDriver, dbName)
-	h.Close()
+	_ = h.Close()
 	return dbType{h}
 }

@@ -28,8 +28,7 @@ type xCmd struct {
 
 // getDbResourcesHandler handles GET requests on /db
 func getDbResourcesHandler(harg *apiHandlerArg) apiHandlerRet {
-	// not sure what this should do
-	return notImplemented()
+	return apiHandlerRet{http.StatusOK, swaggerJSON}
 }
 
 // getDbTablesHandler handles GET requests on /db/_table
@@ -128,11 +127,6 @@ func deleteDbRecordHandler(harg *apiHandlerArg) apiHandlerRet {
 		return errorRet(badStat, err, "after fetchParams")
 	}
 	return delCommon(params)
-}
-
-// getDbSchemasHandler handles GET requests on /db/_schema .
-func getDbSchemasHandler(harg *apiHandlerArg) apiHandlerRet {
-	return notImplemented()
 }
 
 // createDbTableHandler handles POST requests on /db/_schema/{table_name} .
@@ -237,13 +231,6 @@ func errorRet(code int, err error, dmsg string) apiHandlerRet {
 		log.Debugf("errorRet %d [%s], %s", code, err, dmsg)
 	}
 	return apiHandlerRet{code, ErrorResponse{code, err.Error()}}
-}
-
-// notImpemented() returns the code/data pair for an apiHandler
-// that is not implemented.
-func notImplemented() apiHandlerRet {
-	return errorRet(http.StatusNotImplemented,
-		fmt.Errorf("API not implemented yet"), "")
 }
 
 // mkSQLRow() returns a list of interface{} of the given length,

@@ -3,15 +3,7 @@ info:
   title: Building blocks of REPL and CRUD module
   description: |
     Assumes you have read [APID Core](https://docs.google.com/a/apigee.com/document/d/15-HvWdv-JGRk5rKDK5DLjr0qEqe8lwy18AQRQqRlO-I/edit?usp=sharing) document.
-    
-    Mapping:
-
-    | Tag     | Description                                                       |
-    | ------- | ----------------------------------------------------------------- |
-    | schema  | Represents the schema operations, e.g. manipulate table structure |
-    | table   | Represents the table operations, e.g. manipulate table data       |
-    
-  version: '0.5'
+  version: '0.6'
   contact:
     name: 'Apigee Inc.'
     email: support@apigee.com
@@ -22,19 +14,15 @@ info:
 basePath: /apid
 consumes:
   - application/json
-  - application/xml	# notyet
   - application/x-www-form-urlencoded
 produces:
   - application/json
-  - application/xml	# notyet
 paths:
   /db: # PATH
     get: # VERB
       summary: getDbResources() - Get resources for this service.
       operationId: getDbResources
       description: Return an array of the resources available.
-      x-published:	# notyet
-        - db.list
       parameters:
         - name: as_list
           type: boolean
@@ -89,8 +77,6 @@ paths:
       summary: getDbSchemas() - List all Schemas
       operationId: getDbSchemas
       description: Return a list of the resource identifiers.
-      x-published:	# notyet
-        - db._schema.list
       parameters:
         - name: as_list
           type: boolean
@@ -138,9 +124,6 @@ paths:
         - schema
       summary: describeDbTable() - Retrieve table definition for the given table.
       operationId: describeDbTable
-      x-published:	# notyet
-        - 'db._schema.{table_name}.describe'
-        - db._schema.table_described
       parameters:
         - name: refresh
           description: Refresh any cached copy of the schema.
@@ -161,9 +144,6 @@ paths:
         - schema
       summary: createDbTable() - Create a table with the given properties and fields.
       operationId: createDbTable
-      x-published:	# notyet
-        - 'db._schema.{table_name}.create'
-        - db._schema.table_created
       parameters:
         - name: schema
           description: Array of table properties and fields definitions.
@@ -188,9 +168,6 @@ paths:
         - schema
       summary: deleteDbTable() - Delete (aka drop) the given table.
       operationId: deleteDbTable
-      x-published:	# notyet
-        - 'db._schema.{table_name}.drop'
-        - db._schema.table_dropped
       parameters: []
       responses:
         '200':
@@ -208,8 +185,6 @@ paths:
       summary: getDbTables() - List all Tables
       operationId: getDbTables
       description: Return a list of the table names.
-      x-published:	# notyet
-        - db._table.list
       responses:
         '200':
           description: Success
@@ -230,34 +205,10 @@ paths:
       tags: [table, get, record, getDbRecords, implemented]
       summary: getDbRecords() - Retrieve one or more records.
       operationId: getDbRecords
-      description: >-
-        Set the <b>filter</b> parameter to a SQL WHERE clause (optional native
-        filter accepted in some scenarios) to limit records returned or leave it
-        blank to return all records up to the maximum limit.<br/> Set the
-        <b>limit</b> parameter with or without a filter to return a specific
-        amount of records.<br/> Use the <b>offset</b> parameter along with the
-        <b>limit</b> parameter to page through sets of records.<br/> Set the
-        <b>order</b> parameter to SQL ORDER_BY clause containing field and
-        optional direction (<field_name> [ASC|DESC]) to order the returned
-        records.<br/> Alternatively, to send the <b>filter</b> with or without
-        <b>params</b> as posted data, use the getRecordsByPost() POST request
-        and post a filter with or without params.<br/>Pass the identifying field
-        values as a comma-separated list in the <b>ids</b> parameter.<br/> Use
-        the <b>id_field</b> and <b>id_type</b> parameters to override or specify
-        detail for identifying fields where applicable.<br/> Alternatively, to
-        send the <b>ids</b> as posted data, use the getRecordsByPost() POST
-        request.<br/> Use the <b>fields</b> parameter to limit properties
-        returned for each record. By default, all fields are returned for all
-        records.
-      x-published:	# notyet
-        - 'db._table.{table_name}.select'
-        - db._table.table_selected
       consumes:
         - application/json
-        - application/xml	# notyet
       produces:
         - application/json
-        - application/xml	# notyet
       parameters:
         - name: fields
           type: array
@@ -309,17 +260,12 @@ paths:
       operationId: createDbRecords
       description: >-
         Posted data should be an array of records wrapped in a <b>record</b>
-        element.<br/> By default, only the id property of the record is returned
-        on success. Use <b>fields</b> parameter to return more info.
-      x-published:	# notyet
-        - 'db._table.{table_name}.insert'
-        - db._table.table_inserted
+        element. By default, only the id property of the record is returned
+        on success. Use fields parameter to return more info.
       consumes:
         - application/json
-        - application/xml	# notyet
       produces:
         - application/json
-        - application/xml	# notyet
       parameters:
         - name: body
           description: Data containing name-value pairs of records to create.
@@ -357,21 +303,16 @@ paths:
       operationId: updateDbRecords
       description: >-
         Post data should be an array of records containing at least the
-        identifying fields for each record.<br/> Posted body should be a single
-        record with name-value pairs to update wrapped in a <b>record</b>
-        tag.<br/> Ids can be included via URL parameter or included in the
-        posted body.<br/> Filter can be included via URL parameter or included
-        in the posted body.<br/> By default, only the id property of the record
-        is returned on success. Use <b>fields</b> parameter to return more info.
-      x-published:	# notyet
-        - 'db._table.{table_name}.update'
-        - db._table.table_updated
+        identifying fields for each record. Posted body should be a single
+        record with name-value pairs to update wrapped in a record
+        tag. Ids can be included via URL parameter or included in the
+        posted body. Filter can be included via URL parameter or included
+        in the posted body. By default, only the id property of the record
+        is returned on success. Use fields parameter to return more info.
       consumes:
         - application/json
-        - application/xml	# notyet
       produces:
         - application/json
-        - application/xml	# notyet
       parameters:
         - name: body
           description: >-
@@ -420,30 +361,10 @@ paths:
       tags: [table, delete, record, deleteDbRecords, implemented]
       summary: deleteDbRecords() - Delete one or more records.
       operationId: deleteDbRecords
-      description: >-
-        Set the <b>ids</b> parameter to a list of record identifying (primary
-        key) values to delete specific records.<br/> Alternatively, to delete
-        records by a large list of ids, pass the ids in the <b>body</b>.<br/> By
-        default, only the id property of the record is returned on success, use
-        <b>fields</b> to return more info. Set the <b>filter</b> parameter to a
-        SQL WHERE clause to delete specific records, otherwise set <b>force</b>
-        to true to clear the table.<br/> Alternatively, to delete by a
-        complicated filter or to use parameter replacement, pass the filter with
-        or without params as the <b>body</b>.<br/> By default, only the id
-        property of the record is returned on success, use <b>fields</b> to
-        return more info. Set the <b>body</b> to an array of records, minimally
-        including the identifying fields, to delete specific records.<br/> By
-        default, only the id property of the record is returned on success, use
-        <b>fields</b> to return more info.
-      x-published:	# notyet
-        - 'db._table.{table_name}.delete'
-        - db._table.table_deleted
       consumes:
         - application/json
-        - application/xml	# notyet
       produces:
         - application/json
-        - application/xml	# notyet
       parameters:
         - name: fields
           type: array
@@ -497,17 +418,12 @@ paths:
       summary: getDbRecord() - Retrieve one record by identifier.
       operationId: getDbRecord
       description: >-
-        Use the <b>fields</b> parameter to limit properties that are returned.
+        Use the fields parameter to limit properties that are returned.
         By default, all fields are returned.
-      x-published:	# notyet
-        - 'db._table.{table_name}.{id}.select'
-        - db._table.record_selected
       consumes:
         - application/json
-        - application/xml	# notyet
       produces:
         - application/json
-        - application/xml	# notyet
       parameters:
         - name: fields
           type: array
@@ -541,19 +457,10 @@ paths:
       tags: [table, patch, record, updateDbRecord, implemented]
       summary: updateDbRecord() - Update (patch) one record by identifier.
       operationId: updateDbRecord
-      description: >-
-        Post data should be an array of fields for a single record.<br/> Use the
-        <b>fields</b> parameter to return more properties. By default, the id is
-        returned.
-      x-published:	# notyet
-        - 'db._table.{table_name}.{id}.update'
-        - db._table.record_updated
       consumes:
         - application/json
-        - application/xml	# notyet
       produces:
         - application/json
-        - application/xml	# notyet
       parameters:
         - name: body
           description: Data containing name-value pairs of the fields to update.
@@ -585,15 +492,10 @@ paths:
       description: >-
         Use the <b>fields</b> parameter to return more deleted properties. By
         default, the id is returned.
-      x-published:	# notyet
-        - 'db._table.{table_name}.{id}.delete'
-        - db._table.record_deleted
       consumes:
         - application/json
-        - application/xml	# notyet
       produces:
         - application/json
-        - application/xml	# notyet
       parameters:
         - name: fields
           type: array
