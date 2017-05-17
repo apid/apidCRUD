@@ -129,8 +129,4 @@ note that the code in this module can be invoked in at least 3 ways:
    * [coveralls for apidCRUD](https://coveralls.io/github/30x/apidCRUD)
    * [godoc for apidCRUD](https://godoc.org/github.com/30x/apidCRUD)
    * [swagger.yaml for apidCRUD](./swagger.yaml)
-   * [apistudio for apidCRUD](http://playground.apistudio.io/28eb9ba8-8575-4700-8076-004ed16d0247/#/)
-
-## Badges
-
-[![Coverage Status](https://coveralls.io/repos/github/30x/apidCRUD/badge.svg?branch=master)](https://coveralls.io/github/30x/apidCRUD?branch=master)
+   * [apistudio for apidCRUD](http://playground.apistudio.io/d2a356b1-b977-434e-a7f9-19adba8496d9/#/)
