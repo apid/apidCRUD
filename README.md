@@ -65,21 +65,33 @@ make func-test
 there are also a handful of \*test.sh scripts,
 each of which calls one of the APIs.
 
+## Adding new APIs
+
+to add a new API:
+
+* create definition in swagger.yaml.  the definition should include a name.
+* add an entry for it (including its path, verb, and handler)
+to the apiTable in plugin.go .
+* put the new handler function in handlers.go .
+* add at least one unit test in handlers_test.go .
+* add at least one functional test script in functests/ .
+modify tester.sh to call the new functional test.
+
 ## Adding unit tests
 
 this project follows the somewhat standard go testing pattern.
 
-   * unit test functions are placed in files whose names end with _test.go .
-   * generally (but not always), functions defined in *FILE*.go have their test functions located in *FILE*_test.go .
-   * *FILE*_test.go imports the module "testing".
-   * the test suite for a function named *XYZ*() is a function named Test_*XYZ*() .
-   * Test_*XYZ*() takes one argument *t* of type \*testing.T .
-   * Test_*XYZ*() in turn may call other functions from *FILE*_test.go, to run the individual test cases.
-   * to report a test failure, call `t.Errorf(fmt, ...)` .
-   * generally, but not always, there may be a variable *XYZ*\_Tab which is an array of test cases, each of type *XYZ*\_TC .
-   * the type *XYZ*\_TC has fields defining the test case: the function arguments, and the expected results of calling the function with those arguments.
-   * Test_*XYZ*() just uses a for/range statement to loop over the test cases.
-   * on each test case, the function *XYZ*_Checker() checks one test case.
+* unit test functions are placed in files whose names end with _test.go .
+* generally (but not always), functions defined in *FILE*.go have their test functions located in *FILE*_test.go .
+* *FILE*_test.go imports the module "testing".
+* the test suite for a function named *XYZ*() is a function named Test_*XYZ*() .
+* Test_*XYZ*() takes one argument *t* of type \*testing.T .
+* Test_*XYZ*() in turn may call other functions from *FILE*_test.go, to run the individual test cases.
+* to report a test failure, call `t.Errorf(fmt, ...)` .
+* generally, but not always, there may be a variable *XYZ*\_Tab which is an array of test cases, each of type *XYZ*\_TC .
+* the type *XYZ*\_TC has fields defining the test case: the function arguments, and the expected results of calling the function with those arguments.
+* Test_*XYZ*() just uses a for/range statement to loop over the test cases.
+* on each test case, the function *XYZ*_Checker() checks one test case.
 
 Template:
 ```
@@ -119,9 +131,16 @@ func Test_XYZ(t *testing.T) {
 
 note that the code in this module can be invoked in at least 3 ways:
 
-   * as an apid plugin, called via apid.InitializePlugins() - see init.c, plugin.c
-   * standalone test program - see cmd/apidCRUD/main.go, init.c, plugin.c
-   * thru unit test framework - see setup_test.go
+* as an apid plugin, called via apid.InitializePlugins() -
+see init.c, plugin.c .
+when called this way, initPlugin() uses configuration info from
+apid's config file.
+* standalone test program - see cmd/apidCRUD/main.go, init.c, plugin.c .
+when called this way, initPlugin() uses configuration info from
+the apid_config.yaml file in this directory.
+* thru unit test framework - see setup_test.go .
+when called this way, initPlugin() uses configuration info from
+utConfData in globals_test.go .
 
 ## Resources
 
