@@ -26,7 +26,7 @@ func convert(i interface{}) interface{} {
     return i
 }
 
-func fileToJson(cont []byte) []byte {
+func contToJson(cont []byte) []byte {
 	obj := map[interface{}]interface{} {}
 	err := yaml.Unmarshal(cont, &obj)
 	if err != nil {
@@ -47,18 +47,24 @@ func fileToJson(cont []byte) []byte {
 }
 
 func main() {
-	var cont []byte
 	var err error
-	if len(os.Args) < 2 {
-		cont, err = ioutil.ReadAll(os.Stdin)
-	} else {
-		cont, err = ioutil.ReadFile(os.Args[1])
+	F := os.Stdin
+	if len(os.Args) > 1 {
+		fn := os.Args[1]
+		F, err = os.Open(fn)
+		if err != nil {
+			fmt.Fprintf(os.Stderr,
+				"Error: %s - could not open %s\n", err, fn)
+			os.Exit(2)
+		}
 	}
+
+	cont, err := ioutil.ReadAll(F)
 	if err != nil {
 		fmt.Fprintf(os.Stderr,
-			"Error: %s - could not read input\n", err)
-		os.Exit(1)
+			"Error: %s - read error\n", err)
+		os.Exit(2)
 	}
-	out := fileToJson(cont)
+	out := contToJson(cont)
 	fmt.Printf("%s\n", out)
 }

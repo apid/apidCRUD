@@ -67,7 +67,7 @@ func createDbData(db dbType) {
 		// fmt.Printf("cmd=%s\n", cmd)
 		if err != nil {
 			panic(fmt.Sprintf(
-				`Exec error on "%s": [%s]\n`, cmd, err))
+				"Exec error on "%s": [%s]\n", cmd, err))
 		}
 	}
 }
