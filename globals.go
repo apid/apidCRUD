@@ -1,10 +1,9 @@
 package apidCRUD
 
 // this file contains defs that are global to the apidCRUD plugin.
-// do not put functions here other than initConfig() and confGet().
+// do not put functions here.
 
 import (
-	"strconv"
 	"net/http"
 	"database/sql"
 	"github.com/30x/apid-core"
@@ -45,31 +44,3 @@ var maxRecs = 1000
 
 // tobleOfTables is the name of the internal table of table names/schemas
 var  tableOfTables = "_tables_"
-
-// getStringer is an interface that supports GetString().
-// narrowed from apid.ConfigService.
-type getStringer interface {
-	GetString(vname string) string
-}
-
-// confGet() returns the config value of the named string,
-// or if there is no configured value, the given default value.
-func confGet(gsi getStringer, vname string, defval string) string {
-	ret := gsi.GetString(vname)
-	if ret == "" {
-		return defval
-	}
-	return ret
-}
-
-// initConfig() sets up some global configuration parameters for this plugin.
-func initConfig(gsi getStringer) {
-	aMaxRecs := strconv.Itoa(maxRecs)
-
-	// these are all global assignments!
-	dbDriver = confGet(gsi, "apidCRUD_db_driver", dbDriver)
-	dbName = confGet(gsi, "apidCRUD_db_name", dbName)
-	basePath = confGet(gsi, "apidCRUD_base_path", basePath)
-	maxRecs, _ = strconv.Atoi(			// nolint
-		confGet(gsi, "apidCRUD_max_recs", aMaxRecs))
-}

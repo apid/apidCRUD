@@ -9,5 +9,5 @@
 .coveralls.yml
 *.iml
 /.idea
-/swagger.go
+/gen_*.go
 /swagger.json

@@ -1,6 +1,7 @@
 package apidCRUD
 
 import (
+	"strconv"
 	"net/http"
 	"github.com/30x/apid-core"
 )
@@ -75,4 +76,34 @@ func addPath(service handleFuncer, path string, vmap verbMap) {
 // getPathParams() returns a map of path params from the given http request.
 func getPathParams(req *http.Request) map[string]string {
 	return apid.API().Vars(req)
+}
+
+// ----- configuration related functions
+
+// getStringer is an interface that supports GetString().
+// narrowed from apid.ConfigService.
+type getStringer interface {
+	GetString(vname string) string
+}
+
+// confGet() returns the config value of the named string,
+// or if there is no configured value, the given default value.
+func confGet(gsi getStringer, vname string, defval string) string {
+	ret := gsi.GetString(vname)
+	if ret == "" {
+		return defval
+	}
+	return ret
+}
+
+// initConfig() sets up some global configuration parameters for this plugin.
+func initConfig(gsi getStringer) {
+	aMaxRecs := strconv.Itoa(maxRecs)
+
+	// these are all global assignments!
+	dbDriver = confGet(gsi, "apidCRUD_db_driver", dbDriver)
+	dbName = confGet(gsi, "apidCRUD_db_name", dbName)
+	basePath = confGet(gsi, "apidCRUD_base_path", basePath)
+	maxRecs, _ = strconv.Atoi(			// nolint
+		confGet(gsi, "apidCRUD_max_recs", aMaxRecs))
 }
