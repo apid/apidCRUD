@@ -70,48 +70,6 @@ paths:
           description: Error
           schema:
             $ref: '#/definitions/Error'
-  /db/_schema: # PATH
-    get: # VERB
-      tags:
-        - schema
-      summary: getDbSchemas() - List all Schemas
-      operationId: getDbSchemas
-      description: Return a list of the resource identifiers.
-      parameters:
-        - name: as_list
-          type: boolean
-          in: query
-          description: Return only a list of the resource identifiers.
-        - name: fields
-          type: array
-          collectionFormat: csv
-          items:
-            type: string
-          in: query
-          description: >-
-            Comma-delimited list of properties to be returned for each resource,
-            "*" returns all properties. If as_list, use this to override the
-            default identifier.
-        - name: ids
-          type: array
-          collectionFormat: csv
-          items:
-            type: string
-          in: query
-          description: Comma-delimited list of the identifiers of the records to retrieve.
-        - name: refresh
-          type: boolean
-          in: query
-          description: Refresh any cached resource list on the server.
-      responses:
-        '200':
-          description: Success
-          schema:
-            $ref: '#/definitions/SchemasResponse'
-        default:
-          description: Error
-          schema:
-            $ref: '#/definitions/Error'
   '/db/_schema/{table_name}': # PATH
     parameters:
       - name: table_name

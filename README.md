@@ -70,8 +70,7 @@ each of which calls one of the APIs.
 to add a new API:
 
 * create definition in swagger.yaml.  the definition should include a name.
-* add an entry for it (including its path, verb, and handler)
-to the apiTable in plugin.go .
+* remove the generated file gen_swag.go (to be sure)
 * put the new handler function in handlers.go .
 * add at least one unit test in handlers_test.go .
 * add at least one functional test script in functests/ .

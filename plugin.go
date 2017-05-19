@@ -23,22 +23,6 @@ type forModuler interface {
 	ForModule(name string) apid.LogService
 }
 
-// ----- apiTable is the list of APIs that need to be wired up.
-var apiTable = []apiDesc {
-	{ "/db", http.MethodGet, getDbResourcesHandler },
-	{ "/db/_table", http.MethodGet, getDbTablesHandler },
-	{ "/db/_table/{table_name}", http.MethodGet, getDbRecordsHandler },
-	{ "/db/_table/{table_name}", http.MethodPost, createDbRecordsHandler },
-	{ "/db/_table/{table_name}", http.MethodDelete, deleteDbRecordsHandler },
-	{ "/db/_table/{table_name}", http.MethodPatch, updateDbRecordsHandler },
-	{ "/db/_table/{table_name}/{id}", http.MethodGet, getDbRecordHandler },
-	{ "/db/_table/{table_name}/{id}", http.MethodPatch, updateDbRecordHandler },
-	{ "/db/_table/{table_name}/{id}", http.MethodDelete, deleteDbRecordHandler },
-	{ "/db/_schema/{table_name}", http.MethodPost, createDbTableHandler },
-	{ "/db/_schema/{table_name}", http.MethodGet, describeDbTableHandler },
-	{ "/db/_schema/{table_name}", http.MethodDelete, deleteDbTableHandler },
-}
-
 // ----- functions go below this line
 
 // initPlugin() is called by the apid InitializePlugins().

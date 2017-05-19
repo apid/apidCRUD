@@ -14,7 +14,7 @@ VENDOR_DIR := github.com/30x/$(MYAPP)/vendor
 SQLITE_PKG := github.com/mattn/go-sqlite3
 
 clean:
-	/bin/rm -f swagger.go
+	/bin/rm -f gen_*.go
 	go clean
 	/bin/rm -rf $(LOG_DIR)
 	mkdir -p $(LOG_DIR)
@@ -32,7 +32,7 @@ get:
 	[ -d ./vendor ] \
 	|| glide install
 
-build: swagger.go
+build: gen_swag.go
 	time go $@
 
 setup:
@@ -43,7 +43,7 @@ preinstall: get
 	[ -d $(VENDOR_DIR)/$(SQLITE_PKG) ] \
 	|| go install $(VENDOR_DIR)/$(SQLITE_PKG)
 
-install: setup preinstall swagger.go
+install: setup preinstall gen_swag.go
 	go $@ ./cmd/$(MYAPP)
 
 run: install
@@ -54,7 +54,7 @@ killer:
 
 test: unit-test
 
-unit-test: swagger.go
+unit-test: gen_swag.go
 	./unit-test.sh
 
 cov-view:
@@ -76,8 +76,8 @@ doc:
 fix-readme:
 	./fix-readme.sh README.md template.txt
 
-swagger.go: swagger.yaml mk-swagger-go.sh cmd/yaml2json/yaml2json.go
-	./mk-swagger-go.sh $< > $@
+gen_swag.go: swagger.yaml cmd/swag/main.go
+	go run cmd/swag/main.go $< > $@
 
 ##
 ## this is not a working target.
