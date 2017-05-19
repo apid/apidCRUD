@@ -69,13 +69,15 @@ each of which calls one of the APIs.
 
 to add a new API:
 
-* create definition in swagger.yaml.  the definition should include a name.
+* create definition in swagger.yaml.
+the definition should include an operationId.
 be sure to up the version number.
 * upload the new swagger.yaml to apistudio.com .
-* update the apistudio link in README.md .
-* remove the generated file gen_swag.go (to be sure),
-and run "make install" to regenerate the apiTable.
-* put the new handler function in handlers.go .
+* update the apistudio link in the [Resources](#resources) section of README.md .
+* remove the generated file gen_swag.go
+to ensure that apiTable will be regenerated.
+* put the new handler function in handlers.go,
+named after the operationId with "Handler" appended.
 * add at least one unit test in handlers_test.go .
 * add at least one functional test script in functests/ .
 modify tester.sh to call the new functional test.
