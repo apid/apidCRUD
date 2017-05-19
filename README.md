@@ -70,7 +70,11 @@ each of which calls one of the APIs.
 to add a new API:
 
 * create definition in swagger.yaml.  the definition should include a name.
-* remove the generated file gen_swag.go (to be sure)
+be sure to up the version number.
+* upload the new swagger.yaml to apistudio.com .
+* update the apistudio link in README.md .
+* remove the generated file gen_swag.go (to be sure),
+and run "make install" to regenerate the apiTable.
 * put the new handler function in handlers.go .
 * add at least one unit test in handlers_test.go .
 * add at least one functional test script in functests/ .
@@ -147,4 +151,4 @@ utConfData in globals_test.go .
    * [coveralls for apidCRUD](https://coveralls.io/github/30x/apidCRUD)
    * [godoc for apidCRUD](https://godoc.org/github.com/30x/apidCRUD)
    * [swagger.yaml for apidCRUD](./swagger.yaml)
-   * [apistudio for apidCRUD](http://playground.apistudio.io/d2a356b1-b977-434e-a7f9-19adba8496d9/#/)
+   * [apistudio for apidCRUD](http://playground.apistudio.io/d40adf05-277a-4751-9aa1-256b28aa62f6/#/)

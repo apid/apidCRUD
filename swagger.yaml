@@ -3,7 +3,7 @@ info:
   title: Building blocks of REPL and CRUD module
   description: |
     Assumes you have read [APID Core](https://docs.google.com/a/apigee.com/document/d/15-HvWdv-JGRk5rKDK5DLjr0qEqe8lwy18AQRQqRlO-I/edit?usp=sharing) document.
-  version: '0.6'
+  version: '0.7'
   contact:
     name: 'Apigee Inc.'
     email: support@apigee.com
@@ -519,14 +519,6 @@ definitions:
       name:
         type: string
         description: Identifier of the resource.
-  SchemasResponse:
-    type: object
-    properties:
-      resource:
-        type: array
-        description: Array of resources available to this path.
-        items:
-          $ref: '#/definitions/SchemaResponse'
   TableSchema:
     type: object
     properties:
