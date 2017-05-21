@@ -11,7 +11,8 @@ import (
 	"path"
 )
 
-// context for printing test failure messages.
+// context for printing assertion failure messages including the tab name
+// and item number for table-based testcases.
 type testContext struct {
 	t *testing.T
 	tabName string
@@ -42,6 +43,7 @@ func (cx *testContext) bump() {
 
 // ----- definition of assertions
 
+// assertEqual() fails the test unless exp and act are equal.
 func (cx *testContext) assertEqual(exp interface{}, act interface{}, msg string) bool {
 	if exp != act {
 		cx.Errorf(`*** Assertion Failed: %s, got (%T)<%v>; expected (%T)<%v>`,
@@ -51,6 +53,7 @@ func (cx *testContext) assertEqual(exp interface{}, act interface{}, msg string)
 	return true
 }
 
+// assertEqualObj() fails the test unless exp and act are deeply equal.
 func (cx *testContext) assertEqualObj(exp interface{}, act interface{}, msg string) bool {
 	if !reflect.DeepEqual(exp, act) {
 		cx.Errorf(`assertion failed: %s, got <%s>; expected <%s>`,
@@ -60,6 +63,7 @@ func (cx *testContext) assertEqualObj(exp interface{}, act interface{}, msg stri
 	return true
 }
 
+// assertTrue() fails the test unless act is true.
 func (cx *testContext) assertTrue(act bool, msg string) bool {
 	if !act {
 		cx.Errorf(`assertion failed: %s, is %t; s/b true`,
@@ -69,6 +73,7 @@ func (cx *testContext) assertTrue(act bool, msg string) bool {
 	return true
 }
 
+// assertErrorNil fails the test unless act is nil.
 func (cx *testContext) assertErrorNil(err error, msg string) bool {
 	if err != nil {
 		cx.Errorf(`assertion failed: %s, gave error [%s]`,
@@ -97,6 +102,12 @@ func getFunctionName(f interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 }
 
+// getTestCaller() returns the name of the n-th function up the call
+// chain from the caller of "this" function.  ie, the function that
+// called getTestCaller would be 0; the caller of that function
+// would be 1.
+// the returned name includes the file and line number of the
+// function call.
 func getTestCaller(nth int) string {
 	pc := make([]uintptr, 1)
 	n := runtime.Callers(nth+2, pc)
@@ -106,6 +117,7 @@ func getTestCaller(nth int) string {
 	frames := runtime.CallersFrames(pc[:n])
 	frame, _ := frames.Next()
 	fn := frame.Function
+	// skip over the module name if any.
 	i := strings.LastIndexByte(fn, '.')
 	if i >= 0 {
 		fn = fn[i+1:]

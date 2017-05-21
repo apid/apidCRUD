@@ -127,7 +127,7 @@ func Test_XYZ(t *testing.T) {
 	cx := newTestContext(t, "XYZ_Tab")
 	for _, tc := range XYZ_Tab {
 		XYZ_Checker(cx, &tc)
-		cx.bump()
+		cx.bump()	// increment testno.
 	}
 }
 ```
