@@ -174,12 +174,12 @@ func deleteDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 
 // tablesQuery is the guts of getDbTablesHandler().
 // it's easier to test with an argument.
-func tablesQuery(tabname string,
-		fieldname string) apiHandlerRet {
+func tablesQuery(tabName string,
+		fieldName string) apiHandlerRet {
 	// the tableOfTables table is our convention, not maintained by sqlite.
 
 	idlist := []interface{}{}
-	qstring := fmt.Sprintf("select %s from %s", fieldname, tabname)
+	qstring := fmt.Sprintf("select %s from %s", fieldName, tabName)
 	result, err := runQuery(db, qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err, "after runQuery")
@@ -194,15 +194,15 @@ func tablesQuery(tabname string,
 
 // schemaQuery is the guts of describeDbTableHandler().
 // it's easier to test with an argument.
-func schemaQuery(tabname string,
-		fieldname string,
+func schemaQuery(tabName string,
+		fieldName string,
 		selector string,
 		item string) apiHandlerRet {
 	// the tableOfTables table is our convention, not maintained by sqlite.
 
 	idlist := []interface{}{}
 	qstring := fmt.Sprintf(`select %s from %s where %s = "%s"`,
-			fieldname, tabname, selector, item)
+			fieldName, tabName, selector, item)
 	result, err := runQuery(db, qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err, "after runQuery")
@@ -341,7 +341,7 @@ func getExecResult(res sql.Result) xResult {
 // runInsert() inserts a record whose data is specified by the
 // given keys and values.  it returns the id of the inserted record.
 func runInsert(db dbType,
-		tabname string,
+		tabName string,
 		keys []string,
 		values []interface{}) (idType, error) {
 	nvalues := len(values)
@@ -350,7 +350,7 @@ func runInsert(db dbType,
 	placestr := nstring("?", nvalues)
 
 	qstring := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",  // nolint
-		tabname, keystr, placestr)
+		tabName, keystr, placestr)
 
 	exres, err := runExec(db, qstring, values)
 	return exres.lastInsertId, err
