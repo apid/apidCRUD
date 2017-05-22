@@ -1,0 +1,21 @@
+/*
+this is only a suggestion for how the test suite for
+an API handler function might be written.
+ */
+
+// ----- unit tests for XYZHandler().
+
+// table of XYZ testcases.
+var XYZHandler_Tab = []apiCall_TC {
+	// CUSTOMIZE and add multiple cases
+	{"Customize the title for this test call",
+		XYZHandler,
+		http.MethodPost,
+		`Customize the handler argument descriptor string`,
+		http.StatusOK, []byte("xdata")},
+}
+
+// the XYZ test suite.  run all XYZ testcases.
+func Test_XYZHandler(t *testing.T) {
+	apiCalls_Runner(t, "XYZHandler_Tab", XYZHandler_Tab)
+}

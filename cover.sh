@@ -25,7 +25,7 @@ for d in $(modules); do
     go test "-coverprofile=$prof" -covermode=set $d
     if [ -f "$prof" ]; then
         head -2 "$prof" >> "$ctxt"
-        rm "$prof"
+        rm -f "$prof"
     fi
 done
 go tool cover "-html=$ctxt" -o "$cdir/cover.html"

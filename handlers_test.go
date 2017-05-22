@@ -569,12 +569,24 @@ type apiCall_TC struct {
 	verb string
 	argDesc string
 	xcode int
+	xdata string
 }
+
+// this special value for xdata signifies do not check the returned data.
+const noCheck = `NOCHECK`
 
 func apiCall_Checker(cx *testContext, tc *apiCall_TC) apiHandlerRet {
 	log.Debugf("----- %s #%d: [%s]", cx.tabName, cx.testno, tc.title)
 	result := callApiHandler(tc.hf, tc.verb, tc.argDesc)
 	cx.assertEqual(tc.xcode, result.code, tc.title)
+	// check the returned data only if expected data is non-nil.
+	if tc.xdata != noCheck {
+		rdata, err := convData(result.data)
+		if !cx.assertErrorNil(err, "data conversion error") {
+			return result
+		}
+		cx.assertEqual(tc.xdata, string(rdata), tc.title)
+	}
 	return result
 }
 
@@ -599,205 +611,205 @@ var createDbRecords_Tab = []apiCall_TC {
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc1","xyz1"]}]}`,
-		http.StatusCreated},
+		http.StatusCreated, noCheck},
 	{"create record 2",
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc2","xyz2"]}]}`,
-		http.StatusCreated},
+		http.StatusCreated, noCheck},
 	{"create record 3",
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc3","xyz3"]}]}`,
-		http.StatusCreated},
+		http.StatusCreated, noCheck},
 	{"create record 4",
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4"]}]}`,
-		http.StatusCreated},
+		http.StatusCreated, noCheck},
 
 	{"get record 123",
 		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=123|fields=name,uri`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 	{"get record 1",
 		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=1|fields=name,uri`,
-		http.StatusOK},
+		http.StatusOK, noCheck},
 	{"get record 2",
 		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=2|fields=name,uri`,
-		http.StatusOK},
+		http.StatusOK, noCheck},
 
 	{"get records 1,2",
 		getDbRecordsHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles|ids=1,2&fields=name,uri`,
-		http.StatusOK},
+		http.StatusOK, noCheck},
 
 	{"get record 1 bad field",
 		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=123|fields=name,uri,bogus`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"delete records 2,4",
 		deleteDbRecordsHandler,
 		http.MethodDelete,
 		`/db/_table/tabname|table_name=bundles|ids=2,4`,
-		http.StatusOK},
+		http.StatusOK, noCheck},
 
 	{"delete records no id or ids",
 		deleteDbRecordsHandler,
 		http.MethodDelete,
 		`/db/_table/tabname|table_name=bundles`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"delete record no id or ids",
 		deleteDbRecordHandler,
 		http.MethodDelete,
 		`/db/_table/tabname|table_name=bundles`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"delete record bad table_name",
 		deleteDbRecordHandler,
 		http.MethodDelete,
 		`/db/_table/tabname|table_name=bogus|id=1`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"get record 2 expecting failure",
 		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=2`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"get record 4 expecting failure",
 		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=4`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"delete record 1",
 		deleteDbRecordHandler,
 		http.MethodDelete,
 		`/db/_table/tabname|table_name=bundles&id=1`,
-		http.StatusOK},
+		http.StatusOK, noCheck},
 
 	{"delete record 1 expecting failure",
 		deleteDbRecordHandler,
 		http.MethodDelete,
 		`/db/_table/tabname|table_name=bundles&id=1`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"get record 1 expecting failure",
 		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=bundles&id=1`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"update records missing id",
 		updateDbRecordsHandler,
 		http.MethodPatch,
 		`/db/_table/tabname|table_name=bundles`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"update records missing table_name",
 		updateDbRecordsHandler,
 		http.MethodPatch,
 		`/db/_table/tabname|id=1`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"update records bogus table_name",
 		updateDbRecordsHandler,
 		http.MethodPatch,
 		`/db/_table/tabname|table_name=bogus&id=1||{"records":[{"keys":["name", "uri"], "values":["name9", "uri9"]}]}`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"update records bogus field name",
 		updateDbRecordsHandler,
 		http.MethodPatch,
 		`/db/_table/tabname|table_name=xxx&id=1||{"records":[{"keys":["bogus", "uri"], "values":["name9", "uri9"]}]}`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"update records no body records",
 		updateDbRecordsHandler,
 		http.MethodPatch,
 		`/db/_table/tabname|table_name=xxx&id=1||{"records":[]}`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"update record missing id",
 		updateDbRecordHandler,
 		http.MethodPatch,
 		`/db/_table/tabname|table_name=bundles`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"create record missing id",
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"create records missing body",
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles|id=1`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"create records missing table_name",
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|id=1`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"create records bogus field",
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","bogus"],"Values":["abc3","xyz3"]}]}`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"get records missing table_name",
 		getDbRecordsHandler,
 		http.MethodGet,
 		`/db/_table/tabname|id=1`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"get record missing table_name",
 		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|id=1`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"delete records missing table_name",
 		deleteDbRecordsHandler,
 		http.MethodDelete,
 		`/db/_table/tabname||ids=1`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"delete record missing table name",
 		deleteDbRecordHandler,
 		http.MethodDelete,
 		`/db/_table/tabname/1234|id=1`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"delete record nonexistent record",
 		deleteDbRecordHandler,
 		http.MethodDelete,
 		`/db/_table/tabname/1234|id=1001`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 
 	{"create records with excess values",
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=xxx||{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4","superfluous"]}]}`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 }
 
 // the handlers must be called in a certain order, in order for the
 // calls to succeed or fail as expected.
-func Test_createDbRecords(t *testing.T) {
+func Test_createDbRecordsHandler(t *testing.T) {
 	apiCalls_Runner(t, "createDbRecords_Tab", createDbRecords_Tab)
 }
 
@@ -808,7 +820,7 @@ var getDbTables_Tab = []apiCall_TC {
 		getDbTablesHandler,
 		http.MethodGet,
 		"/db/_tables",
-		http.StatusOK},
+		http.StatusOK, noCheck},
 }
 
 func getDbTables_Checker(cx *testContext, tc *apiCall_TC) {
@@ -827,7 +839,7 @@ func getDbTables_Checker(cx *testContext, tc *apiCall_TC) {
 	cx.assertEqualObj(xtabNames, resNames, "retrieved names")
 }
 
-func Test_getDbTables(t *testing.T) {
+func Test_getDbTablesHandler(t *testing.T) {
 	cx := newTestContext(t, "getDbTables_Tab")
 	for _, tc := range getDbTables_Tab {
 		getDbTables_Checker(cx, &tc)
@@ -864,7 +876,7 @@ func Test_tablesQuery_bogusField(t *testing.T) {
 
 // ----- unit tests of updateDbRecordHandler()
 
-func Test_updateDbRecord(t *testing.T) {
+func Test_updateDbRecordHandler(t *testing.T) {
 
 	cx := newTestContext(t)
 	tabName := "xxx"
@@ -879,7 +891,7 @@ func Test_updateDbRecord(t *testing.T) {
 		updateDbRecordHandler,
 		http.MethodPatch,
 		argDesc,
-		http.StatusOK}
+		http.StatusOK, noCheck}
 
 	result := apiCall_Checker(cx, &tc)
 	if result.code != tc.xcode {
@@ -915,7 +927,7 @@ func retrieveValues(cx *testContext,
 		getDbRecordHandler,
 		http.MethodGet,
 		argDesc,
-		http.StatusOK}
+		http.StatusOK, noCheck}
 	result := apiCall_Checker(cx, &tc)
 	if !cx.assertEqual(tc.xcode, result.code,
 		"return code from getDbRecordHandler") {
@@ -940,7 +952,7 @@ func retrieveValues(cx *testContext,
 
 // ----- unit tests for updateDbRecordsHandler()
 
-func Test_updateDbRecords(t *testing.T) {
+func Test_updateDbRecordsHandler(t *testing.T) {
 
 	cx := newTestContext(t)
 	tabName := "xxx"
@@ -956,7 +968,7 @@ func Test_updateDbRecords(t *testing.T) {
 		updateDbRecordsHandler,
 		http.MethodPatch,
 		argDesc,
-		http.StatusOK}
+		http.StatusOK, noCheck}
 
 	result := apiCall_Checker(cx, &tc)
 	if result.code != tc.xcode {
@@ -982,7 +994,7 @@ func Test_updateDbRecords(t *testing.T) {
 		getDbRecordHandler,
 		http.MethodGet,
 		argDesc,
-		http.StatusOK}
+		http.StatusOK, noCheck}
 	result = apiCall_Checker(cx, &tc)
 	if tc.xcode != result.code {
 		// would have already failed.
@@ -1066,46 +1078,46 @@ var createDbTable_Tab = []apiCall_TC {
 		createDbTableHandler,
 		http.MethodPost,
 		`/db/_schema|||`+users_schema,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 	{"create table w/ invalid table_name",
 		createDbTableHandler,
 		http.MethodPost,
 		`/db/_schema|table_name=XYZ.DEF||`+users_schema,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 	{"create table w/ malformed body",
 		createDbTableHandler,
 		http.MethodPost,
 		`/db/_schema/ABC|table_name=ABC||bogus`+users_schema,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 	{"create table ABC expecting success",
 		createDbTableHandler,
 		http.MethodPost,
 		`/db/_schema/ABC|table_name=ABC||`+users_schema,
-		http.StatusCreated},
+		http.StatusCreated, noCheck},
 	{"create table GHI expecting success, absent properties",
 		createDbTableHandler,
 		http.MethodPost,
 		`/db/_schema/GHI|table_name=GHI||{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri"},{"name":"name"}]}`,
-		http.StatusCreated},
+		http.StatusCreated, noCheck},
 	{"create table ABC expecting failure, pre-existing",
 		createDbTableHandler,
 		http.MethodPost,
 		`/db/_schema/ABC|table_name=ABC||`+users_schema,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 	{"create record in ABC",
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/db/_table/tabname|table_name=ABC||{"Records":[{"Keys":["name","uri"],"Values":["xyz-abc4","abc-xyz4"]}]}`,
-		http.StatusCreated},
+		http.StatusCreated, noCheck},
 	{"get record 1 in ABC",
 		getDbRecordHandler,
 		http.MethodGet,
 		`/db/_table/tabname|table_name=ABC&id=1|fields=name,uri`,
-		http.StatusOK},
+		http.StatusOK, noCheck},
 }
 
 // the createDbTable test suite.  run all createDbTable testcases.
-func Test_createDbTable(t *testing.T) {
+func Test_createDbTableHandler(t *testing.T) {
 	apiCalls_Runner(t, "createDbTable_Tab", createDbTable_Tab)
 }
 
@@ -1117,36 +1129,36 @@ var deleteDbTable_Tab = []apiCall_TC {
 		deleteDbTableHandler,
 		http.MethodDelete,
 		`/db/_schema`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 	{"delete table ABC empty table_name",
 		deleteDbTableHandler,
 		http.MethodDelete,
 		`/db/_schema|table_name=`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 	{"delete table ABCD expecting failure",
 		deleteDbTableHandler,
 		http.MethodDelete,
 		`/db/_schema/ABCD|table_name=ABCD`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 	{"create table ABCD expecting success",
 		createDbTableHandler,
 		http.MethodPost,
 		`/db/_schema/ABCD|table_name=ABCD||{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}`,
-		http.StatusCreated},
+		http.StatusCreated, noCheck},
 	{"delete table ABCD expecting success",
 		deleteDbTableHandler,
 		http.MethodDelete,
 		`/db/_schema/ABCD|table_name=ABCD`,
-		http.StatusOK},
+		http.StatusOK, noCheck},
 	{"delete table ABCD expecting failure",
 		deleteDbTableHandler,
 		http.MethodDelete,
 		`/db/_schema/ABCD|table_name=ABCD`,
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 }
 
 // the deleteDbTable test suite.  run all deleteDbTable testcases.
-func Test_deleteDbTable(t *testing.T) {
+func Test_deleteDbTableHandler(t *testing.T) {
 	apiCalls_Runner(t, "deleteDbTable_Tab", deleteDbTable_Tab)
 }
 
@@ -1200,7 +1212,7 @@ func Test_schemaQuery(t *testing.T) {
 	}
 }
 
-// ----- unit tests for describeDbTable().
+// ----- unit tests for describeDbTableHandler().
 
 // table of describeDbTable testcases.
 var describeDbTable_Tab = []apiCall_TC {
@@ -1208,26 +1220,26 @@ var describeDbTable_Tab = []apiCall_TC {
 		describeDbTableHandler,
 		http.MethodGet,
 		"/db/_schema/users|table_name=users",
-		http.StatusOK},
+		http.StatusOK, noCheck},
 	{"get schema for bundles table",
 		describeDbTableHandler,
 		http.MethodGet,
 		"/db/_schema/bundles|table_name=bundles",
-		http.StatusOK},
+		http.StatusOK, noCheck},
 	{"get schema for bogus table",
 		describeDbTableHandler,
 		http.MethodGet,
 		"/db/_schema/bogus|table_name=bogus",
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 	{"get schema for no table_name",
 		describeDbTableHandler,
 		http.MethodGet,
 		"/db/_schema/|",
-		http.StatusBadRequest},
+		http.StatusBadRequest, noCheck},
 }
 
 // the describeDbTable test suite.  run all describeDbTable testcases.
-func Test_describeDbTable(t *testing.T) {
+func Test_describeDbTableHandler(t *testing.T) {
 	apiCalls_Runner(t, "describeDbTable_Tab", describeDbTable_Tab)
 }
 
@@ -1263,10 +1275,191 @@ var getDbResources_Tab = []apiCall_TC {
 		getDbResourcesHandler,
 		http.MethodGet,
 		"/db",
-		http.StatusOK},
+		http.StatusOK, noCheck},
 }
 
 // the getDbResources test suite.  run all getDbResources testcases.
-func Test_getDbResources(t *testing.T) {
+func Test_getDbResourcesHandler(t *testing.T) {
 	apiCalls_Runner(t, "getDbResources_Tab", getDbResources_Tab)
+}
+
+// ----- unit tests for deleteDbRecordHandler().
+
+// this test suite is somewhat minimal since deleteDbRecordHandler
+// gets more thorough testing by the unit tests for createDbRecordsHandler.
+
+// table of deleteDbRecord testcases.
+var deleteDbRecord_Tab = []apiCall_TC {
+	{"create table xxxdel",
+		createDbTableHandler,
+		http.MethodPost,
+		`/db/_schema/ABC|table_name=xxxdel||`+users_schema,
+		http.StatusCreated, noCheck},
+	{"create db resources",
+		createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=xxxdel||{"Records":[{"Keys":["name","uri"],"Values":["name-1","uri-1"]}]}`,
+		http.StatusCreated, `{"Ids":[1]}`},
+	{"delete db resources expecting success",
+		deleteDbRecordHandler,
+		http.MethodDelete,
+		"/db/_table/xxx|table_name=xxxdel&id=1",
+		http.StatusOK, `{"NumChanged":1}`},
+	{"delete table xxxdel",
+		deleteDbTableHandler,
+		http.MethodDelete,
+		`/db/_schema/ABCD|table_name=xxxdel`,
+		http.StatusOK, noCheck},
+}
+
+// the deleteDbRecord test suite.  run all deleteDbRecord testcases.
+func Test_deleteDbRecordHandler(t *testing.T) {
+	apiCalls_Runner(t, "deleteDbRecord_Tab", deleteDbRecord_Tab)
+}
+
+// ----- unit tests for deleteDbRecordsHandler().
+
+// this test suite is somewhat minimal since deleteDbRecordsHandler
+// gets more thorough testing by the unit tests for createDbRecordsHandler.
+
+// table of deleteDbRecords testcases.
+var deleteDbRecords_Tab = []apiCall_TC {
+	{"setup: create table xxxdels",
+		createDbTableHandler,
+		http.MethodPost,
+		`/db/_schema/ABC|table_name=xxxdels||`+users_schema,
+		http.StatusCreated, noCheck},
+	{"setup: create db record 1",
+		createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=xxxdels||{"Records":[{"Keys":["name","uri"],"Values":["xyz-abc5","abc-xyz5"]}]}`,
+		http.StatusCreated, noCheck},
+	{"create db record 2",
+		createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=xxxdels||{"Records":[{"Keys":["name","uri"],"Values":["xxxdel1","abc-xyz5"]}]}`,
+		http.StatusCreated, noCheck},
+	{"delete db records 1,2",
+		deleteDbRecordsHandler,
+		http.MethodDelete,
+		"/db/_table/xxx|table_name=xxxdels|ids=1,2",
+		http.StatusOK, `{"NumChanged":2}`},
+	{"teardown: delete table xxxdels",
+		deleteDbTableHandler,
+		http.MethodDelete,
+		`/db/_schema/xxxdels|table_name=xxxdels`,
+		http.StatusOK, noCheck},
+}
+
+// the deleteDbRecords test suite.  run all deleteDbRecords testcases.
+func Test_deleteDbRecordsHandler(t *testing.T) {
+	apiCalls_Runner(t, "deleteDbRecords_Tab", deleteDbRecords_Tab)
+}
+
+// ----- unit tests for getDbRecordHandler().
+
+// this suite is somewhat miminal since getDbRecordHandler is well
+// exercised by the test suite for createDbRecordsHandler.
+
+// table of getDbRecord testcases.
+var getDbRecordHandler_Tab = []apiCall_TC {
+	{"setup: create table xxxget",
+		createDbTableHandler,
+		http.MethodPost,
+		`/db/_schema/ABC|table_name=xxxget||`+users_schema,
+		http.StatusCreated, noCheck},
+	{"setup: create db record 1",
+		createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=xxxget||{"Records":[{"Keys":["uri","name"],"Values":["uri-a","name-a"]}]}`,
+		http.StatusCreated, noCheck},
+	{"get db record 1",
+		getDbRecordHandler,
+		http.MethodGet,
+		`/db/_table/tabname|table_name=xxxget&id=1`,
+		http.StatusOK, `{"Records":[{"Keys":["id","uri","name"],"Values":["1","uri-a","name-a"]}]}`},
+	{"teardown: delete table xxxget",
+		deleteDbTableHandler,
+		http.MethodDelete,
+		`/db/_schema/xxxget|table_name=xxxget`,
+		http.StatusOK, noCheck},
+}
+
+// the getDbRecord test suite.  run all getDbRecord testcases.
+func Test_getDbRecordHandler(t *testing.T) {
+	apiCalls_Runner(t, "getDbRecordHandler_Tab", getDbRecordHandler_Tab)
+}
+
+// ----- unit tests for getDbRecordHandler().
+
+// this suite is somewhat miminal since getDbRecordsHandler is well
+// exercised by the test suite for createDbRecordsHandler.
+
+// table of getDbRecords testcases.
+var getDbRecordsHandler_Tab = []apiCall_TC {
+	{"setup: create table xxxget",
+		createDbTableHandler,
+		http.MethodPost,
+		`/db/_schema/xxxget|table_name=xxxget||`+users_schema,
+		http.StatusCreated, noCheck},
+	{"setup: create db record 1",
+		createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=xxxget||{"Records":[{"Keys":["name","uri"],"Values":["name-a","uri-a"]}]}`,
+		http.StatusCreated, noCheck},
+	{"setup: create db record 2",
+		createDbRecordsHandler,
+		http.MethodPost,
+		`/db/_table/tabname|table_name=xxxget||{"Records":[{"Keys":["uri","name"],"Values":["uri-b","name-b"]}]}`,
+		http.StatusCreated, noCheck},
+	{"get db records 1,2",
+		getDbRecordsHandler,
+		http.MethodGet,
+		`/db/_table/tabname|table_name=xxxget&ids=1,2`,
+		http.StatusOK,
+		`{"Records":[{"Keys":["id","uri","name"],"Values":["1","uri-a","name-a"]},{"Keys":["id","uri","name"],"Values":["2","uri-b","name-b"]}]}`},
+	{"teardown: delete table xxxget",
+		deleteDbTableHandler,
+		http.MethodDelete,
+		`/db/_schema/xxxget|table_name=xxxget`,
+		http.StatusOK, noCheck},
+}
+
+// the getDbRecords test suite.  run all getDbRecords testcases.
+func Test_getDbRecordsHandler(t *testing.T) {
+	apiCalls_Runner(t, "getDbRecordsHandler_Tab", getDbRecordsHandler_Tab)
+}
+
+// ----- unit tests for listToMap().
+
+// inputs and outputs for one listToMap testcase.
+type listToMap_TC struct {
+	arg string
+}
+
+// table of listToMap testcases.
+var listToMap_Tab = []listToMap_TC {
+	{""},
+	{"a"},
+	{"a,b"},
+	{"x,y,z"},
+}
+
+// run one testcase for function listToMap.
+func listToMap_Checker(cx *testContext, tc *listToMap_TC) {
+	m := mySplit(tc.arg, ",")
+	result := listToMap(m)
+	cx.assertEqual(len(m), len(result), "number of items")
+	for _, mitem := range m {
+		cx.assertTrue(result[mitem] != 0, "item in map")
+	}
+}
+
+// the listToMap test suite.  run all listToMap testcases.
+func Test_listToMap(t *testing.T) {
+	cx := newTestContext(t, "listToMap_Tab")
+	for _, tc := range listToMap_Tab {
+		listToMap_Checker(cx, &tc)
+		cx.bump()	// increment testno.
+	}
 }

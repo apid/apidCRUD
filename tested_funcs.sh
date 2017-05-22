@@ -2,4 +2,5 @@
 
 cat *_test.go \
 | sed -n -e 's/^func Test_\([^()]*\).*/\1/p' \
-| sort
+| sed -e p -e 's/_[^_]*$//' \
+| sort -u
