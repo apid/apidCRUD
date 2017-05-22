@@ -19,7 +19,7 @@ func utInitDB() {
 
 var cmds = []string {
 	// create the special table _tables_
-	`create table _tables_(name text unique not null, schema text)`,
+	`create table _tables_(id integer not null primary key autoincrement, name text unique not null, schema text)`,
 	`insert into _tables_ (name,schema) values ("bundles", "bundles_schema")`,
 	`insert into _tables_ (name,schema) values ("users", "users_schema")`,
 	`insert into _tables_ (name,schema) values ("nothing", "nothing_schema")`,

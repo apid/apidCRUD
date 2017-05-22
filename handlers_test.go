@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sort"
 	"net/http"
-	"net/url"
 	"database/sql"
 )
 
@@ -307,10 +306,10 @@ type mkSelectString_TC struct {
 
 var mkSelectString_Tab = []mkSelectString_TC {
 	{"table_name=T&id_field=id&id=456&fields=a&limit=1&offset=0",
-		"SELECT a FROM T WHERE id = ? LIMIT 1 OFFSET 0",
+		"SELECT id,a FROM T WHERE id = ? LIMIT 1 OFFSET 0",
 		"456", true},
 	{"table_name=T&id_field=id&ids=123,456&fields=a,b,c&limit=1&offset=0",
-		"SELECT a,b,c FROM T WHERE id in (?,?) LIMIT 1 OFFSET 0",
+		"SELECT id,a,b,c FROM T WHERE id in (?,?) LIMIT 1 OFFSET 0",
 		"123,456", true},
 }
 
@@ -851,19 +850,20 @@ func Test_getDbTablesHandler(t *testing.T) {
 // ----- unit test for tablesQuery()
 
 type tablesQuery_TC struct {
+	self string
 	tableName string
 	fieldName string
 	xcode int
 }
 
 var tablesQuery_Tab = []tablesQuery_TC {
-	{"bogus_table", "name", http.StatusBadRequest},
-	{"_tables_", "bogus_field", http.StatusBadRequest},
-	{"_tables_", "name", http.StatusOK},
+	{"xyz", "bogus_table", "name", http.StatusBadRequest},
+	{"xyz", "_tables_", "bogus_field", http.StatusBadRequest},
+	{"xyz", "_tables_", "name", http.StatusOK},
 }
 
 func tablesQuery_Checker(cx *testContext, tc *tablesQuery_TC) {
-	result := tablesQuery(tc.tableName, tc.fieldName)
+	result := tablesQuery(tc.self, tc.tableName, tc.fieldName)
 	cx.assertEqual(tc.xcode, result.code, "returned code")
 }
 
@@ -1167,7 +1167,7 @@ func Test_deleteDbTableHandler(t *testing.T) {
 
 // inputs and outputs for one schemaQuery testcase.
 type schemaQuery_TC struct {
-	urlStr string
+	self string
 	tableName string
 	fieldName string
 	selector string
@@ -1196,8 +1196,7 @@ var schemaQuery_Tab = []schemaQuery_TC {
 
 // run one testcase for function schemaQuery.
 func schemaQuery_Checker(cx *testContext, tc *schemaQuery_TC) {
-	u, _ := url.Parse(tc.urlStr)
-	res := schemaQuery(u, tc.tableName, tc.fieldName,
+	res := schemaQuery(tc.self, tc.tableName, tc.fieldName,
 			tc.selector, tc.item)
 	cx.assertEqual(tc.xcode, res.code, "returned code")
 	if tc.xcode == http.StatusOK {

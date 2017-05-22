@@ -34,7 +34,7 @@ func getDbResourcesHandler(harg *apiHandlerArg) apiHandlerRet {
 
 // getDbTablesHandler handles GET requests on /db/_table
 func getDbTablesHandler(harg *apiHandlerArg) apiHandlerRet {
-	return tablesQuery(tableOfTables, "name")
+	return tablesQuery(harg.req.URL.String(), tableOfTables, "name")
 }
 
 // createDbRecordsHandler() handles POST requests on /db/_table/{table_name} .
@@ -155,7 +155,7 @@ func describeDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 	if err != nil {
 		return errorRet(badStat, err, "after fetchParams")
 	}
-	return schemaQuery(harg.req.URL, tableOfTables,
+	return schemaQuery(harg.req.URL.String(), tableOfTables,
 		"schema", "name", params["table_name"])
 }
 
@@ -176,12 +176,13 @@ func deleteDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 
 // tablesQuery is the guts of getDbTablesHandler().
 // it's easier to test with an argument.
-func tablesQuery(tabName string,
+func tablesQuery(self string,
+		tabName string,
 		fieldName string) apiHandlerRet {
 	// the tableOfTables table is our convention, not maintained by sqlite.
 
 	idlist := []interface{}{}
-	qstring := fmt.Sprintf("select %s from %s", fieldName, tabName)
+	qstring := fmt.Sprintf("select id,%s from %s", fieldName, tabName)
 	result, err := runQuery(db, nil, qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err, "after runQuery")
@@ -191,12 +192,13 @@ func tablesQuery(tabName string,
 		return errorRet(badStat, err, "after convTableNames")
 	}
 
-	return apiHandlerRet{http.StatusOK, TablesResponse{Names: ret}}
+	return apiHandlerRet{http.StatusOK,
+		TablesResponse{ret, "TablesResponse", self}}
 }
 
 // schemaQuery is the guts of describeDbTableHandler().
 // it's easier to test with an argument.
-func schemaQuery(u *url.URL,
+func schemaQuery(self string,
 		tabName string,
 		fieldName string,
 		selector string,
@@ -204,7 +206,7 @@ func schemaQuery(u *url.URL,
 	// the tableOfTables table is our convention, not maintained by sqlite.
 
 	idlist := []interface{}{}
-	qstring := fmt.Sprintf(`select %s from %s where %s = "%s"`,
+	qstring := fmt.Sprintf(`select id,%s from %s where %s = "%s"`,
 			fieldName, tabName, selector, item)
 	result, err := runQuery(db, nil, qstring, idlist)
 	if err != nil {
@@ -224,7 +226,7 @@ func schemaQuery(u *url.URL,
 	log.Debugf("schema = %s", data)
 
 	return apiHandlerRet{http.StatusOK,
-		SchemaResponse{data, "SchemaResponse", u.String()}}
+		SchemaResponse{data, "SchemaResponse", self}}
 }
 
 // errorRet() is called by apiHandler routines to pass back the code/data
@@ -284,7 +286,6 @@ func runQuery(db dbType,
 	log.Debugf("cols = %s", cols)
 	ncols := len(cols)
 
-	i := 0
 	for rows.Next() {
 		vals := mkSQLRow(ncols)
 		err = rows.Scan(vals...)
@@ -296,17 +297,29 @@ func runQuery(db dbType,
 		if err != nil {
 			return queryErrorRet(ret, err, "failure after convValues")
 		}
-		// this is bogus
-		kvrow := KVResponse{Keys: cols,
-			Values: vals,
+		var id int64
+		switch v := vals[0].(type) {
+		case int64:
+			id = v
+			err = nil
+		case string:
+			id, err = strconv.ParseInt(v, idTypeRadix, idTypeBits)
+		default:
+			id = -1
+			err = fmt.Errorf("unknown type in id field")
+		}
+		if err != nil {
+			return queryErrorRet(ret, err, "failure after typeswitch")
+		}
+		kvrow := KVResponse{Keys: cols[1:],
+			Values: vals[1:],
 			Kind: "KVResponse",
-			Self: selfKVResponse(u, ivals, i),
+			Self: selfKVResponse(u, id),
 			}
 		ret = append(ret, &kvrow)
 		if len(ret) >= maxRecs { // safety check
 			break
 		}
-		i++
 	}
 
 	err = rows.Err()
@@ -525,11 +538,18 @@ func runExec(db dbType,
 }
 
 // mkSelectString() returns the WHERE part of a selection query.
+// insert an extra id field at the start of the list of fields,
+// to ensure that the id is one of the retrieved fields.
 func mkSelectString(params map[string]string) (string, []interface{}) {
 	idclause, idlist := mkIdClause(params)
 
+	idfield := params["idfield"]
+	if idfield == "" {
+		idfield = "id"
+	}
+	xfields := idfield + "," + params["fields"]
 	qstring := fmt.Sprintf("SELECT %s FROM %s %s LIMIT %s OFFSET %s", // nolint
-		params["fields"],
+		xfields,
 		params["table_name"],
 		idclause,
 		params["limit"],
@@ -709,22 +729,11 @@ func execN(db dbType, cmdList ...*xCmd) error {
 // the url may be nil if "self" is allowed to remain unspecified.
 // if the idlist is empty, // the request must have been (?)
 // reading multiple records with "*".
-func selfKVResponse(u *url.URL, idlist []interface{}, i int) string {
+func selfKVResponse(u *url.URL, id int64) string {
 	if u == nil {
 		// internal request with no URL specified.
 		return ""
 	}
-	n := len(idlist)
-	if n == 0 {
-		// the request must have been (?) reading *, no ids specified.
-		return fmt.Sprintf("%s://%s%s", u.Scheme, u.Host, u.Path)
-	}
-	if i >= n {
-		// should not happen
-		log.Errorf("selfKVResponse: idlist=%s, i=%d", idlist, i)
-		return fmt.Sprintf("?", u.Scheme, u.Host, u.Path)
-	}
 	// the normal case.
-	id, _ := idlist[i].(int64)
 	return fmt.Sprintf("%s://%s%s/%d", u.Scheme, u.Host, u.Path, id)
 }

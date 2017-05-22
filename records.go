@@ -49,6 +49,7 @@ type IdsResponse struct {
 type TablesResponse struct {
 	Names []string
 	Kind string
+	Self string
 }
 
 // FieldSchema is the type used to specify a field in a table.

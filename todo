@@ -1,5 +1,0 @@
-fix violations of api style guide
-
-param naming
-self/kind
-id must always be in get query ?  so add at front of list

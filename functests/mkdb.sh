@@ -24,7 +24,7 @@ EOF
 
 # create the _tables_ table
 sqlite3 "$DBFILE" <<EOF
-create table _tables_ (name text unique not null, schema text not null);
+create table _tables_ (id integer not null primary key autoincrement, name text unique not null, schema text not null);
 insert into _tables_ (name,schema) values ("bundles",
 '{"fields":[{"name":"id",properties:["is_primary_key"]},{"name":"name"},{"name":"uri"}]}');
 insert into _tables_ (name,schema) values ("users",
