@@ -13,20 +13,27 @@ type ErrorResponse struct {
 	Message string
 }
 
-// BodyRecord is the body data for APIs that create or update database records.
-type BodyRecord struct {
-	Records []KVRecord
-}
-
 // KVRecord represents record data in requests, used in multiple APIs.
 type KVRecord struct {
 	Keys []string
 	Values []interface{}
 }
 
+// BodyRecord is the body data for APIs that create or update database records.
+type BodyRecord struct {
+	Records []KVRecord
+}
+
+type KVResponse struct {
+	Keys []string
+	Values []interface{}
+	Kind string
+	Self string
+}
+
 // RecordsResponse is the type for multiple get*Record* APIs.
 type RecordsResponse struct {
-	Records []*KVRecord
+	Records []*KVResponse
 }
 
 // IdsResponse is the type returned by createDbRecords .

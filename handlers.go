@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"bytes"
 	"net/http"
+	"net/url"
 	"encoding/json"
 	"database/sql"
 )
@@ -77,7 +78,7 @@ func getDbRecordsHandler(harg *apiHandlerArg) apiHandlerRet {
 		return errorRet(badStat, err, "after fetchParams")
 	}
 
-	return getCommon(params)
+	return getCommon(harg.req.URL, params)
 }
 
 // getDbRecordHandler() handles GET requests on /db/_table/{table_name}/{id} .
@@ -90,7 +91,7 @@ func getDbRecordHandler(harg *apiHandlerArg) apiHandlerRet {
 	params["limit"] = strconv.Itoa(1)
 	params["offset"] = strconv.Itoa(0)
 
-	return getCommon(params)
+	return getCommon(harg.req.URL, params)
 }
 
 // updateDbRecordsHandler() handles PATCH requests on /db/_table/{table_name} .
@@ -180,7 +181,7 @@ func tablesQuery(tabName string,
 
 	idlist := []interface{}{}
 	qstring := fmt.Sprintf("select %s from %s", fieldName, tabName)
-	result, err := runQuery(db, qstring, idlist)
+	result, err := runQuery(db, nil, qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err, "after runQuery")
 	}
@@ -203,7 +204,7 @@ func schemaQuery(tabName string,
 	idlist := []interface{}{}
 	qstring := fmt.Sprintf(`select %s from %s where %s = "%s"`,
 			fieldName, tabName, selector, item)
-	result, err := runQuery(db, qstring, idlist)
+	result, err := runQuery(db, nil, qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err, "after runQuery")
 	}
@@ -245,9 +246,9 @@ func mkSQLRow(N int) []interface{} {
 
 // queryErrorRet() passes thru the first 2 args (ret and err),
 // while logging the third argument (dmsg).
-func queryErrorRet(ret []*KVRecord,
+func queryErrorRet(ret []*KVResponse,
 		err error,
-		dmsg string) ([]*KVRecord, error) {
+		dmsg string) ([]*KVResponse, error) {
 	if dmsg != "" {
 		log.Debugf("queryErrorRet [%s], %s", err, dmsg)
 	}
@@ -257,12 +258,13 @@ func queryErrorRet(ret []*KVRecord,
 // runQuery() does a select query using the given query string.
 // the return value is a list of the retrieved records.
 func runQuery(db dbType,
+		u *url.URL,
 		qstring string,
-		ivals []interface{}) ([]*KVRecord, error) {
+		ivals []interface{}) ([]*KVResponse, error) {
 	log.Debugf("query = %s", qstring)
 	log.Debugf("ivals = %s", ivals)
 
-	ret := make([]*KVRecord, 0, 1)
+	ret := make([]*KVResponse, 0, 1)
 
 	rows, err := db.handle.Query(qstring, ivals...)
 	if err != nil {
@@ -279,6 +281,7 @@ func runQuery(db dbType,
 	log.Debugf("cols = %s", cols)
 	ncols := len(cols)
 
+	i := 0
 	for rows.Next() {
 		vals := mkSQLRow(ncols)
 		err = rows.Scan(vals...)
@@ -290,11 +293,16 @@ func runQuery(db dbType,
 		if err != nil {
 			return queryErrorRet(ret, err, "failure after convValues")
 		}
-		kvrow := KVRecord{Keys: cols, Values: vals}
+		kvrow := KVResponse{Keys: cols,
+			Values: vals,
+			Kind: "KVResponse",
+			Self: mkSelf(u, ivals, i),
+			}
 		ret = append(ret, &kvrow)
 		if len(ret) >= maxRecs { // safety check
 			break
 		}
+		i++
 	}
 
 	err = rows.Err()
@@ -526,9 +534,9 @@ func mkSelectString(params map[string]string) (string, []interface{}) {
 }
 
 // getCommon() is common code for selection APIs.
-func getCommon(params map[string]string) apiHandlerRet {
+func getCommon(u *url.URL, params map[string]string) apiHandlerRet {
 	qstring, idlist := mkSelectString(params)
-	result, err := runQuery(db, qstring, idlist)
+	result, err := runQuery(db, u, qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err, "after runQuery")
 	}
@@ -560,7 +568,7 @@ func updateCommon(harg *apiHandlerArg, params map[string]string) apiHandlerRet {
 
 // convTableNames() converts the return format from runQuery()
 // into a simple list of names.
-func convTableNames(result []*KVRecord) ([]string, error) {
+func convTableNames(result []*KVResponse) ([]string, error) {
 	// convert from query format to simple list of names
 	ret := make([]string, len(result))
 	for i, row := range result {
@@ -688,4 +696,14 @@ func execN(db dbType, cmdList ...*xCmd) error {
 		}
 	}
 	return tx.Commit()
+}
+
+// mkSelf() returns a string for the self field of a KVResponse.
+func mkSelf(u *url.URL, idlist []interface{}, i int) string {
+	if u == nil || i >= len(idlist) {
+		log.Debugf("mkSelf: idlist=%s, i=%d", idlist, i)
+		return "??"
+	}
+	id, _ := idlist[i].(int64)
+	return fmt.Sprintf("%s://%s%s/%d", u.Scheme, u.Host, u.Path, id)
 }

@@ -46,8 +46,10 @@ func (cx *testContext) bump() {
 // assertEqual() fails the test unless exp and act are equal.
 func (cx *testContext) assertEqual(exp interface{}, act interface{}, msg string) bool {
 	if exp != act {
-		cx.Errorf(`*** Assertion Failed: %s, got (%T)<%v>; expected (%T)<%v>`,
-			msg, act, act, exp, exp)
+		cx.Errorf(`*** Assertion Failed: %s
+   expected: (%T)<%v>
+   got:      (%T)<%v>`,
+			msg, exp, exp, act, act)
 		return false
 	}
 	return true
@@ -56,8 +58,10 @@ func (cx *testContext) assertEqual(exp interface{}, act interface{}, msg string)
 // assertEqualObj() fails the test unless exp and act are deeply equal.
 func (cx *testContext) assertEqualObj(exp interface{}, act interface{}, msg string) bool {
 	if !reflect.DeepEqual(exp, act) {
-		cx.Errorf(`assertion failed: %s, got <%s>; expected <%s>`,
-			msg, act, exp)
+		cx.Errorf(`assertion failed: %s
+   expected: <%s>
+   got:      <%s>`,
+			msg, exp, act)
 		return false
 	}
 	return true

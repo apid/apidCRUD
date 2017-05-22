@@ -428,9 +428,9 @@ var convTableNames_Tab = []convTableNames_TC {
 
 // mimicTableNamesQuery() returns an object that mimics the return from
 // the query to the "_tables_" table.
-func mimicTableNamesQuery(names []string) []*KVRecord {
+func mimicTableNamesQuery(names []string) []*KVResponse {
 	N := len(names)
-	ret := make([]*KVRecord, N)
+	ret := make([]*KVResponse, N)
 	for i := 0; i < N; i++ {
 		Keys := []string{"name"}
 		val := names[i]
@@ -442,7 +442,7 @@ func mimicTableNamesQuery(names []string) []*KVRecord {
 			ival = interface{}(val)
 		}
 		Values := []interface{}{ival}
-		ret[i] = &KVRecord{Keys, Values}
+		ret[i] = &KVResponse{Keys, Values, "KVResponse", ""}
 	}
 	return ret
 }
@@ -1366,18 +1366,18 @@ var getDbRecordHandler_Tab = []apiCall_TC {
 	{"setup: create table xxxget",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=xxxget||`+users_schema,
+		`/db/_schema/xxxget|table_name=xxxget||`+users_schema,
 		http.StatusCreated, noCheck},
 	{"setup: create db record 1",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=xxxget||{"Records":[{"Keys":["uri","name"],"Values":["uri-a","name-a"]}]}`,
+		`/db/_table/xxxget|table_name=xxxget||{"Records":[{"Keys":["uri","name"],"Values":["uri-a","name-a"]}]}`,
 		http.StatusCreated, noCheck},
 	{"get db record 1",
 		getDbRecordHandler,
 		http.MethodGet,
-		`/db/_table/tabname|table_name=xxxget&id=1`,
-		http.StatusOK, `{"Records":[{"Keys":["id","uri","name"],"Values":["1","uri-a","name-a"]}]}`},
+		`http://localhost/db/_table/xxxget|table_name=xxxget&id=1`,
+		http.StatusOK, `{"Records":[{"Keys":["id","uri","name"],"Values":["1","uri-a","name-a"],"Kind":"KVResponse","Self":"http://localhost/db/_table/xxxget/1"}]}`},
 	{"teardown: delete table xxxget",
 		deleteDbTableHandler,
 		http.MethodDelete,
@@ -1405,19 +1405,19 @@ var getDbRecordsHandler_Tab = []apiCall_TC {
 	{"setup: create db record 1",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=xxxget||{"Records":[{"Keys":["name","uri"],"Values":["name-a","uri-a"]}]}`,
+		`/db/_table/xxxget|table_name=xxxget||{"Records":[{"Keys":["name","uri"],"Values":["name-a","uri-a"]}]}`,
 		http.StatusCreated, noCheck},
 	{"setup: create db record 2",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=xxxget||{"Records":[{"Keys":["uri","name"],"Values":["uri-b","name-b"]}]}`,
+		`/db/_table/xxxget|table_name=xxxget||{"Records":[{"Keys":["uri","name"],"Values":["uri-b","name-b"]}]}`,
 		http.StatusCreated, noCheck},
 	{"get db records 1,2",
 		getDbRecordsHandler,
 		http.MethodGet,
-		`/db/_table/tabname|table_name=xxxget&ids=1,2`,
+		`http://localhost/db/_table/xxxget|table_name=xxxget|ids=1,2`,
 		http.StatusOK,
-		`{"Records":[{"Keys":["id","uri","name"],"Values":["1","uri-a","name-a"]},{"Keys":["id","uri","name"],"Values":["2","uri-b","name-b"]}]}`},
+		`{"Records":[{"Keys":["id","uri","name"],"Values":["1","uri-a","name-a"],"Kind":"KVResponse","Self":"http://localhost/db/_table/xxxget/1"},{"Keys":["id","uri","name"],"Values":["2","uri-b","name-b"],"Kind":"KVResponse","Self":"http://localhost/db/_table/xxxget/2"}]}`},
 	{"teardown: delete table xxxget",
 		deleteDbTableHandler,
 		http.MethodDelete,
