@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sort"
 	"net/http"
+	"net/url"
 	"database/sql"
 )
 
@@ -610,200 +611,200 @@ var createDbRecords_Tab = []apiCall_TC {
 	{"create record 1",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc1","xyz1"]}]}`,
+		`/test/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc1","xyz1"]}]}`,
 		http.StatusCreated, noCheck},
 	{"create record 2",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc2","xyz2"]}]}`,
+		`/test/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc2","xyz2"]}]}`,
 		http.StatusCreated, noCheck},
 	{"create record 3",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc3","xyz3"]}]}`,
+		`/test/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc3","xyz3"]}]}`,
 		http.StatusCreated, noCheck},
 	{"create record 4",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4"]}]}`,
+		`/test/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4"]}]}`,
 		http.StatusCreated, noCheck},
 
 	{"get record 123",
 		getDbRecordHandler,
 		http.MethodGet,
-		`/db/_table/tabname|table_name=bundles&id=123|fields=name,uri`,
+		`/test/db/_table/tabname|table_name=bundles&id=123|fields=name,uri`,
 		http.StatusBadRequest, noCheck},
 	{"get record 1",
 		getDbRecordHandler,
 		http.MethodGet,
-		`/db/_table/tabname|table_name=bundles&id=1|fields=name,uri`,
+		`/test/db/_table/tabname|table_name=bundles&id=1|fields=name,uri`,
 		http.StatusOK, noCheck},
 	{"get record 2",
 		getDbRecordHandler,
 		http.MethodGet,
-		`/db/_table/tabname|table_name=bundles&id=2|fields=name,uri`,
+		`/test/db/_table/tabname|table_name=bundles&id=2|fields=name,uri`,
 		http.StatusOK, noCheck},
 
 	{"get records 1,2",
 		getDbRecordsHandler,
 		http.MethodGet,
-		`/db/_table/tabname|table_name=bundles|ids=1,2&fields=name,uri`,
+		`/test/db/_table/tabname|table_name=bundles|ids=1,2&fields=name,uri`,
 		http.StatusOK, noCheck},
 
 	{"get record 1 bad field",
 		getDbRecordHandler,
 		http.MethodGet,
-		`/db/_table/tabname|table_name=bundles&id=123|fields=name,uri,bogus`,
+		`/test/db/_table/tabname|table_name=bundles&id=123|fields=name,uri,bogus`,
 		http.StatusBadRequest, noCheck},
 
 	{"delete records 2,4",
 		deleteDbRecordsHandler,
 		http.MethodDelete,
-		`/db/_table/tabname|table_name=bundles|ids=2,4`,
+		`/test/db/_table/tabname|table_name=bundles|ids=2,4`,
 		http.StatusOK, noCheck},
 
 	{"delete records no id or ids",
 		deleteDbRecordsHandler,
 		http.MethodDelete,
-		`/db/_table/tabname|table_name=bundles`,
+		`/test/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest, noCheck},
 
 	{"delete record no id or ids",
 		deleteDbRecordHandler,
 		http.MethodDelete,
-		`/db/_table/tabname|table_name=bundles`,
+		`/test/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest, noCheck},
 
 	{"delete record bad table_name",
 		deleteDbRecordHandler,
 		http.MethodDelete,
-		`/db/_table/tabname|table_name=bogus|id=1`,
+		`/test/db/_table/tabname|table_name=bogus|id=1`,
 		http.StatusBadRequest, noCheck},
 
 	{"get record 2 expecting failure",
 		getDbRecordHandler,
 		http.MethodGet,
-		`/db/_table/tabname|table_name=bundles&id=2`,
+		`/test/db/_table/tabname|table_name=bundles&id=2`,
 		http.StatusBadRequest, noCheck},
 
 	{"get record 4 expecting failure",
 		getDbRecordHandler,
 		http.MethodGet,
-		`/db/_table/tabname|table_name=bundles&id=4`,
+		`/test/db/_table/tabname|table_name=bundles&id=4`,
 		http.StatusBadRequest, noCheck},
 
 	{"delete record 1",
 		deleteDbRecordHandler,
 		http.MethodDelete,
-		`/db/_table/tabname|table_name=bundles&id=1`,
+		`/test/db/_table/tabname|table_name=bundles&id=1`,
 		http.StatusOK, noCheck},
 
 	{"delete record 1 expecting failure",
 		deleteDbRecordHandler,
 		http.MethodDelete,
-		`/db/_table/tabname|table_name=bundles&id=1`,
+		`/test/db/_table/tabname|table_name=bundles&id=1`,
 		http.StatusBadRequest, noCheck},
 
 	{"get record 1 expecting failure",
 		getDbRecordHandler,
 		http.MethodGet,
-		`/db/_table/tabname|table_name=bundles&id=1`,
+		`/test/db/_table/tabname|table_name=bundles&id=1`,
 		http.StatusBadRequest, noCheck},
 
 	{"update records missing id",
 		updateDbRecordsHandler,
 		http.MethodPatch,
-		`/db/_table/tabname|table_name=bundles`,
+		`/test/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest, noCheck},
 
 	{"update records missing table_name",
 		updateDbRecordsHandler,
 		http.MethodPatch,
-		`/db/_table/tabname|id=1`,
+		`/test/db/_table/tabname|id=1`,
 		http.StatusBadRequest, noCheck},
 
 	{"update records bogus table_name",
 		updateDbRecordsHandler,
 		http.MethodPatch,
-		`/db/_table/tabname|table_name=bogus&id=1||{"records":[{"keys":["name", "uri"], "values":["name9", "uri9"]}]}`,
+		`/test/db/_table/tabname|table_name=bogus&id=1||{"records":[{"keys":["name", "uri"], "values":["name9", "uri9"]}]}`,
 		http.StatusBadRequest, noCheck},
 
 	{"update records bogus field name",
 		updateDbRecordsHandler,
 		http.MethodPatch,
-		`/db/_table/tabname|table_name=xxx&id=1||{"records":[{"keys":["bogus", "uri"], "values":["name9", "uri9"]}]}`,
+		`/test/db/_table/tabname|table_name=xxx&id=1||{"records":[{"keys":["bogus", "uri"], "values":["name9", "uri9"]}]}`,
 		http.StatusBadRequest, noCheck},
 
 	{"update records no body records",
 		updateDbRecordsHandler,
 		http.MethodPatch,
-		`/db/_table/tabname|table_name=xxx&id=1||{"records":[]}`,
+		`/test/db/_table/tabname|table_name=xxx&id=1||{"records":[]}`,
 		http.StatusBadRequest, noCheck},
 
 	{"update record missing id",
 		updateDbRecordHandler,
 		http.MethodPatch,
-		`/db/_table/tabname|table_name=bundles`,
+		`/test/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest, noCheck},
 
 	{"create record missing id",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=bundles`,
+		`/test/db/_table/tabname|table_name=bundles`,
 		http.StatusBadRequest, noCheck},
 
 	{"create records missing body",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=bundles|id=1`,
+		`/test/db/_table/tabname|table_name=bundles|id=1`,
 		http.StatusBadRequest, noCheck},
 
 	{"create records missing table_name",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|id=1`,
+		`/test/db/_table/tabname|id=1`,
 		http.StatusBadRequest, noCheck},
 
 	{"create records bogus field",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","bogus"],"Values":["abc3","xyz3"]}]}`,
+		`/test/db/_table/tabname|table_name=bundles||{"Records":[{"Keys":["name","bogus"],"Values":["abc3","xyz3"]}]}`,
 		http.StatusBadRequest, noCheck},
 
 	{"get records missing table_name",
 		getDbRecordsHandler,
 		http.MethodGet,
-		`/db/_table/tabname|id=1`,
+		`/test/db/_table/tabname|id=1`,
 		http.StatusBadRequest, noCheck},
 
 	{"get record missing table_name",
 		getDbRecordHandler,
 		http.MethodGet,
-		`/db/_table/tabname|id=1`,
+		`/test/db/_table/tabname|id=1`,
 		http.StatusBadRequest, noCheck},
 
 	{"delete records missing table_name",
 		deleteDbRecordsHandler,
 		http.MethodDelete,
-		`/db/_table/tabname||ids=1`,
+		`/test/db/_table/tabname||ids=1`,
 		http.StatusBadRequest, noCheck},
 
 	{"delete record missing table name",
 		deleteDbRecordHandler,
 		http.MethodDelete,
-		`/db/_table/tabname/1234|id=1`,
+		`/test/db/_table/tabname/1234|id=1`,
 		http.StatusBadRequest, noCheck},
 
 	{"delete record nonexistent record",
 		deleteDbRecordHandler,
 		http.MethodDelete,
-		`/db/_table/tabname/1234|id=1001`,
+		`/test/db/_table/tabname/1234|id=1001`,
 		http.StatusBadRequest, noCheck},
 
 	{"create records with excess values",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=xxx||{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4","superfluous"]}]}`,
+		`/test/db/_table/tabname|table_name=xxx||{"Records":[{"Keys":["name","uri"],"Values":["abc4","xyz4","superfluous"]}]}`,
 		http.StatusBadRequest, noCheck},
 }
 
@@ -819,7 +820,7 @@ var getDbTables_Tab = []apiCall_TC {
 	{"get tablenames",
 		getDbTablesHandler,
 		http.MethodGet,
-		"/db/_tables",
+		`/test/db/_tables`,
 		http.StatusOK, noCheck},
 }
 
@@ -883,7 +884,7 @@ func Test_updateDbRecordHandler(t *testing.T) {
 	recno := "2"
 	newurl := "host9:xyz"
 
-	argDesc := fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s|fields=name|{"records":[{"keys":["name", "uri"], "values":["name9", "%s"]}]}`,
+	argDesc := fmt.Sprintf(`/test/db/_table/tabname|table_name=%s&id=%s|fields=name|{"records":[{"keys":["name", "uri"], "values":["name9", "%s"]}]}`,
 		tabName, recno, newurl)
 
 	// do an update record
@@ -921,7 +922,7 @@ func Test_updateDbRecordHandler(t *testing.T) {
 func retrieveValues(cx *testContext,
 		tabName string,
 		recno string) ([]string, bool) {
-	argDesc := fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s`,
+	argDesc := fmt.Sprintf(`/test/db/_table/tabname|table_name=%s&id=%s`,
 		tabName, recno)
 	tc := apiCall_TC{"get record in retrieveValues",
 		getDbRecordHandler,
@@ -960,7 +961,7 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 	newname := "name7"
 	newurl := "host7:abc"
 
-	argDesc := fmt.Sprintf(`/db/_table/tabname|table_name=%s|ids=%s&fields=name|{"records":[{"keys":["name", "uri"], "values":["%s", "%s"]}]}`,
+	argDesc := fmt.Sprintf(`/test/db/_table/tabname|table_name=%s|ids=%s&fields=name|{"records":[{"keys":["name", "uri"], "values":["%s", "%s"]}]}`,
 		tabName, recno, newname, newurl)
 
 	// do an update record
@@ -986,7 +987,7 @@ func Test_updateDbRecordsHandler(t *testing.T) {
 		return
 	}
 
-	argDesc = fmt.Sprintf(`/db/_table/tabname|table_name=%s&id=%s`,
+	argDesc = fmt.Sprintf(`/test/db/_table/tabname|table_name=%s&id=%s`,
 		tabName, recno)
 
 	// read the record back, and check the data
@@ -1023,7 +1024,7 @@ func readNamesWithOffset(cx *testContext,
 		tab string,
 		offset int) []string {
 	ret := []string{}
-	argDesc := fmt.Sprintf(`/db/_table|table_name=%s|fields=name&offset=%d`,
+	argDesc := fmt.Sprintf(`/test/db/_table|table_name=%s|fields=name&offset=%d`,
 		tab, offset)
 	result := callApiHandler(getDbRecordsHandler, http.MethodGet, argDesc)
 	if !cx.assertEqual(http.StatusOK, result.code,
@@ -1077,42 +1078,42 @@ var createDbTable_Tab = []apiCall_TC {
 	{"create table w/ missing table_name",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema|||`+users_schema,
+		`/test/db/_schema|||`+users_schema,
 		http.StatusBadRequest, noCheck},
 	{"create table w/ invalid table_name",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema|table_name=XYZ.DEF||`+users_schema,
+		`/test/db/_schema|table_name=XYZ.DEF||`+users_schema,
 		http.StatusBadRequest, noCheck},
 	{"create table w/ malformed body",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||bogus`+users_schema,
+		`/test/db/_schema/ABC|table_name=ABC||bogus`+users_schema,
 		http.StatusBadRequest, noCheck},
 	{"create table ABC expecting success",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||`+users_schema,
+		`/test/db/_schema/ABC|table_name=ABC||`+users_schema,
 		http.StatusCreated, noCheck},
 	{"create table GHI expecting success, absent properties",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/GHI|table_name=GHI||{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri"},{"name":"name"}]}`,
+		`/test/db/_schema/GHI|table_name=GHI||{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri"},{"name":"name"}]}`,
 		http.StatusCreated, noCheck},
 	{"create table ABC expecting failure, pre-existing",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=ABC||`+users_schema,
+		`/test/db/_schema/ABC|table_name=ABC||`+users_schema,
 		http.StatusBadRequest, noCheck},
 	{"create record in ABC",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=ABC||{"Records":[{"Keys":["name","uri"],"Values":["xyz-abc4","abc-xyz4"]}]}`,
+		`/test/db/_table/tabname|table_name=ABC||{"Records":[{"Keys":["name","uri"],"Values":["xyz-abc4","abc-xyz4"]}]}`,
 		http.StatusCreated, noCheck},
 	{"get record 1 in ABC",
 		getDbRecordHandler,
 		http.MethodGet,
-		`/db/_table/tabname|table_name=ABC&id=1|fields=name,uri`,
+		`/test/db/_table/tabname|table_name=ABC&id=1|fields=name,uri`,
 		http.StatusOK, noCheck},
 }
 
@@ -1128,32 +1129,32 @@ var deleteDbTable_Tab = []apiCall_TC {
 	{"delete table ABC missing table_name",
 		deleteDbTableHandler,
 		http.MethodDelete,
-		`/db/_schema`,
+		`/test/db/_schema`,
 		http.StatusBadRequest, noCheck},
 	{"delete table ABC empty table_name",
 		deleteDbTableHandler,
 		http.MethodDelete,
-		`/db/_schema|table_name=`,
+		`/test/db/_schema|table_name=`,
 		http.StatusBadRequest, noCheck},
 	{"delete table ABCD expecting failure",
 		deleteDbTableHandler,
 		http.MethodDelete,
-		`/db/_schema/ABCD|table_name=ABCD`,
+		`/test/db/_schema/ABCD|table_name=ABCD`,
 		http.StatusBadRequest, noCheck},
 	{"create table ABCD expecting success",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABCD|table_name=ABCD||{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}`,
+		`/test/db/_schema/ABCD|table_name=ABCD||{"fields":[{"name":"id","properties":["is_primary_key","int32"]},{"name":"uri","properties":[]},{"name":"name","properties":[]}]}`,
 		http.StatusCreated, noCheck},
 	{"delete table ABCD expecting success",
 		deleteDbTableHandler,
 		http.MethodDelete,
-		`/db/_schema/ABCD|table_name=ABCD`,
+		`/test/db/_schema/ABCD|table_name=ABCD`,
 		http.StatusOK, noCheck},
 	{"delete table ABCD expecting failure",
 		deleteDbTableHandler,
 		http.MethodDelete,
-		`/db/_schema/ABCD|table_name=ABCD`,
+		`/test/db/_schema/ABCD|table_name=ABCD`,
 		http.StatusBadRequest, noCheck},
 }
 
@@ -1166,6 +1167,7 @@ func Test_deleteDbTableHandler(t *testing.T) {
 
 // inputs and outputs for one schemaQuery testcase.
 type schemaQuery_TC struct {
+	urlStr string
 	tableName string
 	fieldName string
 	selector string
@@ -1177,24 +1179,25 @@ type schemaQuery_TC struct {
 // table of schemaQuery testcases.
 var schemaQuery_Tab = []schemaQuery_TC {
 	// a good request
-	{ "_tables_", "schema", "name", "users", http.StatusOK, "{users_schema}" },
+	{ "http://abc", "_tables_", "schema", "name", "users", http.StatusOK, "{users_schema SchemaResponse http://abc}" },
 
 	// a good request
-	{ "_tables_", "schema", "name", "bundles", http.StatusOK, "{bundles_schema}" },
+	{ "http://abc", "_tables_", "schema", "name", "bundles", http.StatusOK, "{bundles_schema SchemaResponse http://abc}" },
 
 	// bogus table
-	{ "bogus", "schema", "name", "users", http.StatusBadRequest, "xxx" },
+	{ "http://abc", "bogus", "schema", "name", "users", http.StatusBadRequest, "xxx" },
 
 	// bogus field
-	{ "_tables_", "schema", "bogus", "users", http.StatusBadRequest, "xxx" },
+	{ "http://abc", "_tables_", "schema", "bogus", "users", http.StatusBadRequest, "xxx" },
 
 	// bogus item
-	{ "_tables_", "schema", "name", "bogus", http.StatusBadRequest, "xxx" },
+	{ "http://abc", "_tables_", "schema", "name", "bogus", http.StatusBadRequest, "xxx" },
 }
 
 // run one testcase for function schemaQuery.
 func schemaQuery_Checker(cx *testContext, tc *schemaQuery_TC) {
-	res := schemaQuery(tc.tableName, tc.fieldName,
+	u, _ := url.Parse(tc.urlStr)
+	res := schemaQuery(u, tc.tableName, tc.fieldName,
 			tc.selector, tc.item)
 	cx.assertEqual(tc.xcode, res.code, "returned code")
 	if tc.xcode == http.StatusOK {
@@ -1219,22 +1222,22 @@ var describeDbTable_Tab = []apiCall_TC {
 	{"get schema for users table",
 		describeDbTableHandler,
 		http.MethodGet,
-		"/db/_schema/users|table_name=users",
+		`/test/db/_schema/users|table_name=users`,
 		http.StatusOK, noCheck},
 	{"get schema for bundles table",
 		describeDbTableHandler,
 		http.MethodGet,
-		"/db/_schema/bundles|table_name=bundles",
+		`/test/db/_schema/bundles|table_name=bundles`,
 		http.StatusOK, noCheck},
 	{"get schema for bogus table",
 		describeDbTableHandler,
 		http.MethodGet,
-		"/db/_schema/bogus|table_name=bogus",
+		`/test/db/_schema/bogus|table_name=bogus`,
 		http.StatusBadRequest, noCheck},
 	{"get schema for no table_name",
 		describeDbTableHandler,
 		http.MethodGet,
-		"/db/_schema/|",
+		`/test/db/_schema/|`,
 		http.StatusBadRequest, noCheck},
 }
 
@@ -1274,7 +1277,7 @@ var getDbResources_Tab = []apiCall_TC {
 	{"get db resources",
 		getDbResourcesHandler,
 		http.MethodGet,
-		"/db",
+		`/test/db`,
 		http.StatusOK, noCheck},
 }
 
@@ -1293,22 +1296,22 @@ var deleteDbRecord_Tab = []apiCall_TC {
 	{"create table xxxdel",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=xxxdel||`+users_schema,
+		`/test/db/_schema/ABC|table_name=xxxdel||`+users_schema,
 		http.StatusCreated, noCheck},
 	{"create db resources",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=xxxdel||{"Records":[{"Keys":["name","uri"],"Values":["name-1","uri-1"]}]}`,
-		http.StatusCreated, `{"Ids":[1]}`},
+		`/test/db/_table/tabname|table_name=xxxdel||{"Records":[{"Keys":["name","uri"],"Values":["name-1","uri-1"]}]}`,
+		http.StatusCreated, `{"Ids":[1],"Kind":"Collection"}`},
 	{"delete db resources expecting success",
 		deleteDbRecordHandler,
 		http.MethodDelete,
-		"/db/_table/xxx|table_name=xxxdel&id=1",
-		http.StatusOK, `{"NumChanged":1}`},
+		`/test/db/_table/xxx|table_name=xxxdel&id=1`,
+		http.StatusOK, `{"NumChanged":1,"Kind":"NumChangedResponse"}`},
 	{"delete table xxxdel",
 		deleteDbTableHandler,
 		http.MethodDelete,
-		`/db/_schema/ABCD|table_name=xxxdel`,
+		`/test/db/_schema/ABCD|table_name=xxxdel`,
 		http.StatusOK, noCheck},
 }
 
@@ -1327,27 +1330,27 @@ var deleteDbRecords_Tab = []apiCall_TC {
 	{"setup: create table xxxdels",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/ABC|table_name=xxxdels||`+users_schema,
+		`/test/db/_schema/ABC|table_name=xxxdels||`+users_schema,
 		http.StatusCreated, noCheck},
 	{"setup: create db record 1",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=xxxdels||{"Records":[{"Keys":["name","uri"],"Values":["xyz-abc5","abc-xyz5"]}]}`,
+		`/test/db/_table/tabname|table_name=xxxdels||{"Records":[{"Keys":["name","uri"],"Values":["xyz-abc5","abc-xyz5"]}]}`,
 		http.StatusCreated, noCheck},
 	{"create db record 2",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/tabname|table_name=xxxdels||{"Records":[{"Keys":["name","uri"],"Values":["xxxdel1","abc-xyz5"]}]}`,
+		`/test/db/_table/tabname|table_name=xxxdels||{"Records":[{"Keys":["name","uri"],"Values":["xxxdel1","abc-xyz5"]}]}`,
 		http.StatusCreated, noCheck},
 	{"delete db records 1,2",
 		deleteDbRecordsHandler,
 		http.MethodDelete,
-		"/db/_table/xxx|table_name=xxxdels|ids=1,2",
-		http.StatusOK, `{"NumChanged":2}`},
+		`/test/db/_table/xxx|table_name=xxxdels|ids=1,2`,
+		http.StatusOK, `{"NumChanged":2,"Kind":"NumChangedResponse"}`},
 	{"teardown: delete table xxxdels",
 		deleteDbTableHandler,
 		http.MethodDelete,
-		`/db/_schema/xxxdels|table_name=xxxdels`,
+		`/test/db/_schema/xxxdels|table_name=xxxdels`,
 		http.StatusOK, noCheck},
 }
 
@@ -1366,22 +1369,22 @@ var getDbRecordHandler_Tab = []apiCall_TC {
 	{"setup: create table xxxget",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/xxxget|table_name=xxxget||`+users_schema,
+		`/test/db/_schema/xxxget|table_name=xxxget||`+users_schema,
 		http.StatusCreated, noCheck},
 	{"setup: create db record 1",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/xxxget|table_name=xxxget||{"Records":[{"Keys":["uri","name"],"Values":["uri-a","name-a"]}]}`,
+		`/test/db/_table/xxxget|table_name=xxxget||{"Records":[{"Keys":["uri","name"],"Values":["uri-a","name-a"]}]}`,
 		http.StatusCreated, noCheck},
 	{"get db record 1",
 		getDbRecordHandler,
 		http.MethodGet,
 		`http://localhost/db/_table/xxxget|table_name=xxxget&id=1`,
-		http.StatusOK, `{"Records":[{"Keys":["id","uri","name"],"Values":["1","uri-a","name-a"],"Kind":"KVResponse","Self":"http://localhost/db/_table/xxxget/1"}]}`},
+		http.StatusOK, `{"Records":[{"Keys":["id","uri","name"],"Values":["1","uri-a","name-a"],"Kind":"KVResponse","Self":"http://localhost/db/_table/xxxget/1"}],"Kind":"Collection"}`},
 	{"teardown: delete table xxxget",
 		deleteDbTableHandler,
 		http.MethodDelete,
-		`/db/_schema/xxxget|table_name=xxxget`,
+		`/test/db/_schema/xxxget|table_name=xxxget`,
 		http.StatusOK, noCheck},
 }
 
@@ -1400,28 +1403,28 @@ var getDbRecordsHandler_Tab = []apiCall_TC {
 	{"setup: create table xxxget",
 		createDbTableHandler,
 		http.MethodPost,
-		`/db/_schema/xxxget|table_name=xxxget||`+users_schema,
+		`/test/db/_schema/xxxget|table_name=xxxget||`+users_schema,
 		http.StatusCreated, noCheck},
 	{"setup: create db record 1",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/xxxget|table_name=xxxget||{"Records":[{"Keys":["name","uri"],"Values":["name-a","uri-a"]}]}`,
+		`/test/db/_table/xxxget|table_name=xxxget||{"Records":[{"Keys":["name","uri"],"Values":["name-a","uri-a"]}]}`,
 		http.StatusCreated, noCheck},
 	{"setup: create db record 2",
 		createDbRecordsHandler,
 		http.MethodPost,
-		`/db/_table/xxxget|table_name=xxxget||{"Records":[{"Keys":["uri","name"],"Values":["uri-b","name-b"]}]}`,
+		`/test/db/_table/xxxget|table_name=xxxget||{"Records":[{"Keys":["uri","name"],"Values":["uri-b","name-b"]}]}`,
 		http.StatusCreated, noCheck},
 	{"get db records 1,2",
 		getDbRecordsHandler,
 		http.MethodGet,
 		`http://localhost/db/_table/xxxget|table_name=xxxget|ids=1,2`,
 		http.StatusOK,
-		`{"Records":[{"Keys":["id","uri","name"],"Values":["1","uri-a","name-a"],"Kind":"KVResponse","Self":"http://localhost/db/_table/xxxget/1"},{"Keys":["id","uri","name"],"Values":["2","uri-b","name-b"],"Kind":"KVResponse","Self":"http://localhost/db/_table/xxxget/2"}]}`},
+		`{"Records":[{"Keys":["id","uri","name"],"Values":["1","uri-a","name-a"],"Kind":"KVResponse","Self":"http://localhost/db/_table/xxxget/1"},{"Keys":["id","uri","name"],"Values":["2","uri-b","name-b"],"Kind":"KVResponse","Self":"http://localhost/db/_table/xxxget/2"}],"Kind":"Collection"}`},
 	{"teardown: delete table xxxget",
 		deleteDbTableHandler,
 		http.MethodDelete,
-		`/db/_schema/xxxget|table_name=xxxget`,
+		`/test/db/_schema/xxxget|table_name=xxxget`,
 		http.StatusOK, noCheck},
 }
 

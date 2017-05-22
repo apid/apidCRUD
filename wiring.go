@@ -8,9 +8,11 @@ package apidCRUD
 
 import (
 	"fmt"
+	"strings"
 	"net/http"
 	"encoding/json"
 	"io"
+	"sort"
 )
 
 // apiHandlerRet is the return type from an apiHandler function.
@@ -89,6 +91,17 @@ func callApiMethod(vmap verbMap, verb string, harg *apiHandlerArg) apiHandlerRet
 	return verbFunc(harg)
 }
 
+func allowedMethods(vmap verbMap) []string {
+	ret := make([]string, len(vmap.methods))
+	i := 0
+	for verb, _ := range vmap.methods {
+		ret[i] = verb
+		i++
+	}
+	sort.Strings(ret)
+	return ret
+}
+
 // pathDispatch() is the general handler for all our APIs.
 // it is called indirectly thru a closure function that
 // supplies the vmap argument.
@@ -100,6 +113,10 @@ func pathDispatch(vmap verbMap, w http.ResponseWriter, harg *apiHandlerArg) {
 	}()
 
 	res := callApiMethod(vmap, harg.req.Method, harg)
+	if res.code == http.StatusMethodNotAllowed {
+		w.Header().Set("Allowed",
+			strings.Join(allowedMethods(vmap), ","))
+	}
 
 	rawdata, err := convData(res.data)
 	if err != nil {
@@ -132,7 +149,7 @@ func convData(data interface{}) ([]byte, error) {
 func writeErrorResponse(w http.ResponseWriter, err error) {
 	code := http.StatusInternalServerError
 	msg := err.Error()
-	data, _ := convData(ErrorResponse{code,msg})
+	data, _ := convData(ErrorResponse{code,msg,"ErrorResponse"})
 
         w.WriteHeader(code)
         _, _ = w.Write(data)

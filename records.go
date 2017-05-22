@@ -5,12 +5,14 @@ package apidCRUD
 // NumChangedResponse is the response data for API deleteDbRecord and others.
 type NumChangedResponse struct {
 	NumChanged int64
+	Kind string
 }
 
 // ErrorResponse is the response data for API errors.
 type ErrorResponse struct {
 	Code int
 	Message string
+	Kind string
 }
 
 // KVRecord represents record data in requests, used in multiple APIs.
@@ -34,16 +36,19 @@ type KVResponse struct {
 // RecordsResponse is the type for multiple get*Record* APIs.
 type RecordsResponse struct {
 	Records []*KVResponse
+	Kind string
 }
 
 // IdsResponse is the type returned by createDbRecords .
 type IdsResponse struct {
 	Ids []int64
+	Kind string
 }
 
 // TablesResponse is the type returned by getDbTables.
 type TablesResponse struct {
 	Names []string
+	Kind string
 }
 
 // FieldSchema is the type used to specify a field in a table.
@@ -57,12 +62,9 @@ type TableSchema struct {
 	Fields []FieldSchema
 }
 
-// TableSchemas is the type used to specify multiple tables to be created.
-type TableSchemas struct {
-	Resource []TableSchema
-}
-
-// SchemasResponse is the response format for table creation.
+// SchemaResponse is the response format for table creation.
 type SchemaResponse struct {
 	Schema string
+	Kind string
+	Self string
 }

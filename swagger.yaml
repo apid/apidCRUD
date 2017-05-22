@@ -570,6 +570,21 @@ definitions:
         type: array
         items:
           type: string
+  KVResponse:
+    type: object
+    properties:
+      keys:
+        type: array
+        items:
+          type: string
+      values:
+        type: array
+        items:
+          type: string
+      kind:
+        type: string
+      self:
+        type: string
   BodyRecord:
     type: object
     properties:
@@ -600,4 +615,4 @@ definitions:
         type: array
         description: Array of system user records.
         items:
-          type: object
+          $ref: '#/definitions/KVResponse'

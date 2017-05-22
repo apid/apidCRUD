@@ -92,7 +92,7 @@ func Test_realInitPlugin(t *testing.T) {
 // global conf variables with values to be used during unit testing.
 // used by initConfig().
 var utConfData = map[string]string {
-	"apidCRUD_base_path": "",
+	"apidCRUD_base_path": "test",
 	"apidCRUD_max_recs": "7",
 	"apidCRUD_db_driver": "sqlite3",
 	"apidCRUD_db_name": "unit-test.db",

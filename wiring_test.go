@@ -2,6 +2,7 @@ package apidCRUD
 
 import (
 	"testing"
+	"strings"
 	"net/http"
 	"net/http/httptest"
 	"fmt"
@@ -27,6 +28,11 @@ func abcPostHandler(harg *apiHandlerArg) apiHandlerRet {
 	return apiHandlerRet{abcPostRet, ""}
 }
 
+// a dummy handler
+func pqrPatchHandler(harg *apiHandlerArg) apiHandlerRet {
+	return apiHandlerRet{http.StatusOK, ""}
+}
+
 // a dummy handler, returns xyzPutRet.
 func xyzPutHandler(harg *apiHandlerArg) apiHandlerRet {
 	return apiHandlerRet{xyzPutRet, ""}
@@ -38,10 +44,16 @@ func badHandler(harg *apiHandlerArg) apiHandlerRet {
 }
 
 var fakeApiTable = []apiDesc {	// nolint
+	// /abc supports GET and POST
 	{ "/abc", http.MethodGet, abcGetHandler },
 	{ "/abc", http.MethodPost, abcPostHandler },
+
+	// /xyz supports PUT and DELETE
 	{ "/xyz", http.MethodPut, xyzPutHandler },
 	{ "/xyz", http.MethodDelete, badHandler },
+
+	// /pqr supports only PATCH
+	{ "/pqr", http.MethodPatch, pqrPatchHandler },
 }
 
 // countPaths returns the number of unique paths in the given tab.
@@ -144,9 +156,9 @@ type convData_TC struct {
 	xsucc bool
 }
 
-var erdata = ErrorResponse{567, "junk"}
+var erdata = ErrorResponse{567, "junk", "ErrorResponse"}
 
-var erjson = `{"Code":567,"Message":"junk"}`
+var erjson = `{"Code":567,"Message":"junk","Kind":"ErrorResponse"}`
 
 var badconv = func() { }	// cause convData to choke.
 
@@ -209,5 +221,37 @@ func Test_writeErrorResponse(t *testing.T) {
 	for _, tc := range writeErrorResponse_Tab {
 		writeErrorResponse_Checker(cx, tc)
 		cx.bump()
+	}
+}
+
+// ----- unit tests for allowedMethods().
+
+// inputs and outputs for one allowedMethods testcase.
+type allowedMethods_TC struct {
+	path string
+	xres string
+}
+
+// table of allowedMethods testcases.
+var allowedMethods_Tab = []allowedMethods_TC {
+	{ "/abc", "GET,POST" },
+	{ "/xyz", "DELETE,PUT" },
+	{ "/pqr", "PATCH" },
+}
+
+// run one testcase for function allowedMethods.
+func allowedMethods_Checker(cx *testContext, ws *apiWiring, tc *allowedMethods_TC) {
+	vmap := ws.pathsMap[tc.path]
+	result := strings.Join(allowedMethods(vmap), ",")
+	cx.assertEqual(tc.xres, result, "methods")
+}
+
+// the allowedMethods test suite.  run all allowedMethods testcases.
+func Test_allowedMethods(t *testing.T) {
+	cx := newTestContext(t, "allowedMethods_Tab")
+	ws := newApiWiring("", fakeApiTable)
+	for _, tc := range allowedMethods_Tab {
+		allowedMethods_Checker(cx, ws, &tc)
+		cx.bump()	// increment testno.
 	}
 }

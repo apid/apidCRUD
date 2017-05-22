@@ -67,7 +67,8 @@ func createDbRecordsHandler(harg *apiHandlerArg) apiHandlerRet {
 		idlist = append(idlist, int64(id))
 	}
 
-	return apiHandlerRet{http.StatusCreated, IdsResponse{Ids: idlist}}
+	return apiHandlerRet{http.StatusCreated,
+		IdsResponse{Ids: idlist, Kind: "Collection"}}
 }
 
 // getDbRecordsHandler() handles GET requests on /db/_table/{table_name} .
@@ -154,7 +155,7 @@ func describeDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 	if err != nil {
 		return errorRet(badStat, err, "after fetchParams")
 	}
-	return schemaQuery(tableOfTables,
+	return schemaQuery(harg.req.URL, tableOfTables,
 		"schema", "name", params["table_name"])
 }
 
@@ -195,7 +196,8 @@ func tablesQuery(tabName string,
 
 // schemaQuery is the guts of describeDbTableHandler().
 // it's easier to test with an argument.
-func schemaQuery(tabName string,
+func schemaQuery(u *url.URL,
+		tabName string,
 		fieldName string,
 		selector string,
 		item string) apiHandlerRet {
@@ -221,7 +223,8 @@ func schemaQuery(tabName string,
 	}
 	log.Debugf("schema = %s", data)
 
-	return apiHandlerRet{http.StatusOK, SchemaResponse{data}}
+	return apiHandlerRet{http.StatusOK,
+		SchemaResponse{data, "SchemaResponse", u.String()}}
 }
 
 // errorRet() is called by apiHandler routines to pass back the code/data
@@ -231,7 +234,7 @@ func errorRet(code int, err error, dmsg string) apiHandlerRet {
 	if dmsg != "" {
 		log.Debugf("errorRet %d [%s], %s", code, err, dmsg)
 	}
-	return apiHandlerRet{code, ErrorResponse{code, err.Error()}}
+	return apiHandlerRet{code, ErrorResponse{code, err.Error(), "ErrorResponse"}}
 }
 
 // mkSQLRow() returns a list of interface{} of the given length,
@@ -293,10 +296,11 @@ func runQuery(db dbType,
 		if err != nil {
 			return queryErrorRet(ret, err, "failure after convValues")
 		}
+		// this is bogus
 		kvrow := KVResponse{Keys: cols,
 			Values: vals,
 			Kind: "KVResponse",
-			Self: mkSelf(u, ivals, i),
+			Self: selfKVResponse(u, ivals, i),
 			}
 		ret = append(ret, &kvrow)
 		if len(ret) >= maxRecs { // safety check
@@ -371,7 +375,8 @@ func delCommon(params map[string]string) apiHandlerRet {
 		return errorRet(badStat, err, "after delRec")
 	}
 
-	return apiHandlerRet{http.StatusOK, NumChangedResponse{int64(nc)}}
+	return apiHandlerRet{http.StatusOK,
+		NumChangedResponse{int64(nc),"NumChangedResponse"}}
 }
 
 // dbErrorRet() returns an error value on behalf of a db caller
@@ -545,7 +550,8 @@ func getCommon(u *url.URL, params map[string]string) apiHandlerRet {
 		return errorRet(badStat, fmt.Errorf("no matching record"), "")
 	}
 
-	return apiHandlerRet{http.StatusOK, RecordsResponse{Records:result}}
+	return apiHandlerRet{http.StatusOK,
+		RecordsResponse{Records:result,Kind:"Collection"}}
 }
 
 // updateCommon() is common code for update APIs.
@@ -563,7 +569,8 @@ func updateCommon(harg *apiHandlerArg, params map[string]string) apiHandlerRet {
 	if err != nil {
 		return errorRet(badStat, err, "after updateRec")
 	}
-	return apiHandlerRet{http.StatusOK, NumChangedResponse{int64(ra)}}
+	return apiHandlerRet{http.StatusOK,
+		NumChangedResponse{int64(ra),"NumChangedResponse"}}
 }
 
 // convTableNames() converts the return format from runQuery()
@@ -698,12 +705,26 @@ func execN(db dbType, cmdList ...*xCmd) error {
 	return tx.Commit()
 }
 
-// mkSelf() returns a string for the self field of a KVResponse.
-func mkSelf(u *url.URL, idlist []interface{}, i int) string {
-	if u == nil || i >= len(idlist) {
-		log.Debugf("mkSelf: idlist=%s, i=%d", idlist, i)
-		return "??"
+// selfKVResponse() returns a string for the self field of a KVResponse.
+// the url may be nil if "self" is allowed to remain unspecified.
+// if the idlist is empty, // the request must have been (?)
+// reading multiple records with "*".
+func selfKVResponse(u *url.URL, idlist []interface{}, i int) string {
+	if u == nil {
+		// internal request with no URL specified.
+		return ""
 	}
+	n := len(idlist)
+	if n == 0 {
+		// the request must have been (?) reading *, no ids specified.
+		return fmt.Sprintf("%s://%s%s", u.Scheme, u.Host, u.Path)
+	}
+	if i >= n {
+		// should not happen
+		log.Errorf("selfKVResponse: idlist=%s, i=%d", idlist, i)
+		return fmt.Sprintf("?", u.Scheme, u.Host, u.Path)
+	}
+	// the normal case.
 	id, _ := idlist[i].(int64)
 	return fmt.Sprintf("%s://%s%s/%d", u.Scheme, u.Host, u.Path, id)
 }
