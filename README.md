@@ -153,4 +153,4 @@ utConfData in globals_test.go .
    * [coveralls for apidCRUD](https://coveralls.io/github/30x/apidCRUD)
    * [godoc for apidCRUD](https://godoc.org/github.com/30x/apidCRUD)
    * [swagger.yaml for apidCRUD](./swagger.yaml)
-   * [apistudio for apidCRUD](http://playground.apistudio.io/d40adf05-277a-4751-9aa1-256b28aa62f6/#/)
+   * [apistudio for apidCRUD](http://playground.apistudio.io/0f1cefb2-3da2-4c72-87a7-d64791abe9c1/#/)

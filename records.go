@@ -72,3 +72,9 @@ type SchemaResponse struct {
 	Kind string	`json:"kind"`
 	Self string	`json:"self"`
 }
+
+type ServiceResponse struct {
+	Description string `json:"resource"`
+	Kind string	`json:"kind"`
+	Self string	`json:"self"`
+}

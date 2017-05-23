@@ -44,7 +44,7 @@ Logecho()
 
 TestHeader()
 {
-	Logecho -n "# $* -"
+	Logecho -n "# $* - "
 }
 
 AssertOK()
@@ -154,8 +154,8 @@ out=$(Logrun "$TESTS_DIR/desctabtest.sh" users)
 [[ "$out" != "" ]]
 AssertOK "table description"
 
-TestHeader "trying db resources (getres.sh)"
-out=$(Logrun "$TESTS_DIR/getres.sh" h)
+TestHeader "trying db resources (descserv.sh)"
+out=$(Logrun "$TESTS_DIR/descserv.sh" h)
 xstat=$?
 [[ $xstat == 0 && "$out" != "" ]]
 AssertOK "db resources"

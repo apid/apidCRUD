@@ -2,8 +2,10 @@ swagger: '2.0'
 info:
   title: Building blocks of REPL and CRUD module
   description: |
-    Assumes you have read [APID Core](https://docs.google.com/a/apigee.com/document/d/15-HvWdv-JGRk5rKDK5DLjr0qEqe8lwy18AQRQqRlO-I/edit?usp=sharing) document.
-  version: '0.7'
+    Assumes you have read
+    [APID Core](https://docs.google.com/a/apigee.com/document/d/15-HvWdv-JGRk5rKDK5DLjr0qEqe8lwy18AQRQqRlO-I/edit?usp=sharing),
+    [Apigee Edge API style guide](https://docs.google.com/document/d/1iwzeSdQqsDnhapQarQKs9pK_8vQUdnI91RNiwHeLv94/)
+  version: '0.9'
   contact:
     name: 'Apigee Inc.'
     email: support@apigee.com
@@ -20,56 +22,18 @@ produces:
 paths:
   /db: # PATH
     get: # VERB
-      summary: getDbResources() - Get resources for this service.
-      operationId: getDbResources
-      description: Return an array of the resources available.
-      parameters:
-        - name: as_list
-          type: boolean
-          in: query
-          description: Return only a list of the resource identifiers.
-        - name: fields
-          type: array
-          collectionFormat: csv
-          items:
-            type: string
-          in: query
-          description: >-
-            Comma-delimited list of properties to be returned for each resource,
-            "*" returns all properties. If as_list, use this to override the
-            default identifier.
-        - name: id_field
-          type: array
-          collectionFormat: csv
-          items:
-            type: string
-          in: query
-          description: >-
-            Comma-delimited list of the fields used as identifiers, used to
-            override defaults or provide identifiers when none are provisioned.
-        - name: id_type
-          type: array
-          collectionFormat: csv
-          items:
-            type: string
-          in: query
-          description: >-
-            Comma-delimited list of the field types used as identifiers for the
-            table, used to override defaults or provide identifiers when none
-            are provisioned.
-        - name: refresh
-          type: boolean
-          in: query
-          description: Refresh any cached resource list on the server.
+      summary: describeService() - Get description of this service.
+      operationId: describeService
+      description: return swagger.json for this service.
       responses:
         '200':
           description: Success
           schema:
-            $ref: '#/definitions/SqliteDbsResponse'
+            $ref: '#/definitions/ServiceResponse'
         default:
           description: Error
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ErrorResponse'
   '/db/_schema/{table_name}': # PATH
     parameters:
       - name: table_name
@@ -95,7 +59,7 @@ paths:
         default:
           description: Error
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ErrorResponse'
       description: 'This describes the table, its fields and relations to other tables.'
     post: # VERB
       tags:
@@ -117,7 +81,7 @@ paths:
         default:
           description: Error
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ErrorResponse'
       description: >-
         Post data should be an array of field properties for a single record or
         an array of fields.
@@ -135,11 +99,11 @@ paths:
         default:
           description: Error
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ErrorResponse'
       description: 'Careful, this drops the database table and all of its contents.'
   /db/_table: # PATH
     get: # VERB
-      tags: [table, getDbTables, implemented]
+      tags: [table, getDbTables]
       summary: getDbTables() - List all Tables
       operationId: getDbTables
       description: Return a list of the table names.
@@ -151,7 +115,7 @@ paths:
         default:
           description: Error
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ErrorResponse'
   '/db/_table/{table_name}': # PATH
     parameters:
       - name: table_name
@@ -160,7 +124,7 @@ paths:
         in: path
         required: true
     get: # VERB
-      tags: [table, get, record, getDbRecords, implemented]
+      tags: [table, get, record, getDbRecords]
       summary: getDbRecords() - Retrieve one or more records.
       operationId: getDbRecords
       consumes:
@@ -211,9 +175,9 @@ paths:
         default:
           description: Error
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ErrorResponse'
     post: # VERB
-      tags: [table, post, record, createDbRecords, implemented]
+      tags: [table, post, record, createDbRecords]
       summary: createDbRecords() - Create one or more records.
       operationId: createDbRecords
       description: >-
@@ -254,9 +218,9 @@ paths:
         default:
           description: Error
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ErrorResponse'
     patch: # VERB
-      tags: [table, patch, record, updateDbRecords, implemented]
+      tags: [table, patch, record, updateDbRecords]
       summary: updateDbRecords() - Update (patch) one or more records.
       operationId: updateDbRecords
       description: >-
@@ -314,9 +278,9 @@ paths:
         default:
           description: Error
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ErrorResponse'
     delete: # VERB
-      tags: [table, delete, record, deleteDbRecords, implemented]
+      tags: [table, delete, record, deleteDbRecords]
       summary: deleteDbRecords() - Delete one or more records.
       operationId: deleteDbRecords
       consumes:
@@ -358,7 +322,7 @@ paths:
         default:
           description: Error
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ErrorResponse'
   '/db/_table/{table_name}/{id}': # PATH
     parameters:
       - name: id
@@ -372,7 +336,7 @@ paths:
         in: path
         required: true
     get: # VERB
-      tags: [table, get, record, getDbRecord, implemented]
+      tags: [table, get, record, getDbRecord]
       summary: getDbRecord() - Retrieve one record by identifier.
       operationId: getDbRecord
       description: >-
@@ -410,9 +374,9 @@ paths:
         default:
           description: Error
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ErrorResponse'
     patch: # VERB
-      tags: [table, patch, record, updateDbRecord, implemented]
+      tags: [table, patch, record, updateDbRecord]
       summary: updateDbRecord() - Update (patch) one record by identifier.
       operationId: updateDbRecord
       consumes:
@@ -442,9 +406,9 @@ paths:
         default:
           description: Error
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ErrorResponse'
     delete: # VERB
-      tags: [table, delete, record, deleteDbRecord, implemented]
+      tags: [table, delete, record, deleteDbRecord]
       summary: deleteDbRecord() - Delete one record by identifier.
       operationId: deleteDbRecord
       description: >-
@@ -481,7 +445,7 @@ paths:
         default:
           description: Error
           schema:
-            $ref: '#/definitions/Error'
+            $ref: '#/definitions/ErrorResponse'
 definitions:
   Success:
     type: object
@@ -489,36 +453,37 @@ definitions:
       success:
         type: boolean
         description: 'True when API call was successful, false or error otherwise.'
-  Error:
+  ErrorResponse:
     type: object
     properties:
-      Code:
+      code:
         type: integer
         format: int64
         description: Error code.
-      Message:
+      message:
         type: string
         description: String description of the error.
-  SqliteDbResponse:
-    type: object
-    properties:
-      name:
+      kind:
         type: string
-        description: Identifier of the resource.
-  SqliteDbsResponse:
+  ServiceResponse:
     type: object
     properties:
-      resource:
-        type: array
-        description: Array of resources available to this service.
-        items:
-          $ref: '#/definitions/SqliteDbResponse'
+      description:
+        type: string
+      kind:
+        type: string
+      self:
+        type: string
   SchemaResponse:
     type: object
     properties:
       name:
         type: string
         description: Identifier of the resource.
+      kind:
+        type: string
+      self:
+        type: string
   TableSchema:
     type: object
     properties:
@@ -559,6 +524,10 @@ definitions:
         description: Array of resources available to this path.
         items:
           type: string
+      kind:
+        type: string
+      self:
+        type: string
   KVRecord:
     type: object
     properties:
@@ -596,9 +565,11 @@ definitions:
   NumChangedResponse:
     type: object
     properties:
-      NumChanged:
+      numChanged:
         type: integer
         format: int64
+      kind:
+        type: string
   IdsResponse:
     type: object
     properties:
@@ -608,6 +579,8 @@ definitions:
         items:
           type: integer
           format: int64
+      kind:
+        type: string
   RecordsResponse:
     type: object
     properties:

@@ -1272,20 +1272,39 @@ func Test_runExec(t *testing.T) {
 	cx.assertTrue(err != nil, "expected error")
 }
 
-// ----- unit tests for getDbResourcesHandler().
+// ----- unit tests for describeServiceHandler().
 
-// table of getDbResources testcases.
-var getDbResources_Tab = []apiCall_TC {
-	{"get db resources",
-		getDbResourcesHandler,
+// table of describeService testcases.
+var describeService_Tab = []apiCall_TC {
+	{"describe service",
+		describeServiceHandler,
 		http.MethodGet,
 		`/test/db`,
 		http.StatusOK, noCheck},
 }
 
-// the getDbResources test suite.  run all getDbResources testcases.
-func Test_getDbResourcesHandler(t *testing.T) {
-	apiCalls_Runner(t, "getDbResources_Tab", getDbResources_Tab)
+// run one testcase for function describeServiceHandler.
+func describeServiceHandler_Checker(cx *testContext, tc *apiCall_TC) {
+	harg := parseHandlerArg(tc.verb, tc.argDesc)
+	res := describeServiceHandler(harg)
+	if !cx.assertEqual(tc.xcode, res.code, "returned code") {
+		return
+	}
+	p, ok := res.data.(ServiceResponse)
+	if !cx.assertTrue(ok, "convert to ServiceResponse") {
+		return
+	}
+	cx.assertEqual("ServiceResponse", p.Kind, "kind")
+	cx.assertEqual(swaggerJSON, p.Description, "description")
+}
+
+// the describeServiceHandler test suite.  run all describeServiceHandler testcases.
+func Test_describeServiceHandler(t *testing.T) {
+	cx := newTestContext(t, "describeService_Tab")
+	for _, tc := range describeService_Tab {
+		describeServiceHandler_Checker(cx, &tc)
+		cx.bump()	// increment testno.
+	}
 }
 
 // ----- unit tests for deleteDbRecordHandler().

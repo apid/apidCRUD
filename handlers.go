@@ -26,9 +26,11 @@ type xCmd struct {
 
 // ----- plain old handlers that are compatible with the apiHandler type.
 
-// getDbResourcesHandler handles GET requests on /db
-func getDbResourcesHandler(harg *apiHandlerArg) apiHandlerRet {
-	return apiHandlerRet{http.StatusOK, swaggerJSON}
+// describeServiceHandler handles GET requests on /db
+func describeServiceHandler(harg *apiHandlerArg) apiHandlerRet {
+	self := harg.req.URL.String()
+	return apiHandlerRet{http.StatusOK,
+		ServiceResponse{swaggerJSON, "ServiceResponse", self}}
 }
 
 // getDbTablesHandler handles GET requests on /db/_table
