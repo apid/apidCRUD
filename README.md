@@ -9,8 +9,7 @@ Status:
 
 this is still a WIP,
 with some features unimplemented and still subject to change.
-at the moment, the /db/_table APIs are implemented,
-the /db/_schema APIs are not.
+more work is needed to make apidCRUD fully complaint with the Apigee API Style Guide.
 
 ## Functional description
 
@@ -149,8 +148,9 @@ utConfData in globals_test.go .
 
 ## Resources
 
-   * [travis-ci for apidCRUD](https://travis-ci.org/30x/apidCRUD)
-   * [coveralls for apidCRUD](https://coveralls.io/github/30x/apidCRUD)
-   * [godoc for apidCRUD](https://godoc.org/github.com/30x/apidCRUD)
-   * [swagger.yaml for apidCRUD](./swagger.yaml)
-   * [apistudio for apidCRUD](http://playground.apistudio.io/8548bd01-cb5e-47c7-b2f4-5452c9ca4e66/#/)
+* [travis-ci for apidCRUD](https://travis-ci.org/30x/apidCRUD)
+* [coveralls for apidCRUD](https://coveralls.io/github/30x/apidCRUD)
+* [godoc for apidCRUD](https://godoc.org/github.com/30x/apidCRUD)
+* [swagger.yaml for apidCRUD](./swagger.yaml)
+* [apistudio for apidCRUD](http://playground.apistudio.io/8548bd01-cb5e-47c7-b2f4-5452c9ca4e66/#/)
+* [Apigee Edge API style guide](https://docs.google.com/document/d/1iwzeSdQqsDnhapQarQKs9pK_8vQUdnI91RNiwHeLv94)
