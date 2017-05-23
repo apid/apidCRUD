@@ -19,5 +19,5 @@ out=$(apicurl GET "$API_PATH/$TABLE_NAME?ids=$IDS&fields=$FIELDS")
 xstat=$?
 
 echo "$out"
-# echo "$out" | jq -r -S .Records[].id
+# echo "$out" | jq -r -S .records[].id
 exit $xstat

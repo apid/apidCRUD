@@ -17,5 +17,5 @@ BODY="{\"records\":$RESOURCES}"
 out=$(apicurl PATCH "db/_table/$TABLE_NAME?ids=$IDS" -v -d "$BODY")
 xstat=$?
 echo 1>&2 "$out"
-echo "$out" | jq -S -r .NumChanged
+echo "$out" | jq -S -r .numChanged
 exit $xstat

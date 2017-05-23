@@ -12,5 +12,5 @@ PROGDIR=$(cd "$(dirname "$0")" && /bin/pwd)
 out=$(apicurl GET "db/_table")
 xstat=$?
 echo 1>&2 "$out"
-echo "$out" | jq -S -r .Names[]
+echo "$out" | jq -S -r .names[]
 exit $xstat

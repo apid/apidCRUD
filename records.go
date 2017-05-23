@@ -2,17 +2,20 @@ package apidCRUD
 
 // ----- types for parameter record and response structures
 
+// field tags are used to change the case of JSON keys
+// created by json.Unmarshal().
+
 // NumChangedResponse is the response data for API deleteDbRecord and others.
 type NumChangedResponse struct {
-	NumChanged int64
-	Kind string
+	NumChanged int64 `json:"numChanged"`
+	Kind string	`json:"kind"`
 }
 
 // ErrorResponse is the response data for API errors.
 type ErrorResponse struct {
-	Code int
-	Message string
-	Kind string
+	Code int	`json:code`
+	Message string	`json:message`
+	Kind string	`json:"kind"`
 }
 
 // KVRecord represents record data in requests, used in multiple APIs.
@@ -27,29 +30,29 @@ type BodyRecord struct {
 }
 
 type KVResponse struct {
-	Keys []string
-	Values []interface{}
-	Kind string
-	Self string
+	Keys []string	`json:"keys"`
+	Values []interface{} `json:"values"`
+	Kind string	`json:"kind"`
+	Self string	`json:"self"`
 }
 
 // RecordsResponse is the type for multiple get*Record* APIs.
 type RecordsResponse struct {
-	Records []*KVResponse
-	Kind string
+	Records []*KVResponse `json:"records"`
+	Kind string	`json:"kind"`
 }
 
 // IdsResponse is the type returned by createDbRecords .
 type IdsResponse struct {
 	Ids []int64
-	Kind string
+	Kind string	`json:"kind"`
 }
 
 // TablesResponse is the type returned by getDbTables.
 type TablesResponse struct {
-	Names []string
-	Kind string
-	Self string
+	Names []string	`json:"names"`
+	Kind string	`json:"kind"`
+	Self string	`json:"self"`
 }
 
 // FieldSchema is the type used to specify a field in a table.
@@ -65,7 +68,7 @@ type TableSchema struct {
 
 // SchemaResponse is the response format for table creation.
 type SchemaResponse struct {
-	Schema string
-	Kind string
-	Self string
+	Schema string	`json:"schema"`
+	Kind string	`json:"kind"`
+	Self string	`json:"self"`
 }

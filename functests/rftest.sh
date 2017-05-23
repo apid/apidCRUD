@@ -12,4 +12,4 @@ TABNAME=file
 KEY=line
 
 apicurl GET "db/_table/$TABNAME?fields=$KEY" \
-| jq -S -r .Records[].Values[]
+| jq -S -r '.records[].values[]'

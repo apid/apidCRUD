@@ -12,5 +12,5 @@ ID=${1:-25}
 out=$(apicurl DELETE "db/_table/$TABLE_NAME/$ID")
 xstat=$?
 echo 1>&2 "$out"
-echo "$out" | jq -S -r .NumChanged
+echo "$out" | jq -S -r .numChanged
 exit $xstat

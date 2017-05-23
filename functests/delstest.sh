@@ -14,4 +14,4 @@ out=$(apicurl DELETE \
 	"db/_table/$TABLE_NAME?ids=$IDS&id_field=$ID_FIELD")
 
 echo 1>&2 "$out"
-echo "$out" | jq -S -r .NumChanged
+echo "$out" | jq -S -r .numChanged
