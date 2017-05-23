@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"bytes"
 	"net/http"
-	"net/url"
 	"encoding/json"
 	"database/sql"
 )
@@ -79,7 +78,10 @@ func getDbRecordsHandler(harg *apiHandlerArg) apiHandlerRet {
 		return errorRet(badStat, err, "after fetchParams")
 	}
 
-	return getCommon(harg.req.URL, params)
+	u := harg.req.URL
+	self := fmt.Sprintf("%s://%s%s%s/%s",
+		u.Scheme, u.Host, basePath, "/db/_table", params["table_name"])
+	return getCommon(self, params)
 }
 
 // getDbRecordHandler() handles GET requests on /db/_table/{table_name}/{id} .
@@ -92,7 +94,10 @@ func getDbRecordHandler(harg *apiHandlerArg) apiHandlerRet {
 	params["limit"] = strconv.Itoa(1)
 	params["offset"] = strconv.Itoa(0)
 
-	return getCommon(harg.req.URL, params)
+	u := harg.req.URL
+	self := fmt.Sprintf("%s://%s%s%s/%s",
+		u.Scheme, u.Host, basePath, "/db/_table", params["table_name"])
+	return getCommon(self, params)
 }
 
 // updateDbRecordsHandler() handles PATCH requests on /db/_table/{table_name} .
@@ -183,7 +188,7 @@ func tablesQuery(self string,
 
 	idlist := []interface{}{}
 	qstring := fmt.Sprintf("select id,%s from %s", fieldName, tabName)
-	result, err := runQuery(db, nil, qstring, idlist)
+	result, err := runQuery(db, "", qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err, "after runQuery")
 	}
@@ -208,7 +213,7 @@ func schemaQuery(self string,
 	idlist := []interface{}{}
 	qstring := fmt.Sprintf(`select id,%s from %s where %s = "%s"`,
 			fieldName, tabName, selector, item)
-	result, err := runQuery(db, nil, qstring, idlist)
+	result, err := runQuery(db, "", qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err, "after runQuery")
 	}
@@ -263,7 +268,7 @@ func queryErrorRet(ret []*KVResponse,
 // runQuery() does a select query using the given query string.
 // the return value is a list of the retrieved records.
 func runQuery(db dbType,
-		u *url.URL,
+		self string,
 		qstring string,
 		ivals []interface{}) ([]*KVResponse, error) {
 	log.Debugf("query = %s", qstring)
@@ -314,7 +319,7 @@ func runQuery(db dbType,
 		kvrow := KVResponse{Keys: cols[1:],
 			Values: vals[1:],
 			Kind: "KVResponse",
-			Self: selfKVResponse(u, id),
+			Self: fmt.Sprintf("%s/%d", self, id),
 			}
 		ret = append(ret, &kvrow)
 		if len(ret) >= maxRecs { // safety check
@@ -559,9 +564,9 @@ func mkSelectString(params map[string]string) (string, []interface{}) {
 }
 
 // getCommon() is common code for selection APIs.
-func getCommon(u *url.URL, params map[string]string) apiHandlerRet {
+func getCommon(self string, params map[string]string) apiHandlerRet {
 	qstring, idlist := mkSelectString(params)
-	result, err := runQuery(db, u, qstring, idlist)
+	result, err := runQuery(db, self, qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err, "after runQuery")
 	}
@@ -723,17 +728,4 @@ func execN(db dbType, cmdList ...*xCmd) error {
 		}
 	}
 	return tx.Commit()
-}
-
-// selfKVResponse() returns a string for the self field of a KVResponse.
-// the url may be nil if "self" is allowed to remain unspecified.
-// if the idlist is empty, // the request must have been (?)
-// reading multiple records with "*".
-func selfKVResponse(u *url.URL, id int64) string {
-	if u == nil {
-		// internal request with no URL specified.
-		return ""
-	}
-	// the normal case.
-	return fmt.Sprintf("%s://%s%s/%d", u.Scheme, u.Host, u.Path, id)
 }
