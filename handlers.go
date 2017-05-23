@@ -224,12 +224,7 @@ func schemaQuery(self string,
 			fmt.Errorf("results length mismatch"),
 			"after runQuery")
 	}
-	data, ok := (*result[0]).Values[0].(string)
-	if !ok {
-		return errorRet(badStat,
-			fmt.Errorf("results conversion error"),
-			"after runQuery")
-	}
+	data, _ := (*result[0]).Values[0].(string)
 	log.Debugf("schema = %s", data)
 
 	return apiHandlerRet{http.StatusOK,
@@ -286,54 +281,58 @@ func runQuery(db dbType,
 	// ensure rows gets closed at end
 	defer rows.Close()	// nolint
 
-	cols, err := rows.Columns() // Remember to check err afterwards
+	cols, err := rows.Columns()
 	if err != nil {
 		return queryErrorRet(ret, err, "failure after Columns")
 	}
 	log.Debugf("cols = %s", cols)
-	ncols := len(cols)
 
 	for rows.Next() {
-		vals := mkSQLRow(ncols)
-		err = rows.Scan(vals...)
+		rec, err := queryRow(self, rows, cols)
 		if err != nil {
-			return queryErrorRet(ret, err, "failure after Scan")
+			return queryErrorRet(ret, err, "failure after queryRow")
 		}
-
-		err = convValues(vals)
-		if err != nil {
-			return queryErrorRet(ret, err, "failure after convValues")
-		}
-		var id int64
-		switch v := vals[0].(type) {
-		case int64:
-			id = v
-			err = nil
-		case string:
-			id, err = strconv.ParseInt(v, idTypeRadix, idTypeBits)
-		default:
-			id = -1
-			err = fmt.Errorf("unknown type in id field")
-		}
-		if err != nil {
-			return queryErrorRet(ret, err, "failure after typeswitch")
-		}
-		kvrow := KVResponse{Keys: cols[1:],
-			Values: vals[1:],
-			Kind: "KVResponse",
-			Self: fmt.Sprintf("%s/%d", self, id),
-			}
-		ret = append(ret, &kvrow)
+		ret = append(ret, rec)
 		if len(ret) >= maxRecs { // safety check
 			break
 		}
 	}
 
-	err = rows.Err()
+	return ret, rows.Err()
+}
+
+func queryRow(self string,
+		rows *sql.Rows,
+		cols []string) (*KVResponse, error) {
+	vals := mkSQLRow(len(cols))
+	err := rows.Scan(vals...)
+	ret := &KVResponse{}
 	if err != nil {
-		return queryErrorRet(ret, err, "failure after rows.Err")
+		return ret, err
 	}
 
+	err = convValues(vals)
+	if err != nil {
+		return ret, err
+	}
+	var id int64
+	switch v := vals[0].(type) {
+	case int64:
+		id = v
+		err = nil
+	case string:
+		id, err = strconv.ParseInt(v, idTypeRadix, idTypeBits)
+	default:
+		id = -1
+		err = fmt.Errorf("unknown type in id field")
+	}
+	if err != nil {
+		return ret, err
+	}
+	ret.Keys = cols[1:]
+	ret.Values = vals[1:]
+	ret.Kind = "KVResponse"
+	ret.Self = fmt.Sprintf("%s/%d", self, id)
 	return ret, nil
 }
 
@@ -577,6 +576,7 @@ func getCommon(self string, params map[string]string) apiHandlerRet {
 		return errorRet(badStat, fmt.Errorf("no matching record"), "")
 	}
 
+	// TODO: support "page"-related properties
 	return apiHandlerRet{http.StatusOK,
 		RecordsResponse{Records:result,Kind:"Collection"}}
 }

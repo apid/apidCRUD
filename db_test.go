@@ -57,6 +57,10 @@ var cmds = []string {
 	`insert into toomany (name, uri) values ("x14", "url14")`,
 	`insert into toomany (name, uri) values ("x15", "url15")`,
 	`insert into toomany (name, uri) values ("x16", "url16")`,
+
+	// create a table badschema
+	`create table _badtables_(id integer not null primary key autoincrement, name text not null, schema real)`,
+	`insert into _badtables_ (name, schema) values ("bundles", 123)`,
 }
 
 // createDbData() sets up the tables expected by some unit tests.

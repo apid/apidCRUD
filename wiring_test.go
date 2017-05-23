@@ -158,7 +158,7 @@ type convData_TC struct {
 
 var erdata = ErrorResponse{567, "junk", "ErrorResponse"}
 
-var erjson = `{"Code":567,"Message":"junk","kind":"ErrorResponse"}`
+var erjson = `{"code":567,"message":"junk","kind":"ErrorResponse"}`
 
 var badconv = func() { }	// cause convData to choke.
 

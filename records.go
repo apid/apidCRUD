@@ -13,8 +13,8 @@ type NumChangedResponse struct {
 
 // ErrorResponse is the response data for API errors.
 type ErrorResponse struct {
-	Code int	`json:code`
-	Message string	`json:message`
+	Code int	`json:"code"`
+	Message string	`json:"message"`
 	Kind string	`json:"kind"`
 }
 
@@ -29,6 +29,7 @@ type BodyRecord struct {
 	Records []KVRecord
 }
 
+// KVResponse represents data records returned from an API call.
 type KVResponse struct {
 	Keys []string	`json:"keys"`
 	Values []interface{} `json:"values"`
@@ -73,6 +74,7 @@ type SchemaResponse struct {
 	Self string	`json:"self"`
 }
 
+// ServiceResponse is the response format for the describeService API.
 type ServiceResponse struct {
 	Description string `json:"resource"`
 	Kind string	`json:"kind"`

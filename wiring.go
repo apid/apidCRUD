@@ -94,7 +94,7 @@ func callApiMethod(vmap verbMap, verb string, harg *apiHandlerArg) apiHandlerRet
 func allowedMethods(vmap verbMap) []string {
 	ret := make([]string, len(vmap.methods))
 	i := 0
-	for verb, _ := range vmap.methods {
+	for verb := range vmap.methods {
 		ret[i] = verb
 		i++
 	}

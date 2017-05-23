@@ -1,5 +1,5 @@
 .PHONY: default clean clobber update build install preinstall test run
-.PHONY: killer lint test unit-test cov-view setup
+.PHONY: killer lint test unit-test cov-view setup uncovered
 .PHONY: fix-readme
 
 default: install
@@ -78,6 +78,9 @@ fix-readme:
 
 gen_swag.go: swagger.yaml cmd/swag/main.go
 	go run cmd/swag/main.go $< > $@
+
+uncovered:
+	./uncovered.sh > $(LOG_DIR)/$@.out
 
 ##
 ## this is not a working target.
