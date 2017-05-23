@@ -819,7 +819,7 @@ var getDbTables_Tab = []apiCall_TC {
 	{"get tablenames",
 		getDbTablesHandler,
 		http.MethodGet,
-		`/test/db/_tables`,
+		`http://localhost/test/db/_tables`,
 		http.StatusOK, noCheck},
 }
 
@@ -837,6 +837,9 @@ func getDbTables_Checker(cx *testContext, tc *apiCall_TC) {
 	sort.Strings(dataNames)
 	resNames := strings.Join(dataNames, ",")
 	cx.assertEqualObj(xtabNames, resNames, "retrieved names")
+	cx.assertEqual("TablesResponse", data.Kind, "tables response kind")
+	w := strings.SplitN(data.Self, "?", 2)
+	cx.assertEqual(tc.argDesc, w[0], "tables response self")
 }
 
 func Test_getDbTablesHandler(t *testing.T) {

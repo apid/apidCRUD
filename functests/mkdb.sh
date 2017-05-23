@@ -1,5 +1,5 @@
 #! /bin/bash
-#	mkdb
+#	mkdb.sh
 
 # ----- start of mainline code
 PROGDIR=$(cd "$(dirname "$0")" && /bin/pwd)
@@ -18,7 +18,7 @@ create table users (id integer not null primary key autoincrement,
 name text not null);
 insert into users (name) values ("djfong");
 create table nothing(id integer not null primary key autoincrement, name text not null);
-create table file(line text);
+create table file(id integer not null primary key autoincrement, line text);
 .quit
 EOF
 

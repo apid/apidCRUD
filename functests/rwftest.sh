@@ -15,7 +15,7 @@ PROGNAME=${0##*/}
 TMPFILE=/tmp/$PROGNAME-$$.tmp
 
 notice 'creating empty table "file"'
-echo "drop table if exists file;create table file(line text);" \
+echo "drop table if exists file;create table file(id integer primary key autoincrement, line text);" \
 | sqlite3 "$DBFILE"
 
 notice "copying $TESTFILE" 'to table "file"'
