@@ -301,12 +301,16 @@ func runQuery(db dbType,
 	return ret, rows.Err()
 }
 
+// queryRow() handles one iteration of runQuery's row loop.
 func queryRow(self string,
 		rows *sql.Rows,
 		cols []string) (*KVResponse, error) {
+
+	ret := &KVResponse{}
+	ret.Kind = "KVResponse"
+
 	vals := mkSQLRow(len(cols))
 	err := rows.Scan(vals...)
-	ret := &KVResponse{}
 	if err != nil {
 		return ret, err
 	}
@@ -315,24 +319,20 @@ func queryRow(self string,
 	if err != nil {
 		return ret, err
 	}
-	var id int64
-	switch v := vals[0].(type) {
-	case int64:
-		id = v
-		err = nil
-	case string:
-		id, err = strconv.ParseInt(v, idTypeRadix, idTypeBits)
-	default:
-		id = -1
-		err = fmt.Errorf("unknown type in id field")
+
+	// note that the query string was modified to ensure
+	// that the id field would be the first column.
+	// the following fields are those from the request.
+
+	// get the record id for use in the self property.
+	id, ok := vals[0].(string)
+	if !ok {
+		return ret, fmt.Errorf("id type conversion error")
 	}
-	if err != nil {
-		return ret, err
-	}
+	ret.Self = fmt.Sprintf("%s/%s", self, id)
+
 	ret.Keys = cols[1:]
 	ret.Values = vals[1:]
-	ret.Kind = "KVResponse"
-	ret.Self = fmt.Sprintf("%s/%d", self, id)
 	return ret, nil
 }
 
