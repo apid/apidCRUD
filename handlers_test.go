@@ -1304,7 +1304,7 @@ var deleteDbRecord_Tab = []apiCall_TC {
 		createDbRecordsHandler,
 		http.MethodPost,
 		`/test/db/_table/tabname|table_name=xxxdel||{"records":[{"keys":["name","uri"],"values":["name-1","uri-1"]}]}`,
-		http.StatusCreated, `{"Ids":[1],"kind":"Collection"}`},
+		http.StatusCreated, `{"ids":[1],"kind":"Collection"}`},
 	{"delete db resources expecting success",
 		deleteDbRecordHandler,
 		http.MethodDelete,

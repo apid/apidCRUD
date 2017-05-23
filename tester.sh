@@ -82,7 +82,7 @@ AssertOK "tabtest.sh expected [${exp[*]}], got [${tabs[*]}]"
 
 TestHeader "adding a few records (crtest.sh)"
 nrecs=7
-out=$(Logrun "$TESTS_DIR/crtest.sh" "$nrecs" | jq -S '.Ids[]')
+out=$(Logrun "$TESTS_DIR/crtest.sh" "$nrecs" | jq -S '.ids[]')
 nc=$(echo "$out" | grep -c "")
 [[ "$nc" == "$nrecs" ]]
 AssertOK "crtest.sh expected $nrecs, got $nc"

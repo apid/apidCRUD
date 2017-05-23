@@ -40,4 +40,4 @@ BODY="{\"records\":$RESOURCES}"
 out=$(apicurl POST "db/_table/$TABLE_NAME" -v -d "$BODY")
 echo "$out"
 
-# echo "$out" | jq -S .Ids[]
+# echo "$out" | jq -S '.ids[]'

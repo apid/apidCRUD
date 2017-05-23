@@ -44,7 +44,7 @@ type RecordsResponse struct {
 
 // IdsResponse is the type returned by createDbRecords .
 type IdsResponse struct {
-	Ids []int64
+	Ids []int64	`json:"ids"`
 	Kind string	`json:"kind"`
 }
 
