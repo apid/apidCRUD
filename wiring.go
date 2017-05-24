@@ -91,6 +91,8 @@ func callApiMethod(vmap verbMap, verb string, harg *apiHandlerArg) apiHandlerRet
 	return verbFunc(harg)
 }
 
+// allowedMethods() returns a sorted list of the names of the
+// methods allowed by a verbMap.
 func allowedMethods(vmap verbMap) []string {
 	ret := make([]string, len(vmap.methods))
 	i := 0

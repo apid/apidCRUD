@@ -1,13 +1,13 @@
 package apidCRUD
 
 import (
-	"fmt"
-	"strings"
-	"strconv"
 	"bytes"
-	"net/http"
-	"encoding/json"
 	"database/sql"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 // ----- types used internally
@@ -20,7 +20,7 @@ type xResult struct {
 
 // type xCmd holds the arguments to SQL Exec()
 type xCmd struct {
-	cmd string
+	cmd  string
 	args []interface{}
 }
 
@@ -184,8 +184,8 @@ func deleteDbTableHandler(harg *apiHandlerArg) apiHandlerRet {
 // tablesQuery is the guts of getDbTablesHandler().
 // it's easier to test with an argument.
 func tablesQuery(self string,
-		tabName string,
-		fieldName string) apiHandlerRet {
+	tabName string,
+	fieldName string) apiHandlerRet {
 	// the tableOfTables table is our convention, not maintained by sqlite.
 
 	idlist := []interface{}{}
@@ -206,15 +206,15 @@ func tablesQuery(self string,
 // schemaQuery is the guts of describeDbTableHandler().
 // it's easier to test with an argument.
 func schemaQuery(self string,
-		tabName string,
-		fieldName string,
-		selector string,
-		item string) apiHandlerRet {
+	tabName string,
+	fieldName string,
+	selector string,
+	item string) apiHandlerRet {
 	// the tableOfTables table is our convention, not maintained by sqlite.
 
 	idlist := []interface{}{}
 	qstring := fmt.Sprintf(`select id,%s from %s where %s = "%s"`,
-			fieldName, tabName, selector, item)
+		fieldName, tabName, selector, item)
 	result, err := runQuery(db, "", qstring, idlist)
 	if err != nil {
 		return errorRet(badStat, err, "after runQuery")
@@ -254,8 +254,8 @@ func mkSQLRow(N int) []interface{} {
 // queryErrorRet() passes thru the first 2 args (ret and err),
 // while logging the third argument (dmsg).
 func queryErrorRet(ret []*KVResponse,
-		err error,
-		dmsg string) ([]*KVResponse, error) {
+	err error,
+	dmsg string) ([]*KVResponse, error) {
 	if dmsg != "" {
 		log.Debugf("queryErrorRet [%s], %s", err, dmsg)
 	}
@@ -265,9 +265,9 @@ func queryErrorRet(ret []*KVResponse,
 // runQuery() does a select query using the given query string.
 // the return value is a list of the retrieved records.
 func runQuery(db dbType,
-		self string,
-		qstring string,
-		ivals []interface{}) ([]*KVResponse, error) {
+	self string,
+	qstring string,
+	ivals []interface{}) ([]*KVResponse, error) {
 	log.Debugf("query = %s", qstring)
 	log.Debugf("ivals = %s", ivals)
 
@@ -279,7 +279,7 @@ func runQuery(db dbType,
 	}
 
 	// ensure rows gets closed at end
-	defer rows.Close()	// nolint
+	defer rows.Close() // nolint
 
 	cols, err := rows.Columns()
 	if err != nil {
@@ -303,8 +303,8 @@ func runQuery(db dbType,
 
 // queryRow() handles one iteration of runQuery's row loop.
 func queryRow(self string,
-		rows *sql.Rows,
-		cols []string) (*KVResponse, error) {
+	rows *sql.Rows,
+	cols []string) (*KVResponse, error) {
 
 	ret := &KVResponse{}
 	ret.Kind = "KVResponse"
@@ -372,15 +372,15 @@ func getExecResult(res sql.Result) xResult {
 // runInsert() inserts a record whose data is specified by the
 // given keys and values.  it returns the id of the inserted record.
 func runInsert(db dbType,
-		tabName string,
-		keys []string,
-		values []interface{}) (idType, error) {
+	tabName string,
+	keys []string,
+	values []interface{}) (idType, error) {
 	nvalues := len(values)
 
 	keystr := strings.Join(keys, ",")
 	placestr := nstring("?", nvalues)
 
-	qstring := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",  // nolint
+	qstring := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", // nolint
 		tabName, keystr, placestr)
 
 	exres, err := runExec(db, qstring, values)
@@ -395,7 +395,7 @@ func delCommon(params map[string]string) apiHandlerRet {
 	}
 
 	return apiHandlerRet{http.StatusOK,
-		NumChangedResponse{int64(nc),"NumChangedResponse"}}
+		NumChangedResponse{int64(nc), "NumChangedResponse"}}
 }
 
 // dbErrorRet() returns an error value on behalf of a db caller
@@ -411,7 +411,7 @@ func delRecs(db dbType, params map[string]string) (idType, error) {
 	if idclause == "" {
 		return dbErrorRet(fmt.Errorf("deletion must specify id or ids"))
 	}
-	qstring := fmt.Sprintf("DELETE FROM %s %s",		// nolint
+	qstring := fmt.Sprintf("DELETE FROM %s %s", // nolint
 		params["table_name"],
 		idclause)
 	log.Debugf("qstring = %s", qstring)
@@ -445,7 +445,7 @@ func getBodySchema(harg *apiHandlerArg) (TableSchema, error) {
 // getBodyRecord() returns a json record from the body of the given request.
 func getBodyRecord(harg *apiHandlerArg) (BodyRecord, error) {
 	jrec := BodyRecord{}
-        err := json.NewDecoder(harg.getBody()).Decode(&jrec)
+	err := json.NewDecoder(harg.getBody()).Decode(&jrec)
 	return jrec, err
 }
 
@@ -462,8 +462,8 @@ func mkIdClause(params map[string]string) (string, []interface{}) { // nolint
 	if ok {
 		idlist := []interface{}{aToIdType(id)}
 		placestr := "?"
-		idclause := fmt.Sprintf("WHERE %s = %s",	// nolint
-				id_field, placestr)
+		idclause := fmt.Sprintf("WHERE %s = %s", // nolint
+			id_field, placestr)
 		return idclause, idlist
 	}
 
@@ -484,7 +484,7 @@ func mkIdClause(params map[string]string) (string, []interface{}) { // nolint
 // mkIdClauseUpdate() is like mkIdClause(), but for UPDATE operations.
 // the difference is, for now, that the id values are formatted directly
 // into the WHERE string, rather than being subbed in by Exec.
-func mkIdClauseUpdate(params map[string]string) string {  // nolint
+func mkIdClauseUpdate(params map[string]string) string { // nolint
 	id_field := params["id_field"]
 	id, ok := params["id"]
 	if ok {
@@ -504,8 +504,8 @@ func mkIdClauseUpdate(params map[string]string) string {  // nolint
 // using parameters in the params map.
 // it returns the number of records changed.
 func updateRec(db dbType,
-		params map[string]string,
-		body BodyRecord) (idType, error) {
+	params map[string]string,
+	body BodyRecord) (idType, error) {
 	dbrec := body.Records[0]
 	keylist := dbrec.Keys
 	keystr := strings.Join(keylist, ",")
@@ -515,11 +515,11 @@ func updateRec(db dbType,
 		return dbErrorRet(fmt.Errorf("update must specify id or ids"))
 	}
 
-	qstring := fmt.Sprintf("UPDATE %s SET (%s) = (%s) %s",	// nolint
-			params["table_name"],
-			keystr,
-			placestr,
-			idclause)
+	qstring := fmt.Sprintf("UPDATE %s SET (%s) = (%s) %s", // nolint
+		params["table_name"],
+		keystr,
+		placestr,
+		idclause)
 
 	exres, err := runExec(db, qstring, dbrec.Values)
 	return exres.rowsAffected, err
@@ -528,14 +528,14 @@ func updateRec(db dbType,
 // runExec() is common code for database APIs that do
 // Prepare followed by Exec followed by getting the exec results.
 func runExec(db dbType,
-		query string,
-		values []interface{}) (xResult, error) {
+	query string,
+	values []interface{}) (xResult, error) {
 	log.Debugf("query = %s", query)
 	stmt, err := db.handle.Prepare(query)
 	if err != nil {
 		return xResult{}, err
 	}
-	defer stmt.Close()	// nolint
+	defer stmt.Close() // nolint
 	result, err := stmt.Exec(values...)
 	if err != nil {
 		return xResult{}, err
@@ -578,7 +578,7 @@ func getCommon(self string, params map[string]string) apiHandlerRet {
 
 	// TODO: support "page"-related properties
 	return apiHandlerRet{http.StatusOK,
-		RecordsResponse{Records:result,Kind:"Collection"}}
+		RecordsResponse{Records: result, Kind: "Collection"}}
 }
 
 // updateCommon() is common code for update APIs.
@@ -597,7 +597,7 @@ func updateCommon(harg *apiHandlerArg, params map[string]string) apiHandlerRet {
 		return errorRet(badStat, err, "after updateRec")
 	}
 	return apiHandlerRet{http.StatusOK,
-		NumChangedResponse{int64(ra),"NumChangedResponse"}}
+		NumChangedResponse{int64(ra), "NumChangedResponse"}}
 }
 
 // convTableNames() converts the return format from runQuery()
@@ -697,21 +697,21 @@ func mkSchemaClause(sch TableSchema) string {
 func createTable(params map[string]string, sch TableSchema) error {
 	tabName := params["table_name"]
 	log.Debugf("... tabName = %s, sch = %v", tabName, sch)
-	
-	jschema, _ := json.Marshal(sch)		// schema as json
-	fieldStr := mkSchemaClause(sch)  	// schema in SQL
+
+	jschema, _ := json.Marshal(sch) // schema as json
+	fieldStr := mkSchemaClause(sch) // schema in SQL
 
 	// x1 creates the actual table requested in the API.
 	x1 := newXCmd(fmt.Sprintf("create table %s(%s)", tabName, fieldStr))
 
 	// x2 updates our internal table of tables.
 	x2 := newXCmd(fmt.Sprintf("insert into %s (name,schema) values (?,?)",
-			tableOfTables), tabName, jschema)
+		tableOfTables), tabName, jschema)
 	return execN(db, x1, x2)
 }
 
 // newXCmd() constructs an xCmd object from the given string and arguments.
-func newXCmd(cmd string, args...interface{}) *xCmd {
+func newXCmd(cmd string, args ...interface{}) *xCmd {
 	return &xCmd{cmd, args}
 }
 
