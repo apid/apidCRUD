@@ -1,6 +1,6 @@
 package apidCRUD
 
-import "github.com/30x/apid-core"
+import "github.com/apid/apid-core"
 
 // init() is magically called at startup by the go runtime.
 // we take this opportunity to tell apid to call our initPlugin()

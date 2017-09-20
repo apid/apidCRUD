@@ -10,7 +10,7 @@ export COV_FILE := $(COV_DIR)/covdata.out
 export COV_HTML := $(COV_DIR)/$(MYAPP)-coverage.html
 export LOG_DIR := logs
 export UNIT_TEST_DB := unit-test.db
-VENDOR_DIR := github.com/30x/$(MYAPP)/vendor
+VENDOR_DIR := github.com/apid/$(MYAPP)/vendor
 SQLITE_PKG := github.com/mattn/go-sqlite3
 
 clean:

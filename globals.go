@@ -6,7 +6,7 @@ package apidCRUD
 import (
 	"net/http"
 	"database/sql"
-	"github.com/30x/apid-core"
+	"github.com/apid/apid-core"
 )
 
 // dbType is intended to encapsulate the database handle type.

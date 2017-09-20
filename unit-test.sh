@@ -14,12 +14,12 @@ LOG_DIR=${LOG_DIR:-logs}
 COV_DIR=${COV_DIR:-cov}
 COV_FILE=${COV_FILE:-$COV_DIR/covdata.out}
 COV_HTML=${COV_HTML:-$COV_DIR/apidCRUD-coverage.html}
-PKG=github.com/30x/apidCRUD
+PKG=github.com/apid/apidCRUD
 
 mkdir -p "$LOG_DIR" "$COV_DIR"
 
 ./logrun.sh "$LOG_DIR/unit-test.out" \
-go test -coverprofile="$COV_FILE" github.com/30x/apidCRUD \
+go test -coverprofile="$COV_FILE" github.com/apid/apidCRUD \
 || exit 1
 
 go tool cover -func="$COV_FILE" > "$LOG_DIR/cover-func.out"
