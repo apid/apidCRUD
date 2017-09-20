@@ -3,7 +3,7 @@ package apidCRUD
 import (
 	"strconv"
 	"net/http"
-	"github.com/30x/apid-core"
+	"github.com/apid/apid-core"
 )
 
 // ----- narrowed-down versions of apid service interfaces

@@ -2,7 +2,7 @@
 
 modules()
 {
-	local pref="github\.com/30x/apidCRUD"
+	local pref="github\.com/apid/apidCRUD"
 	go list ./... \
 	| egrep -v "^$pref/vendor|^$pref/obs|^$pref/cmd"
 }

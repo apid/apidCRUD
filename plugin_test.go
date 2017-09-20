@@ -5,7 +5,7 @@ import (
 	"strings"
 	"net/http"
 	"net/http/httptest"
-	"github.com/30x/apid-core"
+	"github.com/apid/apid-core"
 )
 
 // ----- unit tests for initDB()

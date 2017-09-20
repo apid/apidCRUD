@@ -3,9 +3,9 @@
 package main
 
 import (
-	"github.com/30x/apid-core"
-	"github.com/30x/apid-core/factory"
-	_ "github.com/30x/apidCRUD"
+	"github.com/apid/apid-core"
+	"github.com/apid/apid-core/factory"
+	_ "github.com/apid/apidCRUD"
 )
 
 // main() here is a stripped-down version of the real apid main.

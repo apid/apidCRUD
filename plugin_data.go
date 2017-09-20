@@ -1,6 +1,6 @@
 package apidCRUD
 
-import "github.com/30x/apid-core"
+import "github.com/apid/apid-core"
 
 // pluginData is used to pass back some plugin data to the apid framework.
 var pluginData = apid.PluginData {
